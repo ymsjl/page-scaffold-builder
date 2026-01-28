@@ -55,7 +55,7 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({ schemaMode = 't
   const handleSaveField = async () => {
     try {
       const values = await form.validateFields();
-      useBuilderStore.getState().selectedNode.applyColumnChanges(values);
+      useBuilderStore.getState().applyColumnChanges(values);
       closeSchemaEditor();
       message.success('保存成功');
     } catch (err) {

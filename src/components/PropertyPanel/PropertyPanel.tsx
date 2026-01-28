@@ -18,7 +18,7 @@ const PropertyPanel: React.FC = () => {
   const selectedNode = useBuilderStore(selectedNodeSelector);
   const selectedComponentType = selectedNode?.type;
   const entityTypes = useEntityTypes();
-  const updateSelectedNodeProps = useBuilderStore.use.selectedNode().updateProps;
+  const updateSelectedNodeProps = useBuilderStore.use.updateProps();
   const handleValuesChange = (changedValues: Record<string, any>) => {
     updateSelectedNodeProps(changedValues);
   };

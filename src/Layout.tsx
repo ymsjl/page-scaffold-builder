@@ -55,7 +55,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
 };
 export function PageScaffoldBuilderLayout() {
-  const addNewNode = useBuilderStore(state => state.componentTree.actions.addNewNode);
+  const addNewNode = useBuilderStore(state => state.addNewNode);
   const entityTypes = useEntityTypes();
   const entityTypeDesignerPanelOpen = useBuilderStore.use.entityTypeDesignerPanelOpen();
   const setEntityTypeDesignerPanelOpen = useBuilderStore.use.setEntityTypeDesignerPanelOpen();

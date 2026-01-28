@@ -15,10 +15,10 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
 
   const showAddDropdown = useBuilderStore(s => s.showAddDropdownNodeId === node.id);
   const showAddDropdownAction = useBuilderStore(s => s.showAddDropdown);
-  const addNewNode = useBuilderStore(s => s.componentTree.actions.addNewNode);
-  const updateNode = useBuilderStore(s => s.componentTree.actions.updateNode);
-  const removeNode = useBuilderStore(s => s.componentTree.actions.removeNode);
-  const isSelected = useBuilderStore(s => s.componentTree.data.selectedNodeId === node.id);
+  const addNewNode = useBuilderStore(s => s.addNewNode);
+  const updateNode = useBuilderStore(s => s.updateNode);
+  const removeNode = useBuilderStore(s => s.removeNode);
+  const isSelected = useBuilderStore(s => s.componentTree.selectedNodeId === node.id);
 
   React.useEffect(() => {
     if (!isEditing) {

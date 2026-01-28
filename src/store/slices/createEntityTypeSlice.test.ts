@@ -4,8 +4,8 @@ import { createEntityTypeSlice } from './createEntityTypeSlice';
 
 describe('createEntityTypeSlice', () => {
   it('upserts and deletes entity types', () => {
-    const store = createStore((set, get) => ({ ...createEntityTypeSlice(set, get) }));
-    const s = store.getState();
+    const store = createStore((set, get) => ({ ...createEntityTypeSlice(set as any, get as any, {} as any) } as any));
+    const s = store.getState() as any;
 
     s.setEditingEntityType({ name: 'ET', fields: [] } as any);
     s.upsertEntityType({} as any);
@@ -21,8 +21,8 @@ describe('createEntityTypeSlice', () => {
   });
 
   it('manages fields of editingEntityType', () => {
-    const store = createStore((set, get) => ({ ...createEntityTypeSlice(set, get) }));
-    const s = store.getState();
+    const store = createStore((set, get) => ({ ...createEntityTypeSlice(set as any, get as any, {} as any) } as any));
+    const s = store.getState() as any;
 
     s.setEditingEntityType({ fields: [{ id: 'f1' }] } as any);
     s.setFieldsOfEditingEntityType([{ id: 'f2' }]);

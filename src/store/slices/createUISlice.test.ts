@@ -4,8 +4,8 @@ import { createUISlice } from './createUISlice';
 
 describe('createUISlice', () => {
   it('toggles schema editor and dropdown', () => {
-    const store = createStore((set, get) => ({ ...createUISlice(set, get) }));
-    const s = store.getState();
+    const store = createStore((set, get) => ({ ...createUISlice(set as any, get as any, {} as any) } as any));
+    const s = store.getState() as any;
 
     s.showAddDropdown('node1');
     expect(s.showAddDropdownNodeId).toBe('node1');

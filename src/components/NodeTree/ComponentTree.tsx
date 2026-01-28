@@ -9,10 +9,10 @@ import { availableComponents } from '@/componentMetas';
 type TreeDataNode = NonNullable<TreeProps['treeData']>[number];
 
 const ComponentTree: React.FC = () => {
-  const selectedNodeId = useBuilderStore(s => s.componentTree.data.selectedNodeId);
-  const selectNode = useBuilderStore(s => s.componentTree.actions.selectNode);
-  const nodesById = useBuilderStore(s => s.componentTree.data.nodesById);
-  const rootIds = useBuilderStore(s => s.componentTree.data.rootIds);
+  const selectedNodeId = useBuilderStore(s => s.componentTree.selectedNodeId);
+  const selectNode = useBuilderStore(s => s.selectNode);
+  const nodesById = useBuilderStore(s => s.componentTree.nodesById);
+  const rootIds = useBuilderStore(s => s.componentTree.rootIds);
 
   const treeNodes = useMemo<TreeDataNode[]>(() => {
     const buildNode = (node: NormalizedComponentNode): TreeDataNode => {

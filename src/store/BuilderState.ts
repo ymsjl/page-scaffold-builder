@@ -1,16 +1,21 @@
-import type { ProCommonColumn, EntityType, SchemaField, ComponentInstance } from '@/types';
-import type { NormalizedComponentTree } from '@/types/Component';
+import type {
+  ProCommonColumn,
+  EntityType,
+  SchemaField,
+  ComponentInstance,
+} from "@/types";
+import type { NormalizedComponentTree } from "@/types/Component";
+
+// Pattern: domain data grouped (under `componentTree`) while action functions are exposed at top-level on the store (e.g., `addNewNode`, `removeNode`). This hybrid shape improves selector ergonomics and avoids middleware issues with nested `actions` objects.
 
 export type ComponentTreeSlice = {
-  componentTree: {
-    data: NormalizedComponentTree & { selectedNodeId: string | null };
-    actions: {
-      addNewNode: (parentId: string | null, type: string) => void;
-      removeNode: (id: string) => void;
-      updateNode: (id: string, updates: Partial<ComponentInstance>) => void;
-      selectNode: (id: string | null) => void;
-    };
+  componentTree: NormalizedComponentTree & {
+    selectedNodeId: string | null;
   };
+  addNewNode: (parentId: string | null, type: string) => void;
+  removeNode: (id: string) => void;
+  updateNode: (id: string, updates: Partial<ComponentInstance>) => void;
+  selectNode: (id: string | null) => void;
 };
 
 export type UISlice = {
@@ -26,14 +31,19 @@ export type UISlice = {
 
 export type SelectedNodeSlice = {
   selectedNode: {
-    upsertColumn: (column: ProCommonColumn) => void;
-    updateProps: (props: Record<string, any>) => void;
-    startEditColumn: (column: ProCommonColumn) => void;
-    startAddColumn: () => void;
-    moveColumn: (from: number, to: number) => void;
-    deleteColumn: (key: string) => void;
-    applyColumnChanges: (column: ProCommonColumn) => void;
+    id?: string | null;
+    name?: string;
+    type?: string;
+    props?: Record<string, any>;
+    columns?: ProCommonColumn[];
   };
+  upsertColumn: (column: ProCommonColumn) => void;
+  updateProps: (props: Record<string, any>) => void;
+  startEditColumn: (column: ProCommonColumn) => void;
+  startAddColumn: () => void;
+  moveColumn: (from: number, to: number) => void;
+  deleteColumn: (key: string) => void;
+  applyColumnChanges: (column: ProCommonColumn) => void;
 };
 
 export type EntityTypeSlice = {
@@ -42,11 +52,16 @@ export type EntityTypeSlice = {
     allIds: string[];
   };
   editingEntityType: Partial<EntityType> | null;
-  setFieldsOfEditingEntityType: (fields: SchemaField[] | readonly SchemaField[]) => void;
+  setFieldsOfEditingEntityType: (
+    fields: SchemaField[] | readonly SchemaField[],
+  ) => void;
   removeFieldsOfEditingEntityType: (id: string) => void;
   setEditingEntityType: (t: Partial<EntityType> | null) => void;
   upsertEntityType: (t: EntityType) => void;
   deleteEntityType: (id: string) => void;
 };
 
-export type BuilderState = ComponentTreeSlice & UISlice & SelectedNodeSlice & EntityTypeSlice;
+export type BuilderState = ComponentTreeSlice &
+  UISlice &
+  SelectedNodeSlice &
+  EntityTypeSlice;

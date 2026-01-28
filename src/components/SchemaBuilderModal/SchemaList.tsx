@@ -8,12 +8,12 @@ export function SchemaList({ selectedNode }: { selectedNode: ComponentInstance |
   const columns = selectedNode?.props?.columns ?? ([] as ProCommonColumn[]);
 
   const handleStartAdd = () => {
-    useBuilderStore.getState().selectedNode.startAddColumn();
+    useBuilderStore.getState().startAddColumn();
   };
 
   // 开始编辑字段
   const handleStartEdit = (field: ProCommonColumn) => {
-    useBuilderStore.getState().selectedNode.startEditColumn(field);
+    useBuilderStore.getState().startEditColumn(field);
   };
 
   // 删除字段
@@ -22,7 +22,7 @@ export function SchemaList({ selectedNode }: { selectedNode: ComponentInstance |
       title: '确认删除',
       content: '确定要删除这个字段吗？',
       onOk: () => {
-        useBuilderStore.getState().selectedNode.deleteColumn(key);
+        useBuilderStore.getState().deleteColumn(key);
         message.success('字段已删除');
       },
     });
@@ -31,13 +31,13 @@ export function SchemaList({ selectedNode }: { selectedNode: ComponentInstance |
   // 上移
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
-    useBuilderStore.getState().selectedNode.moveColumn(index, index - 1);
+    useBuilderStore.getState().moveColumn(index, index - 1);
   };
 
   // 下移
   const handleMoveDown = (index: number) => {
     if (index === columns.length - 1) return;
-    useBuilderStore.getState().selectedNode.moveColumn(index, index + 1);
+    useBuilderStore.getState().moveColumn(index, index + 1);
   };
 
   return (
