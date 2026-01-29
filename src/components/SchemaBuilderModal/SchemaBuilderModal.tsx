@@ -13,6 +13,7 @@ import {
   Select,
   Divider,
   Checkbox,
+  Card,
 } from "antd";
 import {
   selectEditingColumn,
@@ -24,11 +25,12 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { schemaEditorActions } from "@/store/slices/schemaEditorSlice";
 import { LeftOutlined } from "@ant-design/icons";
 import { valueTypeOptions } from "./getRecommendedWidth";
-import RuleBuilder from "../RuleBuilder/RuleBuilder";
 import type { ProCommonColumn } from "@/types";
 import { makeIdCreator } from "@/store/slices/makeIdCreator";
 import { useAutoFillByDataIndex } from "./useAutoFillByDataIndex";
-
+import RuleLibrary from "../RuleBuilder/RuleLibrary";
+import RuleCanvas from "../RuleBuilder/RuleCanvas";
+import RulePreview from "../RuleBuilder/RulePreview";
 interface SchemaBuilderModalProps {
   title?: string;
   schemaMode?: "table" | "form" | "description";
@@ -126,7 +128,7 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
             基础
           </Typography.Title>
           <Row gutter={16}>
-             <Col xs={24}>
+            <Col xs={24}>
               <Form.Item
                 name="dataIndex"
                 label="dataIndex"
@@ -157,7 +159,7 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} >
+            <Col xs={24}>
               <Form.Item label="title" name="title">
                 <Input placeholder="请输入字段标题（例如：用户名称、创建时间）" />
               </Form.Item>
@@ -216,12 +218,14 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
                 </Col>
               </Row>
               <Divider />
-              <Space direction="vertical" style={{ width: "100%" }} size={6}>
-                <RuleBuilder
-                  value={editingColumn?.formItemProps?.rules}
-                  fieldType={valueTypeValue}
-                />
-                <Divider />
+              <Space
+                direction="vertical"
+                style={{ width: "100%" }}
+                size="middle"
+              >
+                <RulePreview />
+                <RuleLibrary fieldType={valueTypeValue} />
+                <RuleCanvas />
               </Space>
             </>
           ) : null}

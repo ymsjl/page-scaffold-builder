@@ -34,7 +34,6 @@
     "redux-persist": "^6.0.0",
     "reselect": "^4.1.7",
     "swiper": "^12.1.0",
-    "zod": "^4.3.5",
-    "zustand": "5.0.0-rc.2"
+    "zod": "^4.3.5"
   }
 }

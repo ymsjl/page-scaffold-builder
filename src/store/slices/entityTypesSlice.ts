@@ -7,7 +7,6 @@ export const entityTypeIdCreator = makeIdCreator('et');
 
 const adapter = createEntityAdapter<EntityType>({ selectId: (e) => e.id });
 
-
 const initialState = adapter.getInitialState({
   editingEntityType: null as Partial<EntityType> | null,
   isDrawerOpen: false,
@@ -28,7 +27,6 @@ const slice = createSlice({
     },
     startEdit(state, action: PayloadAction<string>) {
       state.isDrawerOpen = true;
-      debugger;
       state.editingEntityType = adapter.getSelectors().selectById(state, action.payload) || {};
     },
     setFieldsOfEditingEntityType: (state, action: PayloadAction<ReadonlyArray<SchemaField>>) => {
