@@ -154,7 +154,7 @@ export default function EntityTypeDesignerPanel({ open }: EntityTypeDesignerPane
       },
       {
         title: '可筛选',
-        dataIndex: '__filterable',
+        dataIndex: 'isFilterable',
         valueType: 'switch',
         width: 96,
         fieldProps: {
@@ -162,9 +162,7 @@ export default function EntityTypeDesignerPanel({ open }: EntityTypeDesignerPane
           unCheckedChildren: '否',
         },
         render: (_, item) => {
-          const isFilterable =
-            typeof item.isFilterable === 'boolean' ? item.isFilterable : !Boolean((item as any).hideInSearch);
-          return isFilterable ? <Tag color="blue">是</Tag> : <Tag>否</Tag>;
+          return item.isFilterable ? <Tag color="blue">是</Tag> : <Tag>否</Tag>;
         },
       },
 

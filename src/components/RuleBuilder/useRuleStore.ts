@@ -1,14 +1,17 @@
-import { create } from 'zustand';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { ruleBuilderActions, subscribeRuleBuilder, selectRuleNodes, selectSelectedId, selectLastEmittedSignature } from '@/store/slices/ruleBuilderSlice';
 import type { AntdRule, RuleNode } from './utils/ruleMapping';
-import { rulesToNodes, nodesToRules } from './utils/ruleMapping';
+import { nodesToRules } from './utils/ruleMapping';
+import React from 'react';
 
-type RuleStore = {
+// Compatibility shim: keep the original API shape so existing imports remain valid during migration.
+// This hook accepts a selector function (like original) and returns the selected piece from an API object that
+// proxies to Redux Toolkit state and actions.
+
+type API = {
   nodes: RuleNode[];
   selectedId: string | null;
   lastEmittedSignature: string;
-  onChangeCb?: (rules: AntdRule[]) => void;
-
-  // actions
   setOnChange: (cb?: (rules: AntdRule[]) => void) => void;
   setNodes: (nodes: RuleNode[], emit?: boolean) => void;
   setSelectedId: (id: string | null) => void;
@@ -20,105 +23,57 @@ type RuleStore = {
   moveNode: (id: string, direction: 'up' | 'down') => void;
 };
 
-const serializeRules = (rules: AntdRule[] = []) => {
-  const normalized = rules.map(rule => {
-    if (typeof rule === 'function') return { __fn: true } as any;
-    const { pattern, ...rest } = rule as any;
-    return {
-      ...rest,
-      pattern: pattern ? pattern.toString() : undefined,
-    } as any;
-  });
-  return JSON.stringify(normalized);
+export const useRuleStore = <T,>(selector: (api: API) => T): T => {
+  const dispatch = useAppDispatch();
+  const nodes = useAppSelector(selectRuleNodes);
+  const selectedId = useAppSelector(selectSelectedId);
+  const lastEmittedSignature = useAppSelector(selectLastEmittedSignature);
+
+  const api = React.useMemo<API>(() => ({
+    nodes,
+    selectedId,
+    lastEmittedSignature,
+    setOnChange(cb) {
+      // subscribe returns unsubscribe
+      if (!cb) return;
+      const unsub = subscribeRuleBuilder(cb);
+      // We can't return the unsubscribe from here, so callers must manage lifecycle.
+      // This shim keeps original behavior where `setOnChange` replaces the callback.
+      // To mimic replacement, we will subscribe and immediately return.
+      // NOTE: consumers using this should prefer the new `subscribeRuleBuilder` API.
+      (api as any)._lastUnsub = unsub;
+    },
+    setNodes(nodes: RuleNode[], emit = false) {
+      dispatch(ruleBuilderActions.setNodes(nodes));
+      if (emit) {
+        const rules = nodesToRules(nodes);
+        // middleware will update signature and notify subscribers
+      }
+    },
+    setSelectedId(id: string | null) {
+      dispatch(ruleBuilderActions.setSelectedId(id));
+    },
+    initFromRules(rules: AntdRule[]) {
+      dispatch(ruleBuilderActions.initFromRules(rules));
+    },
+    addNode(node: RuleNode) {
+      dispatch(ruleBuilderActions.addNode(node));
+    },
+    updateNode(node: RuleNode) {
+      dispatch(ruleBuilderActions.updateNode(node));
+    },
+    deleteNode(id: string) {
+      dispatch(ruleBuilderActions.deleteNode(id));
+    },
+    duplicateNode(id: string) {
+      dispatch(ruleBuilderActions.duplicateNode(id));
+    },
+    moveNode(id: string, direction: 'up' | 'down') {
+      dispatch(ruleBuilderActions.moveNode({ id, direction }));
+    },
+  }), [dispatch, nodes, selectedId, lastEmittedSignature]);
+
+  return selector(api);
 };
-
-export const useRuleStore = create<RuleStore>((set, get) => ({
-  nodes: [],
-  selectedId: null,
-  lastEmittedSignature: '',
-  onChangeCb: undefined,
-
-  setOnChange(cb) {
-    set({ onChangeCb: cb });
-  },
-
-  setNodes(nodes, emit = false) {
-    set({ nodes });
-    if (emit) {
-      const rules = nodesToRules(nodes);
-      const sig = serializeRules(rules);
-      set({ lastEmittedSignature: sig });
-      const cb = get().onChangeCb;
-      cb?.(rules);
-    }
-  },
-
-  setSelectedId(id) {
-    set({ selectedId: id });
-  },
-
-  initFromRules(rules) {
-    const sig = serializeRules(rules);
-    // If same as last emitted, skip to avoid echo
-    if (sig && sig === get().lastEmittedSignature) return;
-    const nodes = rulesToNodes(rules);
-    set({ nodes, selectedId: nodes[0]?.id ?? null, lastEmittedSignature: sig });
-  },
-
-  addNode(node) {
-    const next = [...get().nodes, node];
-    set({ nodes: next });
-    const rules = nodesToRules(next);
-    const sig = serializeRules(rules);
-    set({ lastEmittedSignature: sig });
-    get().onChangeCb?.(rules);
-  },
-
-  updateNode(node) {
-    const next = get().nodes.map(n => (n.id === node.id ? node : n));
-    set({ nodes: next });
-    const rules = nodesToRules(next);
-    const sig = serializeRules(rules);
-    set({ lastEmittedSignature: sig });
-    get().onChangeCb?.(rules);
-  },
-
-  deleteNode(id) {
-    const next = get().nodes.filter(n => n.id !== id);
-    set({ nodes: next, selectedId: get().selectedId === id ? null : get().selectedId });
-    const rules = nodesToRules(next);
-    const sig = serializeRules(rules);
-    set({ lastEmittedSignature: sig });
-    get().onChangeCb?.(rules);
-  },
-
-  duplicateNode(id) {
-    const target = get().nodes.find(n => n.id === id);
-    if (!target) return;
-    const clone = { ...target, id: `rule_${Date.now()}_${Math.random().toString(36).slice(2, 9)}` } as RuleNode;
-    const next = [...get().nodes, clone];
-    set({ nodes: next });
-    const rules = nodesToRules(next);
-    const sig = serializeRules(rules);
-    set({ lastEmittedSignature: sig });
-    get().onChangeCb?.(rules);
-  },
-
-  moveNode(id, direction) {
-    const prev = get().nodes;
-    const index = prev.findIndex(n => n.id === id);
-    if (index < 0) return;
-    const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= prev.length) return;
-    const copy = [...prev];
-    const [item] = copy.splice(index, 1);
-    copy.splice(nextIndex, 0, item);
-    set({ nodes: copy });
-    const rules = nodesToRules(copy);
-    const sig = serializeRules(rules);
-    set({ lastEmittedSignature: sig });
-    get().onChangeCb?.(rules);
-  },
-}));
 
 export default useRuleStore;

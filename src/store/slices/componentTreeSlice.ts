@@ -64,7 +64,7 @@ const slice = createSlice({
     upsertColumnForSelectedNode: (state, action: PayloadAction<ProCommonColumn>) => {
       const selectedId = state.selectedNodeId;
       if (!selectedId) return;
-      const node = adapter.getSelectors().selectById(state, selectedId) as NormalizedComponentNode<{ columns: ProCommonColumn[] }>;
+      const node = state.entities[selectedId] as NormalizedComponentNode<{ columns: ProCommonColumn[] }> | undefined;
       if (!node) return;
       const columns: ProCommonColumn[] = node.props?.columns ? [...node.props.columns] : [];
       const idx = columns.findIndex((c) => c.key === (action.payload).key);
@@ -88,9 +88,9 @@ const slice = createSlice({
       const { from, to } = action.payload;
       const selectedId = state.selectedNodeId;
       if (!selectedId) return;
-      const node = adapter.getSelectors().selectById(state, selectedId) as NormalizedComponentNode<{ columns: ProCommonColumn[] }>;
+      const node = state.entities[selectedId] as NormalizedComponentNode<{ columns: ProCommonColumn[] }> | undefined;
       if (!node) return;
-      const columns: ProCommonColumn[] = node.props?.columns;
+      const columns: ProCommonColumn[] = node.props?.columns || [];
       if (from < 0 || from >= columns.length || to < 0 || to >= columns.length) return;
       const [moved] = columns.splice(from, 1);
       columns.splice(to, 0, moved);

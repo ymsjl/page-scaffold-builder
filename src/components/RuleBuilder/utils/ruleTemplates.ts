@@ -23,14 +23,14 @@ export const BUILT_IN_RULE_TEMPLATES: RuleTemplate[] = [
     name: '长度',
     description: '限制字符串长度范围',
     builtIn: true,
-    nodes: [createNode('length', { min: 2, max: 50 })],
+    nodes: [createNode('length', { min: 2, max: 50, operator: 'between' })],
   },
   {
     id: 'range',
     name: '范围',
     description: '限制数值范围',
     builtIn: true,
-    nodes: [createNode('range', { min: 0, max: 100 })],
+    nodes: [createNode('range', { min: 0, max: 100, operator: 'between' })],
   },
   {
     id: 'pattern',
@@ -38,6 +38,13 @@ export const BUILT_IN_RULE_TEMPLATES: RuleTemplate[] = [
     description: '使用正则表达式校验',
     builtIn: true,
     nodes: [createNode('pattern', { pattern: '/^[a-zA-Z0-9_]+$/' })],
+  },
+  {
+    id: 'dateRange',
+    name: '日期范围',
+    description: '限制日期范围',
+    builtIn: true,
+    nodes: [createNode('dateRange', { minDate: '', maxDate: '' })],
   },
   {
     id: 'enum',

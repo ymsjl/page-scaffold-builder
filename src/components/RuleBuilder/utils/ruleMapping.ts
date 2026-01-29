@@ -3,11 +3,13 @@ import dayjs from 'dayjs';
 
 export type AntdRule = Exclude<FormItemProps['rules'], undefined>[number];
 
-export type RuleNodeType = 'required' | 'length' | 'range' | 'pattern' | 'email' | 'phone' | 'enum' | 'dateMin' | 'dateMax' | 'dateSpan';
+export type RuleNodeType = 'required' | 'length' | 'range' | 'pattern' | 'email' | 'phone' | 'enum' | 'dateMin' | 'dateMax' | 'dateSpan' | 'dateRange';
 
 export type RuleNodeScope = 'form' | 'search' | 'both';
 
 export type RuleNodeParams = {
+  // operator: defines comparison type for range-like rules
+  operator?: 'between' | 'gte' | 'lte' | 'eq';
   len?: number;
   min?: number;
   max?: number;
@@ -134,6 +136,11 @@ const buildDefaultMessage = (node: RuleNode) => {
       return '日期晚于允许范围';
     case 'dateSpan':
       return '日期跨度不符合要求';
+    case 'dateRange':
+      if (params?.minDate && params?.maxDate) return `日期需在 ${params.minDate} - ${params.maxDate} 之间`;
+      if (params?.minDate) return `日期需不早于 ${params.minDate}`;
+      if (params?.maxDate) return `日期需不晚于 ${params.maxDate}`;
+      return '日期不符合要求';
     default:
       return '校验未通过';
   }
@@ -191,15 +198,18 @@ export const rulesToNodes = (rules: AntdRule[] = []): RuleNode[] => {
 
     if (rule.len !== undefined || rule.min !== undefined || rule.max !== undefined) {
       if (isNumberRule(rule)) {
+        const op = rule.min !== undefined && rule.max !== undefined ? (rule.min === rule.max ? 'eq' : 'between') : rule.min !== undefined ? 'gte' : rule.max !== undefined ? 'lte' : 'between';
         acc.push({
           ...baseNode,
           type: 'range',
           params: {
             min: rule.min,
             max: rule.max,
+            operator: op,
           },
         });
       } else {
+        const op = rule.len !== undefined ? 'eq' : rule.min !== undefined && rule.max !== undefined ? 'between' : rule.min !== undefined ? 'gte' : rule.max !== undefined ? 'lte' : 'between';
         acc.push({
           ...baseNode,
           type: 'length',
@@ -207,6 +217,7 @@ export const rulesToNodes = (rules: AntdRule[] = []): RuleNode[] => {
             len: rule.len,
             min: rule.min,
             max: rule.max,
+            operator: op,
           },
         });
       }
@@ -312,6 +323,19 @@ export const nodesToRules = (nodes: RuleNode[] = []): AntdRule[] => {
               const diff = e.diff(s, 'day');
               if (node.params?.minSpan !== undefined && diff < node.params.minSpan) return Promise.reject(message);
               if (node.params?.maxSpan !== undefined && diff > node.params.maxSpan) return Promise.reject(message);
+              return Promise.resolve();
+            },
+          };
+        case 'dateRange':
+          return {
+            validator: async (_rule: any, value: any): Promise<void> => {
+              if (!value) return Promise.resolve();
+              const v = dayjs(value);
+              if (!v.isValid()) return Promise.reject(message);
+              const min = node.params?.minDate ? dayjs(node.params.minDate) : undefined;
+              const max = node.params?.maxDate ? dayjs(node.params.maxDate) : undefined;
+              if (min && min.isValid() && v.isBefore(min, 'day')) return Promise.reject(message);
+              if (max && max.isValid() && v.isAfter(max, 'day')) return Promise.reject(message);
               return Promise.resolve();
             },
           };

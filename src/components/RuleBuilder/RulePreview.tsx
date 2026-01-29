@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Input, Space, Typography } from 'antd';
 import type { AntdRule } from './utils/ruleMapping';
 import { DEFAULT_PHONE_PATTERN, nodesToRules } from './utils/ruleMapping';
-import useRuleStore from './useRuleStore';
+import { useAppSelector } from '@/store/hooks';
+import { selectRuleNodes } from '@/store/slices/ruleBuilderSlice';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -56,7 +57,7 @@ const validateValue = (value: any, rules: AntdRule[]): string | null => {
 
 export default function RulePreview() {
   const [value, setValue] = useState('');
-  const nodes = useRuleStore(state => state.nodes);
+  const nodes = useAppSelector(selectRuleNodes);
   const rules = useMemo(() => nodesToRules(nodes), [nodes]);
 
   const error = useMemo(() => validateValue(value, rules), [value, rules]);
