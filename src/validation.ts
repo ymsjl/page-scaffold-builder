@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const SchemaFieldSchema = z.object({
   id: z.string(),
-  key: z.string().optional(),
+  key: z.string(),
   title: z.string().optional(),
   valueType: z.string(),
   required: z.boolean().optional(),
@@ -22,7 +22,7 @@ export const EntityTypeSchema = z
     name: z.string().min(1, 'Name is required'),
     title: z.string().min(1, 'Title is required'),
     fields: z.array(SchemaFieldSchema),
-    primaryKey: z.string().min(1, 'Primary key is required'),
+    primaryKey: z.string().optional(),
   })
   .strict()
   .superRefine((val, ctx) => {

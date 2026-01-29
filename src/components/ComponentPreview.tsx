@@ -1,11 +1,12 @@
 import React from 'react';
 import { getComponentPrototype } from '../componentMetas';
-import { selectedNodeSelector, useBuilderStore } from '../store/useBuilderStore';
+import { useAppSelector } from '../store/hooks';
+import { selectSelectedNode } from '../store/selectors';
 
 interface ComponentPreviewProps { }
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
-  const node = useBuilderStore(selectedNodeSelector);
+  const node = useAppSelector(selectSelectedNode);
 
   if (!node) {
     const emptyStyle: React.CSSProperties = {

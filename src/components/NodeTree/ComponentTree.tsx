@@ -3,26 +3,27 @@ import { Tree } from 'antd';
 import type { TreeProps } from 'antd';
 import type { NormalizedComponentNode } from '@/types';
 import TreeNodeItem from './TreeNodeItem';
-import { useBuilderStore } from '@/store/useBuilderStore';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { componentTreeActions } from '@/store/slices/componentTreeSlice';
 import { availableComponents } from '@/componentMetas';
 
 type TreeDataNode = NonNullable<TreeProps['treeData']>[number];
 
 const ComponentTree: React.FC = () => {
-  const selectedNodeId = useBuilderStore(s => s.componentTree.selectedNodeId);
-  const selectNode = useBuilderStore(s => s.selectNode);
-  const nodesById = useBuilderStore(s => s.componentTree.nodesById);
-  const rootIds = useBuilderStore(s => s.componentTree.rootIds);
+  const dispatch = useAppDispatch();
+  const selectedNodeId = useAppSelector((s) => (s.componentTree as any).selectedNodeId);
+  const nodesById = useAppSelector((s) => (s.componentTree as any).entities);
+  const rootIds = useAppSelector((s) => (s.componentTree as any).rootIds);
 
   const treeNodes = useMemo<TreeDataNode[]>(() => {
     const buildNode = (node: NormalizedComponentNode): TreeDataNode => {
       return {
         key: node.id,
-        title: <TreeNodeItem node={node} level={0} />,
-        children: node.childrenIds?.map(childId => buildNode(nodesById[childId])) || [],
+        title: <TreeNodeItem node={node as any} level={0} />,
+        children: node.childrenIds?.map(childId => buildNode(nodesById?.[childId] as NormalizedComponentNode)) || [],
       };
     };
-    return rootIds.map(id => buildNode(nodesById[id]));
+    return (rootIds || []).map(id => buildNode((nodesById as any)[id]));
   }, [nodesById, rootIds]);
 
   return (
@@ -33,7 +34,7 @@ const ComponentTree: React.FC = () => {
       treeData={treeNodes}
       onSelect={keys => {
         const key = keys?.[0];
-        if (key) selectNode(String(key));
+        if (key) dispatch(componentTreeActions.selectNode(String(key)));
       }}
     />
   );

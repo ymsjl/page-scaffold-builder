@@ -1,21 +1,25 @@
-export type ProValueEnum = Record<string, { text: string; status?: string; color?: string }>;
+import { z } from 'zod';
 
-export interface ProCommonColumn {
-  title: string;
-  dataIndex: string;
-  key?: string;
-  valueType?: string;
-  type?: string;
-  width?: number;
-  hideInSearch?: boolean;
-  hideInTable?: boolean;
-  valueEnum?: ProValueEnum;
-  // form item metadata used by SchemaBuilder
-  formItemProps?: {
-    name?: string;
-    label?: string;
-    rules?: any;
-  };
-}
+export const ProValueEnumSchema = z.object({ text: z.string(), status: z.string().optional(), color: z.string().optional() });
+export type ProValueEnum = z.infer<typeof ProValueEnumSchema>;
 
+export const FormItemPropsSchema = z.object({ name: z.string().optional(), label: z.string().optional(), rules: z.any().optional() });
+export type FormItemPropsZ = z.infer<typeof FormItemPropsSchema>;
+
+export const ProCommonColumnSchema = z.object({
+  title: z.string(),
+  dataIndex: z.string(),
+  key: z.string(),
+  valueType: z.string().optional(),
+  type: z.string().optional(),
+  width: z.number().int().nonnegative().optional(),
+  hideInSearch: z.boolean().optional(),
+  hideInTable: z.boolean().optional(),
+  valueEnum: z.record(
+    z.string(),
+    ProValueEnumSchema
+  ).optional(),
+  formItemProps: FormItemPropsSchema.optional(),
+});
+export type ProCommonColumn = z.infer<typeof ProCommonColumnSchema>;
 export type ColumnSchema = ProCommonColumn;

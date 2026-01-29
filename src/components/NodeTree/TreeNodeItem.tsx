@@ -1,7 +1,9 @@
 import React from 'react';
 import type { ComponentInstance, ComponentType } from "@/types";
 import { PlusOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons';
-import { useBuilderStore } from '@/store/useBuilderStore';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { uiActions } from '@/store/slices/uiSlice';
+import { componentTreeActions } from '@/store/slices/componentTreeSlice';
 import { availableComponents } from '@/componentMetas';
 
 interface TreeNodeItemProps {
@@ -13,12 +15,27 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editingName, setEditingName] = React.useState(node.name);
 
-  const showAddDropdown = useBuilderStore(s => s.showAddDropdownNodeId === node.id);
-  const showAddDropdownAction = useBuilderStore(s => s.showAddDropdown);
-  const addNewNode = useBuilderStore(s => s.addNewNode);
-  const updateNode = useBuilderStore(s => s.updateNode);
-  const removeNode = useBuilderStore(s => s.removeNode);
-  const isSelected = useBuilderStore(s => s.componentTree.selectedNodeId === node.id);
+  const dispatch = useAppDispatch();
+  const showAddDropdown = useAppSelector((s) => (s.ui as any).showAddDropdownNodeId === node.id);
+  const isSelected = useAppSelector((s) => (s.componentTree as any).selectedNodeId === node.id);
+
+  const showAddDropdownAction = (id: string | null) => dispatch(uiActions.setShowAddDropdownNodeId(id));
+  const addNewNode = (parentId: string | null, type: string) => {
+    const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    dispatch(
+      componentTreeActions.addNode({
+        id,
+        parentId,
+        name: `New ${type}`,
+        type,
+        isContainer: type === 'Container',
+        props: {},
+        childrenIds: [],
+      }),
+    );
+  };
+  const updateNode = (id: string, updates: Partial<any>) => dispatch(componentTreeActions.updateNode({ id, updates }));
+  const removeNode = (id: string) => dispatch(componentTreeActions.removeNode(id));
 
   React.useEffect(() => {
     if (!isEditing) {

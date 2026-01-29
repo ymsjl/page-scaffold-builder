@@ -1,7 +1,11 @@
 import React, { ComponentProps, useEffect } from 'react';
 import { Layout, Button, Collapse, Space, Typography } from 'antd';
 import ComponentTree from './components/NodeTree/ComponentTree';
-import { useBuilderStore, useEntityTypes } from './store/useBuilderStore';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { entityTypesSelectors, selectUI } from './store/selectors';
+import { componentTreeActions } from './store/slices/componentTreeSlice';
+import { uiActions } from './store/slices/uiSlice';
+import { entityTypesActions } from './store/slices/entityTypesSlice';
 import EntityTypeDesignerPanel from './components/EntityTypeDesigner/EntityTypeDesignerPanel';
 import { PageScaffoldBuilderPreview } from './Preview';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
@@ -55,14 +59,24 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
 };
 export function PageScaffoldBuilderLayout() {
-  const addNewNode = useBuilderStore(state => state.addNewNode);
-  const entityTypes = useEntityTypes();
-  const entityTypeDesignerPanelOpen = useBuilderStore.use.entityTypeDesignerPanelOpen();
-  const setEntityTypeDesignerPanelOpen = useBuilderStore.use.setEntityTypeDesignerPanelOpen();
+  const dispatch = useAppDispatch();
+  const entityTypes = useAppSelector(entityTypesSelectors.selectAll);
+  const isDrawerOpen = useAppSelector(state => state.entityTypes.isDrawerOpen);
 
   useEffect(() => {
-    addNewNode(null, 'Container');
-  }, []);
+    const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    dispatch(
+      componentTreeActions.addNode({
+        id,
+        parentId: null,
+        name: `New Container`,
+        type: 'Container',
+        isContainer: true,
+        props: {},
+        childrenIds: [],
+      }),
+    );
+  }, [dispatch]);
 
   const collapseItems: ComponentProps<typeof Collapse>['items'] = [
     {
@@ -76,8 +90,7 @@ export function PageScaffoldBuilderLayout() {
       label: '实体类',
       extra: !entityTypes?.length && (
         <Button icon={<PlusOutlined />} onClick={() => {
-          setEntityTypeDesignerPanelOpen(true)
-          useBuilderStore.getState().setEditingEntityType({});
+          dispatch(entityTypesActions.startCreateNew());
         }} type="text" />
       ),
       children: (
@@ -85,10 +98,7 @@ export function PageScaffoldBuilderLayout() {
           {entityTypes?.map(et => (
             <div
               key={et.id}
-              onClick={() => {
-                setEntityTypeDesignerPanelOpen(true);
-                useBuilderStore.getState().setEditingEntityType(et);
-              }}
+              onClick={() => dispatch(entityTypesActions.startEdit(et.id))}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
             >
               <Typography.Text>{et.title}</Typography.Text>
@@ -99,7 +109,7 @@ export function PageScaffoldBuilderLayout() {
                 danger
                 onClick={e => {
                   e.stopPropagation();
-                  useBuilderStore.getState().deleteEntityType(et.id);
+                  dispatch(entityTypesActions.deleteEntityType(et.id));
                 }}
               />
             </div>
@@ -124,7 +134,7 @@ export function PageScaffoldBuilderLayout() {
 
         <PageScaffoldBuilderPreview />
       </Layout>
-      <EntityTypeDesignerPanel open={entityTypeDesignerPanelOpen} onClose={() => setEntityTypeDesignerPanelOpen(false)} />
+      <EntityTypeDesignerPanel open={isDrawerOpen} />
     </Layout>
   );
 }

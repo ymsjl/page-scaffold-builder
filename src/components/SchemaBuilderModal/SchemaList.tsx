@@ -1,20 +1,19 @@
 import React from 'react';
-import { Modal, List, Button, Space, Empty, Tag, message } from 'antd';
-import { useBuilderStore } from '@/store/useBuilderStore';
+import { Modal, List, Button, Space, Empty, Tag, message, Flex } from 'antd';
+import { useAppDispatch } from '@/store/hooks';
+import { schemaEditorActions } from '@/store/slices/schemaEditorSlice';
+import { componentTreeActions } from '@/store/slices/componentTreeSlice';
 import { PlusOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined, EditOutlined } from '@ant-design/icons';
 import type { ComponentInstance, ProCommonColumn } from '@/types';
 
 export function SchemaList({ selectedNode }: { selectedNode: ComponentInstance | null }) {
   const columns = selectedNode?.props?.columns ?? ([] as ProCommonColumn[]);
 
-  const handleStartAdd = () => {
-    useBuilderStore.getState().startAddColumn();
-  };
+  const dispatch = useAppDispatch();
 
-  // 开始编辑字段
-  const handleStartEdit = (field: ProCommonColumn) => {
-    useBuilderStore.getState().startEditColumn(field);
-  };
+  const handleStartAdd = () => dispatch(schemaEditorActions.startAddColumn());
+
+  const handleStartEdit = (field: ProCommonColumn) => dispatch(schemaEditorActions.startEditColumn(field));
 
   // 删除字段
   const handleDelete = (key: string) => {
@@ -22,22 +21,10 @@ export function SchemaList({ selectedNode }: { selectedNode: ComponentInstance |
       title: '确认删除',
       content: '确定要删除这个字段吗？',
       onOk: () => {
-        useBuilderStore.getState().deleteColumn(key);
+        dispatch(componentTreeActions.deleteColumnForSelectedNode(key));
         message.success('字段已删除');
       },
     });
-  };
-
-  // 上移
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
-    useBuilderStore.getState().moveColumn(index, index - 1);
-  };
-
-  // 下移
-  const handleMoveDown = (index: number) => {
-    if (index === columns.length - 1) return;
-    useBuilderStore.getState().moveColumn(index, index + 1);
   };
 
   return (
@@ -76,36 +63,21 @@ export function SchemaList({ selectedNode }: { selectedNode: ComponentInstance |
 
               return (
                 <List.Item key={field.key}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <strong style={{ fontSize: 14 }}>{field.title}</strong>
-                      <Space>
-                        <Button
-                          size="small"
-                          icon={<ArrowUpOutlined />}
-                          disabled={index === 0}
-                          onClick={() => handleMoveUp(index)}
-                        />
-                        <Button
-                          size="small"
-                          icon={<ArrowDownOutlined />}
-                          disabled={index === columns.length - 1}
-                          onClick={() => handleMoveDown(index)}
-                        />
-                        <Button size="small" icon={<EditOutlined />} onClick={() => handleStartEdit(field)} />
-                        <Button
-                          size="small"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(field.key as string)}
-                        />
-                      </Space>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <Flex gap={8} style={{ width: '100%' }}>
+                    <strong style={{ fontSize: 14, flex: '1' }}>{field.title}</strong>
+                    <Flex gap={8} wrap='wrap'>
                       <Tag color="blue">{valueTypeLabel}</Tag>
-                      {!field.hideInSearch && <Tag color="green">可搜索</Tag>}
-                    </div>
-                  </div>
+                    </Flex>
+                    <Space size='small'>
+                      <Button size="small" icon={<EditOutlined />} onClick={() => handleStartEdit(field)} />
+                      <Button
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDelete(field.key as string)}
+                      />
+                    </Space>
+                  </Flex>
                 </List.Item>
               );
             }}

@@ -9,18 +9,26 @@ import {
 } from '@ant-design/pro-components';
 import { Space } from 'antd';
 import SchemaBuilderModal from '../SchemaBuilderModal/SchemaBuilderModal';
-import { useBuilderStore, useEntityTypes, selectedNodeSelector } from '@/store/useBuilderStore';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { selectSelectedNode, entityTypesSelectors } from '@/store/selectors';
+import { componentTreeActions } from '@/store/slices/componentTreeSlice';
 import { SchemaList } from '../SchemaBuilderModal/SchemaList';
 import { getComponentPrototype } from '@/componentMetas';
 import { PropAttribute } from '@/types';
 
 const PropertyPanel: React.FC = () => {
-  const selectedNode = useBuilderStore(selectedNodeSelector);
+  const dispatch = useAppDispatch();
+  const selectedNode = useAppSelector(selectSelectedNode);
   const selectedComponentType = selectedNode?.type;
-  const entityTypes = useEntityTypes();
-  const updateSelectedNodeProps = useBuilderStore.use.updateProps();
+  const entityTypes = useAppSelector(entityTypesSelectors.selectAll);
   const handleValuesChange = (changedValues: Record<string, any>) => {
-    updateSelectedNodeProps(changedValues);
+    if (!selectedNode?.id) return;
+    dispatch(
+      componentTreeActions.updateNode({
+        id: selectedNode.id,
+        updates: { props: { ...selectedNode.props, ...changedValues } },
+      }),
+    );
   };
 
   const schemaMode = useMemo(() => {

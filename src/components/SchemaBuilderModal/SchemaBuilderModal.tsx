@@ -1,76 +1,48 @@
-import React, { useMemo, useRef, useEffect } from 'react';
-import { selectedNodeSelector, useBuilderStore } from '@/store/useBuilderStore';
-import { ProFieldValueType } from '@ant-design/pro-components';
-import { LeftOutlined } from '@ant-design/icons';
+import React, { useMemo } from 'react';
 import { Drawer, Button, message, Space, Input, Form, Row, Col, Typography, AutoComplete, Select, Divider, Checkbox } from 'antd';
-import { getRecommendedWidth, valueTypeOptions } from './getRecommendedWidth';
+import { selectEditingColumn, selectSchemaEditorVisible, selectSelectedNodeEntityTypeId, entityTypesSelectors } from '@/store/selectors';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { schemaEditorActions } from '@/store/slices/schemaEditorSlice';
+import { LeftOutlined } from '@ant-design/icons';
+import { valueTypeOptions } from './getRecommendedWidth';
 import RuleBuilder from '../RuleBuilder/RuleBuilder';
-import type { ProValueEnum } from '../ColumnSchemaEditorProps';
-import type { SchemaField, ProCommonColumn } from '@/types';
-import { useShallow } from 'zustand/react/shallow';
+import type { ProCommonColumn } from '@/types';
+import { makeIdCreator } from '@/store/slices/makeIdCreator';
+import { useAutoFillByDataIndex } from './useAutoFillByDataIndex';
 
 interface SchemaBuilderModalProps {
   title?: string;
   schemaMode?: 'table' | 'form' | 'description';
 }
 
-const createProCommonColumnFromSchemeField = (field: SchemaField): ProCommonColumn => {
-  const result: ProCommonColumn = {
-    title: field.title ?? '',
-    dataIndex: field.key ?? '',
-    key: field.key,
-    valueType: (field.valueType || 'text') as ProFieldValueType,
-    width: getRecommendedWidth(field.valueType || 'text'),
-    hideInSearch: !field.isFilterable,
-  };
-
-  if (field.valueType === 'enum') {
-    result.valueType = 'select';
-    if (field.extra?.options && Array.isArray(field.extra?.options)) {
-      result.valueEnum = field.extra.options.reduce((acc: ProValueEnum, option: any) => {
-        const key = String(option.value ?? option.id);
-        acc[key] = {
-          text: option.label ?? String(option.value ?? option.id),
-          status: option.status,
-          color: option.color,
-        };
-        return acc;
-      }, {} as ProValueEnum);
-    }
-  }
-
-  return result;
-};
+const columnIdCreator = makeIdCreator('column');
 
 const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({ schemaMode = 'table' }) => {
-  const editingColumn = useBuilderStore.use.editingColumn();
-  const schemaEditorVisible = useBuilderStore.use.schemaEditorVisible();
-  const closeSchemaEditor = useBuilderStore.use.closeSchemaEditor();
-  const selectedNode = useBuilderStore(selectedNodeSelector);
-  const entityTypeId = selectedNode?.props?.entityTypeId as string;
-  const selectedNodeColumns = selectedNode?.props?.columns || [];
-  const entityFields = useBuilderStore(useShallow(state => state.entityType.byId[entityTypeId]?.fields || []));
+  const dispatch = useAppDispatch();
+  const editingColumn = useAppSelector(selectEditingColumn);
+  const schemaEditorVisible = useAppSelector(selectSchemaEditorVisible);
+  const selectedNodeEntityTypeId = useAppSelector(selectSelectedNodeEntityTypeId);
+  const entityFields = useAppSelector(state => entityTypesSelectors.selectById(state, selectedNodeEntityTypeId)?.fields || []);
 
-  const [form] = Form.useForm<ProCommonColumn>();
+  const [form] = Form.useForm<Pick<ProCommonColumn, 'title' | 'dataIndex' | 'valueType' | 'width' | 'hideInSearch'>>();
+
+  useAutoFillByDataIndex(form, entityFields);
+
   const handleSaveField = async () => {
     try {
       const values = await form.validateFields();
-      useBuilderStore.getState().applyColumnChanges(values);
-      closeSchemaEditor();
+      dispatch(schemaEditorActions.finishSchemaChanges({ ...values, key: editingColumn?.key ?? columnIdCreator() }));
       message.success('保存成功');
     } catch (err) {
-      debugger
       message.error('存在未完成或不合法的配置，请检查表单');
     }
   };
 
-  const drawerTitle =
-    editingColumn?.key && selectedNodeColumns.find((f: ProCommonColumn) => f.key === editingColumn.key) ? '编辑字段' : '添加字段';
+  const drawerTitle = editingColumn?.key ? '编辑字段' : '添加字段';
 
-  const entityFieldMap = useMemo(() => {
-    const arr = (entityFields || []).map(f => [f.key, f] as [string, SchemaField]);
-    return new Map<string, SchemaField>(arr);
-  }, [entityFields]);
+  const showInSearchValue = Form.useWatch('showInSearch', form);
+  const hideInFormValue = Form.useWatch('hideInForm', form);
+  const showFormItemAndFieldProps = schemaMode === 'table' ? Boolean(showInSearchValue) : !Boolean(hideInFormValue);
 
   const entityFieldOptions = useMemo(
     () =>
@@ -80,44 +52,26 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({ schemaMode = 't
     [entityFields]
   );
 
-  const showInSearchValue = Form.useWatch('showInSearch', form);
-  const hideInFormValue = Form.useWatch('hideInForm', form);
-  const showFormItemAndFieldProps = schemaMode === 'table' ? Boolean(showInSearchValue) : !Boolean(hideInFormValue);
+  const initFormValues = useMemo(() => editingColumn ?? {}, [editingColumn]);
 
-  const prevDataIndexRef = useRef<string>();
-  const dataIndexValue = Form.useWatch('dataIndex', form);
+  const onClose = () => dispatch(schemaEditorActions.closeSchemaEditor())
 
-  useEffect(() => {
-    if (dataIndexValue && dataIndexValue !== prevDataIndexRef.current) {
-      prevDataIndexRef.current = dataIndexValue;
-      const matchedField = entityFieldMap.get(dataIndexValue);
-      if (!matchedField) return;
-      form.setFieldsValue(createProCommonColumnFromSchemeField(matchedField));
-    }
-  }, [dataIndexValue, entityFieldMap, editingColumn, form]);
-
-  const initFormValues = useMemo(() => {
-    if (!editingColumn) return {};
-    return editingColumn;
-  }, [editingColumn]);
-
-  // 编辑器模式
   return (
     <Drawer
       open={schemaEditorVisible}
       width="700px"
       closeIcon={<LeftOutlined />}
       title={drawerTitle}
-      onClose={closeSchemaEditor}
+      onClose={onClose}
+      destroyOnClose
       extra={
         <Button type="primary" onClick={handleSaveField}>
-          {' '}
           完成
         </Button>
       }
     >
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        <Form form={form} layout="vertical" onFinish={handleSaveField} initialValues={initFormValues}>
+        <Form form={form} layout="vertical" onFinish={handleSaveField} clearOnDestroy initialValues={initFormValues}>
           <Typography.Title level={5} id="base-form-group">
             基础
           </Typography.Title>
@@ -207,22 +161,3 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({ schemaMode = 't
 };
 
 export default SchemaBuilderModal;
-
-type ValueEnumListItem = {
-  id: string;
-  value?: string | number;
-  label?: string;
-  status?: string;
-  color?: string;
-};
-
-const valueEnumToList = (valueEnum?: ProValueEnum): ValueEnumListItem[] => {
-  if (!valueEnum) return [];
-  return Object.entries(valueEnum).map(([value, meta]) => ({
-    id: String(value),
-    value,
-    label: meta?.text,
-    status: meta?.status,
-    color: meta?.color,
-  }));
-};

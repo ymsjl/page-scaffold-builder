@@ -3,25 +3,22 @@ import { Button, Drawer, message, Modal, Space, Tag } from 'antd';
 import type { ProColumns } from '@ant-design/pro-components';
 import { EditableProTable, ProForm, ProFormText } from '@ant-design/pro-components';
 import type { EntityType, SchemaField } from '@/types';
-import { useBuilderStore } from '@/store/useBuilderStore';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { entityTypesActions } from '@/store/slices/entityTypesSlice';
 
 import { EditOutlined, SaveOutlined, SettingOutlined, DeleteOutlined, PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import { SchemaFieldSchema } from '@/validation';
-import { useShallow } from 'zustand/react/shallow';
 
 export type EntityTypeDesignerPanelProps = {
   open: boolean;
-  onClose?: () => void;
 };
 
-export default function EntityTypeDesignerPanel({ open, onClose: onCloseProp }: EntityTypeDesignerPanelProps) {
+export default function EntityTypeDesignerPanel({ open }: EntityTypeDesignerPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fieldEditableKeys, setFieldEditableKeys] = useState<React.Key[]>([]);
-  const setEntityTypeDesignerPanelOpen = useBuilderStore.use.setEntityTypeDesignerPanelOpen();
-  const setEditingEntityType = useBuilderStore.use.setEditingEntityType();
+  const dispatch = useAppDispatch();
 
-  const editingEntityType = useBuilderStore(useShallow(state => state.editingEntityType));
-  const setFieldsOfEditingEntityType = useBuilderStore.use.setFieldsOfEditingEntityType();
+  const editingEntityType = useAppSelector((s) => (s.entityTypes as any).editingEntityType);
 
   const [form] = ProForm.useForm<EntityType>();
 
@@ -55,11 +52,9 @@ export default function EntityTypeDesignerPanel({ open, onClose: onCloseProp }: 
   );
 
   const onClose = useCallback(() => {
-    setEntityTypeDesignerPanelOpen(false);
-    setEditingEntityType(null);
+    dispatch(entityTypesActions.closeDrawer());
     form.resetFields();
-    if (typeof onCloseProp === 'function') onCloseProp();
-  }, [setEntityTypeDesignerPanelOpen, setEditingEntityType, form, onCloseProp]);
+  }, [dispatch, form]);
 
   const handleSaveEntity = useCallback(() => {
     if (isTableEditing) {
@@ -72,12 +67,10 @@ export default function EntityTypeDesignerPanel({ open, onClose: onCloseProp }: 
       return;
     }
 
-    const values = form.getFieldsValue();
-    useBuilderStore.getState().upsertEntityType(values);
+    dispatch(entityTypesActions.finishEntityTypeChange(form.getFieldsValue()));
     message.success('已保存');
-    form.resetFields();
     onClose();
-  }, [editingId, isTableEditing, form, onClose]);
+  }, [editingId, onClose, isTableEditing, form]);
 
   const fieldTableColumns = useMemo<ProColumns<SchemaField>[]>(() => {
     return [
@@ -224,7 +217,7 @@ export default function EntityTypeDesignerPanel({ open, onClose: onCloseProp }: 
                   okButtonProps: { danger: true },
                   cancelText: '取消',
                   onOk: () => {
-                    useBuilderStore.getState().removeFieldsOfEditingEntityType(String(item.id));
+                    dispatch(entityTypesActions.removeFieldsOfEditingEntityType(String(item.id)));
                     message.success('已删除');
                   },
                 });
@@ -293,10 +286,7 @@ export default function EntityTypeDesignerPanel({ open, onClose: onCloseProp }: 
               columns={fieldTableColumns}
               tableLayout="fixed"
               value={editingEntityType?.fields}
-              onChange={(nextFields) => {
-                console.log('nextFields', nextFields)
-                setFieldsOfEditingEntityType(nextFields || []);
-              }}
+              onChange={(nextFields) => { dispatch(entityTypesActions.setFieldsOfEditingEntityType(nextFields || [])) }}
               search={false}
               options={false}
               ghost
