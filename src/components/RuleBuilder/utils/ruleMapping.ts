@@ -3,9 +3,11 @@ import dayjs from 'dayjs';
 
 export type AntdRule = Exclude<FormItemProps['rules'], undefined>[number];
 
-export type RuleNodeType = 'required' | 'length' | 'range' | 'pattern' | 'email' | 'phone' | 'enum' | 'dateMin' | 'dateMax' | 'dateSpan' | 'dateRange';
+export type RuleNodeType = 'required' | 'length' | 'range' | 'pattern' | 'email' | 'phone' | 'enum' | 'dateSpan' | 'dateRange' | 'singleDateRange';
 
 export type RuleNodeScope = 'form' | 'search' | 'both';
+
+export type RelativeDateSpec = { type: 'relative'; preset: 'today' | 'yesterday' | 'tomorrow'; offset?: number };
 
 export type RuleNodeParams = {
   // operator: defines comparison type for range-like rules
@@ -16,9 +18,9 @@ export type RuleNodeParams = {
   pattern?: string;
   enum?: Array<string | number>;
   valueType?: 'number' | 'string' | 'array' | 'date';
-  // date-specific
-  minDate?: string;
-  maxDate?: string;
+  // date-specific: min/max can be absolute YYYY-MM-DD or RelativeDateSpec
+  minDate?: string | RelativeDateSpec;
+  maxDate?: string | RelativeDateSpec;
   minSpan?: number; // days
   maxSpan?: number; // days
 };
@@ -82,6 +84,25 @@ const parsePattern = (pattern?: string) => {
   }
 };
 
+// Resolve either an absolute YYYY-MM-DD string or a RelativeDateSpec to a dayjs object (startOf day)
+function resolveDateSpec(spec?: string | RelativeDateSpec) {
+  if (!spec) return undefined;
+  if (typeof spec === 'string') {
+    const d = dayjs(spec);
+    return d.isValid() ? d.startOf('day') : undefined;
+  }
+  if (spec.type === 'relative') {
+    const base = dayjs().startOf('day');
+    let d = base;
+    if (spec.preset === 'today') d = base;
+    else if (spec.preset === 'yesterday') d = base.add(-1, 'day');
+    else if (spec.preset === 'tomorrow') d = base.add(1, 'day');
+    if (spec.offset) d = d.add(spec.offset, 'day');
+    return d.startOf('day');
+  }
+  return undefined;
+}
+
 const isPhonePattern = (pattern?: RegExp) => {
   if (!pattern) return false;
   return (
@@ -114,6 +135,12 @@ const buildDefaultMessage = (node: RuleNode) => {
       }
       return '长度不符合要求';
     case 'range':
+      if (params?.valueType === 'date') {
+        if (params?.minDate && params?.maxDate) return `日期需在 ${stringifyDateSpec(params.minDate)} - ${stringifyDateSpec(params.maxDate)} 之间`;
+        if (params?.minDate) return `日期需不早于 ${stringifyDateSpec(params.minDate)}`;
+        if (params?.maxDate) return `日期需不晚于 ${stringifyDateSpec(params.maxDate)}`;
+        return '日期不符合要求';
+      }
       if (min !== undefined && max !== undefined) {
         return `范围需在 ${min}-${max} 之间`;
       }
@@ -130,10 +157,7 @@ const buildDefaultMessage = (node: RuleNode) => {
       return '邮箱格式不正确';
     case 'phone':
       return '手机号格式不正确';
-    case 'dateMin':
-      return '日期早于允许范围';
-    case 'dateMax':
-      return '日期晚于允许范围';
+
     case 'dateSpan':
       return '日期跨度不符合要求';
     case 'dateRange':
@@ -147,6 +171,18 @@ const buildDefaultMessage = (node: RuleNode) => {
 };
 
 export const getDefaultRuleMessage = (node: RuleNode) => buildDefaultMessage(node);
+
+// helper to display date spec (absolute or relative) in messages
+function stringifyDateSpec(s?: string | RelativeDateSpec) {
+  if (!s) return '';
+  if (typeof s === 'string') return s;
+  if (s.type === 'relative') {
+    if (s.preset === 'today') return '今天' + (s.offset ? ` ${s.offset > 0 ? `+${s.offset}` : s.offset}天` : '');
+    if (s.preset === 'yesterday') return '昨天' + (s.offset ? ` ${s.offset > 0 ? `+${s.offset}` : s.offset}天` : '');
+    if (s.preset === 'tomorrow') return '明天' + (s.offset ? ` ${s.offset > 0 ? `+${s.offset}` : s.offset}天` : '');
+  }
+  return '';
+}
 
 export const rulesToNodes = (rules: AntdRule[] = []): RuleNode[] => {
   return rules.reduce<RuleNode[]>((acc, rule, index) => {
@@ -258,6 +294,21 @@ export const nodesToRules = (nodes: RuleNode[] = []): AntdRule[] => {
             message,
           };
         case 'range':
+          if (node.params?.valueType === 'date') {
+            return {
+              validator: async (_rule: any, value: any): Promise<void> => {
+                if (!value) return Promise.resolve();
+                const v = dayjs(value);
+                if (!v.isValid()) return Promise.reject(message);
+                const min = resolveDateSpec(node.params?.minDate);
+                const max = resolveDateSpec(node.params?.maxDate);
+                if (min && min.isValid() && v.isBefore(min, 'day')) return Promise.reject(message);
+                if (max && max.isValid() && v.isAfter(max, 'day')) return Promise.reject(message);
+                return Promise.resolve();
+              },
+            };
+          }
+
           return {
             type: node.params.valueType ?? 'number',
             min: node.params.min,
@@ -287,30 +338,7 @@ export const nodesToRules = (nodes: RuleNode[] = []): AntdRule[] => {
             pattern: DEFAULT_PHONE_PATTERN,
             message,
           };
-        case 'dateMin':
-          return {
-            validator: async (_rule: any, value: any): Promise<void> => {
-              if (!value) return Promise.resolve();
-              const v = dayjs(value);
-              if (!v.isValid()) return Promise.reject(message);
-              const min = dayjs(node.params?.minDate);
-              if (!min.isValid()) return Promise.resolve();
-              if (v.isBefore(min, 'day')) return Promise.reject(message);
-              return Promise.resolve();
-            },
-          };
-        case 'dateMax':
-          return {
-            validator: async (_rule: any, value: any): Promise<void> => {
-              if (!value) return Promise.resolve();
-              const v = dayjs(value);
-              if (!v.isValid()) return Promise.reject(message);
-              const max = dayjs(node.params?.maxDate);
-              if (!max.isValid()) return Promise.resolve();
-              if (v.isAfter(max, 'day')) return Promise.reject(message);
-              return Promise.resolve();
-            },
-          };
+
         case 'dateSpan':
           return {
             validator: async (_rule: any, value: any): Promise<void> => {
@@ -332,8 +360,8 @@ export const nodesToRules = (nodes: RuleNode[] = []): AntdRule[] => {
               if (!value) return Promise.resolve();
               const v = dayjs(value);
               if (!v.isValid()) return Promise.reject(message);
-              const min = node.params?.minDate ? dayjs(node.params.minDate) : undefined;
-              const max = node.params?.maxDate ? dayjs(node.params.maxDate) : undefined;
+              const min = resolveDateSpec(node.params?.minDate);
+              const max = resolveDateSpec(node.params?.maxDate);
               if (min && min.isValid() && v.isBefore(min, 'day')) return Promise.reject(message);
               if (max && max.isValid() && v.isAfter(max, 'day')) return Promise.reject(message);
               return Promise.resolve();

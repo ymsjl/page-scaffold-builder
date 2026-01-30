@@ -2,8 +2,9 @@ import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type {
   AntdRule,
   RuleNode,
+  RuleNodeParams,
 } from "@/components/RuleBuilder/utils/ruleMapping";
-import { nodesToRules, rulesToNodes } from "@/components/RuleBuilder/utils/ruleMapping";
+import { getDefaultRuleMessage, nodesToRules, rulesToNodes } from "@/components/RuleBuilder/utils/ruleMapping";
 import { RootState } from "../store";
 
 export type RuleBuilderState = {
@@ -16,12 +17,34 @@ const initialState: RuleBuilderState = {
   selectedId: null,
 };
 
+// Normalize legacy nodes (e.g., dateMin/dateMax) into current node types
+const normalizeNodes = (nodes: RuleNode[]) => {
+  return nodes.map((n) => {
+    const t = (n as any).type;
+    if (t === 'dateMin') {
+      return {
+        ...n,
+        type: 'range',
+        params: { ...(n.params || {}), valueType: 'date', minDate: n.params?.minDate },
+      } as RuleNode;
+    }
+    if (t === 'dateMax') {
+      return {
+        ...n,
+        type: 'range',
+        params: { ...(n.params || {}), valueType: 'date', maxDate: n.params?.maxDate },
+      } as RuleNode;
+    }
+    return n;
+  });
+};
+
 const slice = createSlice({
   name: "ruleBuilder",
   initialState,
   reducers: {
     setNodes(state, action: PayloadAction<RuleNode[]>) {
-      state.nodes = action.payload;
+      state.nodes = normalizeNodes(action.payload);
     },
     setSelectedRuleItemId(state, action: PayloadAction<string | null>) {
       state.selectedId = action.payload;
@@ -39,6 +62,13 @@ const slice = createSlice({
       state.nodes = state.nodes.map((n) =>
         n.id === action.payload.id ? action.payload : n,
       );
+    },
+    updateNodeParams(state, action: PayloadAction<{ id: string; params: RuleNodeParams }>) {
+      const { id, params } = action.payload;
+      const targetNode = state.nodes.find((n) => n.id === id);
+      if (!targetNode) return;
+      Object.assign(targetNode.params, {}, params);
+      targetNode.message = targetNode.message || getDefaultRuleMessage(targetNode);
     },
     deleteNode(state, action: PayloadAction<string>) {
       state.nodes = state.nodes.filter((n) => n.id !== action.payload);
@@ -69,7 +99,7 @@ const slice = createSlice({
     },
     // optional: replace nodes directly (used by some flows)
     replaceNodes(state, action: PayloadAction<RuleNode[]>) {
-      state.nodes = action.payload;
+      state.nodes = normalizeNodes(action.payload);
     },
   },
 });

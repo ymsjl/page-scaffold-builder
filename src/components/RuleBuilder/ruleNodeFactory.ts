@@ -3,7 +3,8 @@ import type { RuleNode, RuleNodeType } from './utils/ruleMapping';
 
 export const createNodeId = () => `rule_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-export function createNodeByType(type: RuleNodeType): RuleNode {
+// Accept optional params override so callers can create nodes with specific options (e.g., date range as single-date range)
+export function createNodeByType(type: RuleNodeType, opts?: Partial<Record<string, any>>): RuleNode {
   const params: Record<string, any> = (() => {
     switch (type) {
       case 'length':
@@ -14,10 +15,7 @@ export function createNodeByType(type: RuleNodeType): RuleNode {
         return { pattern: '^[a-zA-Z0-9_]+$' };
       case 'enum':
         return { enum: ['A', 'B'] };
-      case 'dateMin':
-        return { minDate: '' };
-      case 'dateMax':
-        return { maxDate: '' };
+      // Keep span and dateRange as-is
       case 'dateSpan':
         return { minSpan: undefined, maxSpan: undefined, operator: 'between' };
       case 'dateRange':
@@ -27,11 +25,13 @@ export function createNodeByType(type: RuleNodeType): RuleNode {
     }
   })();
 
+  const mergedParams = { ...params, ...(opts || {}) };
+
   return {
     id: createNodeId(),
     type,
     enabled: true,
-    params,
-    message: getDefaultRuleMessage({ id: 'temp', type, enabled: true, params, message: '' }),
+    params: mergedParams,
+    message: getDefaultRuleMessage({ id: 'temp', type, enabled: true, params: mergedParams, message: '' }),
   } as RuleNode;
 }
