@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import DateControl, { DateHelp } from './DateControl';
+import DateControl, { DateHelp } from './ruleEditors/DateControl';
 
 describe('DateControl exports', () => {
   it('exports a DateControl function', () => {

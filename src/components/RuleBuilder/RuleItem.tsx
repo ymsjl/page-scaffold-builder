@@ -1,15 +1,14 @@
 import React, { memo, useCallback, useMemo } from "react";
 import { Card, Space, Typography } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import { getDefaultRuleMessage } from "./utils/ruleMapping";
 import { useAppDispatch } from "@/store/hooks";
 import { ruleBuilderActions } from "@/store/slices/ruleBuilderSlice";
 import type { RuleNode } from "./utils/ruleMapping";
 import { getNodeTitle } from "./utils";
 import LengthRuleEditor from "./ruleEditors/LengthRuleEditor";
 import PatternRuleEditor from "./ruleEditors/PatternRuleEditor";
-import DateRangeRuleEditor from "./ruleEditors/DateRangeRuleEditor";
 import NumericRangeEditor from "./ruleEditors/NumericRangeEditor";
+import DateRangeEditor from "./ruleEditors/DateRangeEditor";
 
 type RuleItemProps = {
   node: RuleNode;
@@ -42,6 +41,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
     [dispatch, id],
   );
 
+  console.log('type', type)
   const renderEditor = () => {
     switch (type) {
       case "length":
@@ -51,7 +51,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
       case "pattern":
         return <PatternRuleEditor params={params} updateParams={updateParams} />;
       case "dateRange":
-        return <DateRangeRuleEditor params={params} updateParams={updateParams} />;
+        return <DateRangeEditor params={params} updateParams={updateParams} />;
       default:
         return null;
     }

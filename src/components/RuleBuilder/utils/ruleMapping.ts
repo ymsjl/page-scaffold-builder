@@ -3,7 +3,15 @@ import dayjs from 'dayjs';
 
 export type AntdRule = Exclude<FormItemProps['rules'], undefined>[number];
 
-export type RuleNodeType = 'required' | 'length' | 'range' | 'pattern' | 'email' | 'phone' | 'enum' | 'dateSpan' | 'dateRange' | 'singleDateRange';
+export enum RuleNodeType {
+  Required = 0, // required
+  TextLength = 1, // 文本长度
+  TextRegexPattern = 2, // 正则表达式
+  NumericRange = 3, // 数值范围
+  Decimal = 4, // 浮点数，保留小数位数
+  DateRange = 5, // 日期范围
+  DateRangeSpan = 6,
+}
 
 export type RuleNodeScope = 'form' | 'search' | 'both';
 

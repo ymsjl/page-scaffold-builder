@@ -9,64 +9,57 @@ import { useAppDispatch } from '@/store/hooks';
 import { ruleBuilderActions } from '@/store/slices/ruleBuilderSlice';
 import { createNodeByType } from "./ruleNodeFactory";
 import { PlusOutlined } from "@ant-design/icons";
+import { RuleTemplate } from "./RuleParamsDateSchema";
 
-const RULE_LIBRARY: Array<{
-  type: string;
-  name: string;
-  description: string;
-  applicableTo: string[];
-}> = [
-    {
-      type: "required",
-      name: "必填",
-      description: "字段不能为空",
-      applicableTo: ["all"],
-    },
-    {
-      type: "length",
-      name: "字符串长度",
-      description: "限制长度范围",
-      applicableTo: ["text", "textarea", "password"],
-    },
-    {
-      type: "range",
-      name: "数字范围",
-      description: "限制数值范围",
-      applicableTo: ["digit", "money", "percent"],
-    },
-    {
-      type: "pattern",
-      name: "正则表达式",
-      description: "正则表达式校验",
-      applicableTo: ["text", "textarea", "password"],
-    },
-    {
-      type: "singleDateRange",
-      name: "单日日期限制",
-      description: "对单个日期限制最早/最晚（支持相对日期）",
-      applicableTo: ["date", "dateTime"],
-    },
-    {
-      type: "dateRange",
-      name: "日期范围",
-      description: "限制日期范围（开始/结束）",
-      applicableTo: ["date", "dateTime"],
-    },
-    {
-      type: "dateSpan",
-      name: "日期跨度",
-      description: "限制日期范围跨度（天数）",
-      applicableTo: ["dateRange"],
-    },
-  ];
 
-function RuleCard({
-  rule,
-  onAdd,
-}: {
-  rule: { type: string; name: string; description: string };
-  onAdd: (type: string) => void;
-}) {
+const RULE_LIBRARY: RuleTemplate[] = [
+  {
+    type: "required",
+    name: "必填",
+    description: "字段不能为空",
+    applicableTo: ["all"],
+  },
+  {
+    type: "length",
+    name: "字符串长度",
+    description: "限制长度范围",
+    applicableTo: ["text", "textarea", "password"],
+  },
+  {
+    type: "range",
+    name: "数字范围",
+    description: "限制数值范围",
+    applicableTo: ["digit", "money", "percent"],
+  },
+  {
+    type: "pattern",
+    name: "正则表达式",
+    description: "正则表达式校验",
+    applicableTo: ["text", "textarea", "password"],
+  },
+  {
+    type: "singleDateRange",
+    name: "单日日期限制",
+    description: "对单个日期限制最早/最晚（支持相对日期）",
+    applicableTo: ["date", "dateTime"],
+  },
+  {
+    type: "dateRange",
+    name: "日期范围",
+    description: "限制日期范围（开始/结束）",
+    applicableTo: ["date", "dateTime", "dateRange"],
+  },
+  {
+    type: "dateSpan",
+    name: "日期跨度",
+    description: "限制日期范围跨度（天数）",
+    applicableTo: ["dateRange"],
+  },
+];
+
+function RuleCard({ rule, }: { rule: RuleTemplate }) {
+  const dispatch = useAppDispatch();
+  const onAdd = (type: string) => dispatch(ruleBuilderActions.addNode(createNodeByType(type as any)));
   return (
     <Card size="small" style={{ width: 200 }}>
       <Space direction="vertical" style={{ width: "100%" }} size={4}>
@@ -98,7 +91,6 @@ export default function RuleLibrary({ fieldType }: { fieldType?: string }) {
       item.applicableTo.includes("all") || item.applicableTo.includes(fieldType)
     );
   });
-  const dispatch = useAppDispatch();
   return (
     <Swiper
       direction="horizontal"
@@ -113,10 +105,7 @@ export default function RuleLibrary({ fieldType }: { fieldType?: string }) {
     >
       {items.map((rule) => (
         <SwiperSlide key={rule.type} style={{ width: "auto" }}>
-          <RuleCard
-            rule={rule}
-            onAdd={(type) => dispatch(ruleBuilderActions.addNode(createNodeByType(type as any)))}
-          />
+          <RuleCard rule={rule} />
         </SwiperSlide>
       ))}
     </Swiper>
