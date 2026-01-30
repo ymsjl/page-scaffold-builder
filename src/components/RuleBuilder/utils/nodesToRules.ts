@@ -127,7 +127,6 @@ export const nodesToRules = (nodes: RuleNode[] = []): AntdRule[] => {
           return { validator, message } as AntdRule;
         }
       } catch (error) {
-        debugger;
       }
       return {} as AntdRule;
     })

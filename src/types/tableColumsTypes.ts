@@ -20,6 +20,7 @@ export const ProCommonColumnSchema = z.object({
     ProValueEnumSchema
   ).optional(),
   formItemProps: FormItemPropsSchema.optional(),
+  fieldProps: z.any().optional(),
 });
 export type ProCommonColumn = z.infer<typeof ProCommonColumnSchema>;
 export type ColumnSchema = ProCommonColumn;

@@ -12,6 +12,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> = 
     defaultProps: {
       headerTitle: '示例表格',
       search: false,
+      ignoreRules: false,
     },
     propsTypes: {
       entityTypeId: {

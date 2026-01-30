@@ -31,6 +31,7 @@ import { useAutoFillByDataIndex } from "./useAutoFillByDataIndex";
 import RuleLibrary from "../RuleBuilder/RuleLibrary";
 import RuleCanvas from "../RuleBuilder/RuleCanvas";
 import RulePreview from "../RuleBuilder/RulePreview";
+import { selectCurrentColumnProps } from "@/store/slices/ruleBuilderSlice";
 
 interface SchemaBuilderModalProps {
   title?: string;
@@ -45,9 +46,11 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
   const dispatch = useAppDispatch();
   const editingColumn = useAppSelector(selectEditingColumn);
   const schemaEditorVisible = useAppSelector(selectSchemaEditorVisible);
+  const currentColumnProps = useAppSelector(selectCurrentColumnProps);
   const selectedNodeEntityTypeId = useAppSelector(
     selectSelectedNodeEntityTypeId,
   );
+
   const entityFields = useAppSelector(
     (state) =>
       entityTypesSelectors.selectById(state, selectedNodeEntityTypeId)
@@ -58,7 +61,13 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
     Form.useForm<
       Pick<
         ProCommonColumn,
-        "title" | "dataIndex" | "valueType" | "width" | "hideInSearch"
+        | "title"
+        | "dataIndex"
+        | "valueType"
+        | "width"
+        | "hideInSearch"
+        | "formItemProps"
+        | "fieldProps"
       >
     >();
 
@@ -66,10 +75,18 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
 
   const handleSaveField = async () => {
     try {
-      const values = await form.validateFields();
+      const { formItemProps, fieldProps, ...values } =
+        await form.validateFields();
+      console.log(currentColumnProps);
+      const {
+        formItemProps: currentFormItemProps,
+        fieldProps: currentFieldProps,
+      } = currentColumnProps;
       dispatch(
         schemaEditorActions.finishSchemaChanges({
           ...values,
+          formItemProps: { ...currentFormItemProps, ...formItemProps },
+          fieldProps: { ...currentFieldProps, ...fieldProps },
           key: editingColumn?.key ?? makeColumnId(),
         }),
       );

@@ -80,7 +80,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
     }
 
     return (
-      <Component {...node.props} key={node.id}>
+      <Component {...node.props} key={node.id} ignoreRules={true}>
         {node.props.children}
       </Component>
     );

@@ -35,7 +35,10 @@ export const RULE_LIBRARY: RuleTemplate[] = [
     description: "限制日期范围（开始/结束）",
     applicableTo: ["date", "dateTime", "dateRange"],
     defaultParams: {
-      minDate: undefined,
+      minDate: {
+        preset: RelativeDatePresets.Today,
+        offset: -30,
+      },
       maxDate: {
         preset: RelativeDatePresets.Today,
         offset: 0,
