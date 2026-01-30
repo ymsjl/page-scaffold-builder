@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeOperatorParams, getNodeTitle, UI_PATTERN_PRESETS } from './utils';
+import { computeOperatorParams, UI_PATTERN_PRESETS } from './utils';
 
 describe('RuleBuilder utils', () => {
   it('UI_PATTERN_PRESETS includes expected keys', () => {
@@ -9,11 +9,6 @@ describe('RuleBuilder utils', () => {
     expect(keys).toContain('custom');
   });
 
-  it('getNodeTitle returns localized titles', () => {
-    expect(getNodeTitle({ type: 'required' } as any)).toBe('必填');
-    expect(getNodeTitle({ type: 'length' } as any)).toBe('文本长度');
-    expect(getNodeTitle({ type: 'pattern' } as any)).toBe('正则表达式');
-  });
 
   it('computeOperatorParams handles eq', () => {
     const params = { min: 1, max: 3 };

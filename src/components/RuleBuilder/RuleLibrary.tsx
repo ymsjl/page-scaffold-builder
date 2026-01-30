@@ -5,61 +5,14 @@ import { FreeMode, Mousewheel, Scrollbar } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/scrollbar";
-import { useAppDispatch } from '@/store/hooks';
-import { ruleBuilderActions } from '@/store/slices/ruleBuilderSlice';
-import { createNodeByType } from "./ruleNodeFactory";
+import { useAppDispatch } from "@/store/hooks";
+import { ruleBuilderActions } from "@/store/slices/ruleBuilderSlice";
 import { PlusOutlined } from "@ant-design/icons";
 import { RuleTemplate } from "./RuleParamsDateSchema";
+import { RULE_LIBRARY } from "./RULE_LIBRARY";
 
-
-const RULE_LIBRARY: RuleTemplate[] = [
-  {
-    type: "required",
-    name: "必填",
-    description: "字段不能为空",
-    applicableTo: ["all"],
-  },
-  {
-    type: "length",
-    name: "字符串长度",
-    description: "限制长度范围",
-    applicableTo: ["text", "textarea", "password"],
-  },
-  {
-    type: "range",
-    name: "数字范围",
-    description: "限制数值范围",
-    applicableTo: ["digit", "money", "percent"],
-  },
-  {
-    type: "pattern",
-    name: "正则表达式",
-    description: "正则表达式校验",
-    applicableTo: ["text", "textarea", "password"],
-  },
-  {
-    type: "singleDateRange",
-    name: "单日日期限制",
-    description: "对单个日期限制最早/最晚（支持相对日期）",
-    applicableTo: ["date", "dateTime"],
-  },
-  {
-    type: "dateRange",
-    name: "日期范围",
-    description: "限制日期范围（开始/结束）",
-    applicableTo: ["date", "dateTime", "dateRange"],
-  },
-  {
-    type: "dateSpan",
-    name: "日期跨度",
-    description: "限制日期范围跨度（天数）",
-    applicableTo: ["dateRange"],
-  },
-];
-
-function RuleCard({ rule, }: { rule: RuleTemplate }) {
+function RuleCard({ ruleTemplate }: { ruleTemplate: RuleTemplate }) {
   const dispatch = useAppDispatch();
-  const onAdd = (type: string) => dispatch(ruleBuilderActions.addNode(createNodeByType(type as any)));
   return (
     <Card size="small" style={{ width: 200 }}>
       <Space direction="vertical" style={{ width: "100%" }} size={4}>
@@ -70,15 +23,19 @@ function RuleCard({ rule, }: { rule: RuleTemplate }) {
             justifyContent: "space-between",
           }}
         >
-          <Typography.Text strong>{rule.name}</Typography.Text>
+          <Typography.Text strong>{ruleTemplate.name}</Typography.Text>
           <Button
             size="small"
             type="text"
             icon={<PlusOutlined />}
-            onClick={() => onAdd(rule.type)}
+            onClick={() =>
+              dispatch(ruleBuilderActions.addNodeFromTemplate(ruleTemplate))
+            }
           />
         </div>
-        <Typography.Text type="secondary">{rule.description}</Typography.Text>
+        <Typography.Text type="secondary">
+          {ruleTemplate.description}
+        </Typography.Text>
       </Space>
     </Card>
   );
@@ -105,10 +62,9 @@ export default function RuleLibrary({ fieldType }: { fieldType?: string }) {
     >
       {items.map((rule) => (
         <SwiperSlide key={rule.type} style={{ width: "auto" }}>
-          <RuleCard rule={rule} />
+          <RuleCard ruleTemplate={rule} />
         </SwiperSlide>
       ))}
     </Swiper>
   );
 }
-

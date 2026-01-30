@@ -1,11 +1,13 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type {
-  AntdRule,
-  RuleNode,
-  RuleNodeParams,
-} from "@/components/RuleBuilder/utils/ruleMapping";
-import { getDefaultRuleMessage, nodesToRules, rulesToNodes } from "@/components/RuleBuilder/utils/ruleMapping";
+import type { RuleNodeParams } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { buildDefaultMessage } from "@/components/RuleBuilder/utils/ruleMapping";
+import { nodesToRules } from "@/components/RuleBuilder/utils/nodesToRules";
 import { RootState } from "../store";
+import { RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { makeIdCreator } from "./makeIdCreator";
+
+export const makeRuleId = makeIdCreator("rule");
 
 export type RuleBuilderState = {
   nodes: RuleNode[];
@@ -17,58 +19,42 @@ const initialState: RuleBuilderState = {
   selectedId: null,
 };
 
-// Normalize legacy nodes (e.g., dateMin/dateMax) into current node types
-const normalizeNodes = (nodes: RuleNode[]) => {
-  return nodes.map((n) => {
-    const t = (n as any).type;
-    if (t === 'dateMin') {
-      return {
-        ...n,
-        type: 'range',
-        params: { ...(n.params || {}), valueType: 'date', minDate: n.params?.minDate },
-      } as RuleNode;
-    }
-    if (t === 'dateMax') {
-      return {
-        ...n,
-        type: 'range',
-        params: { ...(n.params || {}), valueType: 'date', maxDate: n.params?.maxDate },
-      } as RuleNode;
-    }
-    return n;
-  });
-};
-
 const slice = createSlice({
   name: "ruleBuilder",
   initialState,
   reducers: {
     setNodes(state, action: PayloadAction<RuleNode[]>) {
-      state.nodes = normalizeNodes(action.payload);
+      state.nodes = action.payload;
     },
     setSelectedRuleItemId(state, action: PayloadAction<string | null>) {
       state.selectedId = action.payload;
     },
-    initFromRules(state, action: PayloadAction<AntdRule[]>) {
-      const rules = action.payload;
-      const nodes = rulesToNodes(rules);
-      state.nodes = nodes;
-      state.selectedId = nodes[0]?.id ?? null;
-    },
-    addNode(state, action: PayloadAction<RuleNode>) {
-      state.nodes.push(action.payload);
+    addNodeFromTemplate(state, action: PayloadAction<RuleTemplate>) {
+      const { type, defaultParams, name } = action.payload;
+      state.nodes.push({
+        id: makeRuleId(),
+        name,
+        type,
+        enabled: true,
+        params: defaultParams || {},
+        message: buildDefaultMessage({ type, params: defaultParams || {} }),
+      });
     },
     updateNode(state, action: PayloadAction<RuleNode>) {
       state.nodes = state.nodes.map((n) =>
         n.id === action.payload.id ? action.payload : n,
       );
     },
-    updateNodeParams(state, action: PayloadAction<{ id: string; params: RuleNodeParams }>) {
+    updateNodeParams(
+      state,
+      action: PayloadAction<{ id: string; params: RuleNodeParams }>,
+    ) {
       const { id, params } = action.payload;
       const targetNode = state.nodes.find((n) => n.id === id);
       if (!targetNode) return;
       Object.assign(targetNode.params, {}, params);
-      targetNode.message = targetNode.message || getDefaultRuleMessage(targetNode);
+      targetNode.message =
+        targetNode.message || buildDefaultMessage(targetNode);
     },
     deleteNode(state, action: PayloadAction<string>) {
       state.nodes = state.nodes.filter((n) => n.id !== action.payload);
@@ -99,23 +85,10 @@ const slice = createSlice({
     },
     // optional: replace nodes directly (used by some flows)
     replaceNodes(state, action: PayloadAction<RuleNode[]>) {
-      state.nodes = normalizeNodes(action.payload);
+      state.nodes = action.payload;
     },
   },
 });
-
-// Shared utilities
-const serializeRules = (rules: AntdRule[] = []) => {
-  const normalized = rules.map((rule) => {
-    if (typeof rule === "function") return { __fn: true } as any;
-    const { pattern, ...rest } = rule as any;
-    return {
-      ...rest,
-      pattern: pattern ? pattern.toString() : undefined,
-    } as any;
-  });
-  return JSON.stringify(normalized);
-};
 
 export const ruleBuilderActions = slice.actions;
 export default slice.reducer;

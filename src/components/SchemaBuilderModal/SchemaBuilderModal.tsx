@@ -31,12 +31,13 @@ import { useAutoFillByDataIndex } from "./useAutoFillByDataIndex";
 import RuleLibrary from "../RuleBuilder/RuleLibrary";
 import RuleCanvas from "../RuleBuilder/RuleCanvas";
 import RulePreview from "../RuleBuilder/RulePreview";
+
 interface SchemaBuilderModalProps {
   title?: string;
   schemaMode?: "table" | "form" | "description";
 }
 
-const columnIdCreator = makeIdCreator("column");
+const makeColumnId = makeIdCreator("column");
 
 const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
   schemaMode = "table",
@@ -69,7 +70,7 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
       dispatch(
         schemaEditorActions.finishSchemaChanges({
           ...values,
-          key: editingColumn?.key ?? columnIdCreator(),
+          key: editingColumn?.key ?? makeColumnId(),
         }),
       );
       message.success("保存成功");

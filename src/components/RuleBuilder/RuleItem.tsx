@@ -3,8 +3,8 @@ import { Card, Space, Typography } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import { useAppDispatch } from "@/store/hooks";
 import { ruleBuilderActions } from "@/store/slices/ruleBuilderSlice";
-import type { RuleNode } from "./utils/ruleMapping";
-import { getNodeTitle } from "./utils";
+import { RuleNodeType } from "./RuleParamsDateSchema";
+import { type RuleNode } from "./RuleParamsDateSchema";
 import LengthRuleEditor from "./ruleEditors/LengthRuleEditor";
 import PatternRuleEditor from "./ruleEditors/PatternRuleEditor";
 import NumericRangeEditor from "./ruleEditors/NumericRangeEditor";
@@ -41,16 +41,17 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
     [dispatch, id],
   );
 
-  console.log('type', type)
   const renderEditor = () => {
     switch (type) {
-      case "length":
+      case RuleNodeType.TextLength:
         return <LengthRuleEditor params={params} updateParams={updateParams} />;
-      case "range":
+      case RuleNodeType.NumericRange:
         return <NumericRangeEditor params={params} updateParams={updateParams} />;
-      case "pattern":
+      case RuleNodeType.TextRegexPattern:
         return <PatternRuleEditor params={params} updateParams={updateParams} />;
-      case "dateRange":
+      case RuleNodeType.DateRange:
+        return <DateRangeEditor params={params} updateParams={updateParams} />;
+        case RuleNodeType.DateRangeSpan:
         return <DateRangeEditor params={params} updateParams={updateParams} />;
       default:
         return null;
@@ -61,7 +62,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
     <Card
       size="small"
       style={style}
-      title={<Typography.Text strong>{getNodeTitle(node)}</Typography.Text>}
+      title={<Typography.Text strong>{node.name}</Typography.Text>}
       extra={
         <Space wrap>
           <button

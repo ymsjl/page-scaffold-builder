@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { Row, Col, InputNumber } from "antd";
 import OperatorSelect from "./OperatorSelect";
 import { computeOperatorParams, RANGE_OPTIONS, getRangeDefaultOperator } from "../utils";
-import { RuleNodeParams } from "../utils/ruleMapping";
+import { RuleNodeParams } from "../RuleParamsDateSchema";
 
 type Props = {
   params: Record<string, any>;

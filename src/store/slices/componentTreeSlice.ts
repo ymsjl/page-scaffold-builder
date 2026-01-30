@@ -3,7 +3,6 @@ import type { NormalizedComponentNode } from '@/types/Component';
 import type { ProCommonColumn } from '@/types';
 import { schemaEditorActions } from './schemaEditorSlice';
 import { ProCommonColumnSchema } from '@/types/tableColumsTypes';
-import { makeIdCreator } from './makeIdCreator';
 
 const adapter = createEntityAdapter<NormalizedComponentNode>({ selectId: (n) => n.id });
 

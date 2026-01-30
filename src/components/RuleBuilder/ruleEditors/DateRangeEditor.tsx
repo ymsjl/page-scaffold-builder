@@ -57,13 +57,13 @@ const DateRangeEditor: React.FC<Props> = React.memo(({ params, updateParams }) =
       }}
     >
       <ProFormItemRender name="operator" label={false}>
-        {(props: any) => (
+        {(props) => (
           <OperatorSelect options={DATE_RANGE_OPTIONS} value={props.value} onChange={props.onChange} />
         )}
       </ProFormItemRender>
 
       <ProFormDependency name={["operator"]}>
-        {({ operator }: any) => {
+        {({ operator }) => {
           switch (operator) {
             case "eq":
               return (

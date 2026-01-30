@@ -3,7 +3,7 @@ import type { EntityType, SchemaField } from '@/types';
 import { uiActions } from './uiSlice';
 import { makeIdCreator } from './makeIdCreator';
 
-export const entityTypeIdCreator = makeIdCreator('et');
+export const makeEntityTypeId = makeIdCreator('et');
 
 const adapter = createEntityAdapter<EntityType>({ selectId: (e) => e.id });
 
@@ -41,7 +41,7 @@ const slice = createSlice({
       adapter.upsertOne(state, {
         ...state.editingEntityType,
         ...action.payload,
-        id: state.editingEntityType?.id ?? entityTypeIdCreator(),
+        id: state.editingEntityType?.id ?? makeEntityTypeId(),
       });
       state.isDrawerOpen = false;
     },

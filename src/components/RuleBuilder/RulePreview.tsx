@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { Card, Input, Space, Typography } from "antd";
-import type { AntdRule } from "./utils/ruleMapping";
-import { DEFAULT_PHONE_PATTERN } from "./utils/ruleMapping";
+import type { AntdRule } from "./utils/nodesToRules";
 import { useAppSelector } from "@/store/hooks";
 import { selectCurrentColumnRules } from "@/store/slices/ruleBuilderSlice";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEFAULT_PHONE_PATTERN = /^[+]?[0-9]{7,15}$/;
 
 const isRuleConfig = (
   rule: AntdRule,

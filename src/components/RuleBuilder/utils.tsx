@@ -1,5 +1,5 @@
 import { PATTERN_PRESETS as VALIDATE_PRESETS } from "../../utils/validate";
-import type { RuleNode } from "./utils/ruleMapping";
+import type { RuleNode } from "./RuleParamsDateSchema";
 
 // Hoist static presets to avoid recreating them on each render
 export const UI_PATTERN_PRESETS = [
@@ -34,25 +34,6 @@ export const UI_PATTERN_PRESETS = [
   },
   { key: "custom", label: "自定义", value: "" },
 ];
-
-export const getNodeTitle = (node: RuleNode) => {
-  switch (node.type) {
-    case "required":
-      return "必填";
-    case "length":
-      return "文本长度";
-    case "range":
-      return "数字范围";
-    case "pattern":
-      return "正则表达式";
-    case "dateRange":
-      return "日期范围";
-    case "dateSpan":
-      return "日期跨度";
-    default:
-      return node.type;
-  }
-};
 
 // Small helpers to keep rendering logic readable and memoizable
 export const getLengthDefaultOperator = (params: any) => {
