@@ -5,7 +5,7 @@ export const SchemaFieldSchema = z.object({
   key: z.string(),
   title: z.string().optional(),
   valueType: z.string(),
-  required: z.boolean().optional(),
+  isNullable: z.boolean().optional(),
   isUnique: z.boolean().optional(),
   isFilterable: z.boolean().optional(),
   isAutoGenerate: z.boolean().optional(),

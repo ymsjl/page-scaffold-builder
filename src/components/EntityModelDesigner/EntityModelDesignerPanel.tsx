@@ -151,15 +151,13 @@ export default function EntityModelDesignerPanel() {
       },
       {
         title: "可为 null",
-        dataIndex: "__nullable",
+        dataIndex: "isNullable",
         valueType: "switch",
         width: 96,
         fieldProps: {
           checkedChildren: "是",
           unCheckedChildren: "否",
         },
-        render: (_, item) =>
-          item.required ? <Tag color="red">否</Tag> : <Tag>是</Tag>,
       },
       {
         title: "可筛选",
@@ -169,9 +167,6 @@ export default function EntityModelDesignerPanel() {
         fieldProps: {
           checkedChildren: "是",
           unCheckedChildren: "否",
-        },
-        render: (_, item) => {
-          return item.isFilterable ? <Tag color="blue">是</Tag> : <Tag>否</Tag>;
         },
       },
 
@@ -324,7 +319,7 @@ export default function EntityModelDesignerPanel() {
                           key: "",
                           title: "",
                           valueType: "text",
-                          required: false,
+                          isNullable: false,
                           isUnique: false,
                           isFilterable: true,
                           isAutoGenerate: false,
