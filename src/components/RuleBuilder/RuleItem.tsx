@@ -24,14 +24,14 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node }) {
 
   const updateParams = useCallback(
     (next: Record<string, any>) =>
-      dispatch(ruleBuilderActions.updateNodeParams({ id, params: next })),
+      dispatch(ruleBuilderActions.updateRuleNodeParams({ id, params: next })),
     [id, dispatch],
   );
 
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      dispatch(ruleBuilderActions.deleteNode(id));
+      dispatch(ruleBuilderActions.deleteRuleNode(id));
     },
     [dispatch, id],
   );

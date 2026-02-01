@@ -38,7 +38,7 @@ const slice = createSlice({
           } as RuleNode),
       });
     },
-    updateNodeParams(
+    updateRuleNodeParams(
       state,
       action: PayloadAction<{ id: string; params: RuleNodeParams }>,
     ) {
@@ -52,10 +52,10 @@ const slice = createSlice({
           .getStrategyForNodeOrThrow(targetNode)
           .buildDefaultMessage(targetNode);
     },
-    deleteNode(state, action: PayloadAction<string>) {
+    deleteRuleNode(state, action: PayloadAction<string>) {
       state.nodes = state.nodes.filter((n) => n.id !== action.payload);
     },
-    resetState(state) {
+    resetRuleEditorState(state) {
       Object.assign(state, initialState);
     },
   },

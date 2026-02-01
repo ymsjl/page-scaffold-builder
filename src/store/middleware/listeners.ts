@@ -10,6 +10,6 @@ listenerMiddleware.startListening({
     Boolean(previousState?.schemaEditor?.schemaEditorVisible) &&
     !currentState.schemaEditor.schemaEditorVisible,
   effect: async (_action, api) => {
-    api.dispatch(ruleBuilderActions.resetState());
+    api.dispatch(ruleBuilderActions.resetRuleEditorState());
   },
 });

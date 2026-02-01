@@ -115,7 +115,7 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
       return;
     }
     if (lastValueTypeRef.current !== valueTypeValue) {
-      dispatch(ruleBuilderActions.resetState());
+      dispatch(ruleBuilderActions.resetRuleEditorState());
     }
     lastValueTypeRef.current = valueTypeValue;
   }, [valueTypeValue, schemaEditorVisible, dispatch]);
