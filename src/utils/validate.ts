@@ -4,6 +4,7 @@ export const PATTERN_PRESETS = {
   email: { pattern: /^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$/, message: 'Please Enter Valid Email' },
   alpha: { pattern: /^[A-Za-z]+$/, message: 'Please Enter Letters Only' },
   numeric: { pattern: /^\d+$/, message: 'Please Enter Digits Only' },
+  alphanumeric: { pattern: /^[A-Za-z0-9]+$/, message: 'Please Enter Letters and Digits Only' },
 };
 
 export const validatePatternFactory = (pattern: RegExp | string, msgKey?: string) => {

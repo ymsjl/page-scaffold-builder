@@ -12,7 +12,7 @@ export default memo(function RuleCanvas() {
         <Space direction="vertical" style={{ width: "100%" }} size={8}>
           {nodes.length === 0 ? (
             <Typography.Text type="secondary">
-              暂无规则（请从左侧添加）
+              暂无规则（请从上方添加）
             </Typography.Text>
           ) : (
             nodes.map((node) => <RuleItem key={node.id} node={node} />)

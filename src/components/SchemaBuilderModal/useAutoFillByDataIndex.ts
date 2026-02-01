@@ -47,7 +47,7 @@ export const useAutoFillByDataIndex = (
   form: FormInstance<
     Pick<
       ProCommonColumn,
-      "title" | "dataIndex" | "valueType" | "width" | "hideInSearch"
+      "title" | "dataIndex" | "valueType" | "width" | "hideInSearch" | "formItemProps"
     >
   >,
   entityFields: SchemaField[],
@@ -67,7 +67,15 @@ export const useAutoFillByDataIndex = (
       prevDataIndexRef.current = dataIndexValue;
       const matchedField = entityFieldMap.get(dataIndexValue);
       if (dataIndexValue !== "" && !matchedField) return;
-      form.setFieldsValue(createProCommonColumnFromSchemeField(matchedField));
+      const formItemProps = form.getFieldValue("formItemProps") || {};
+      const nextColumn = createProCommonColumnFromSchemeField(matchedField);
+      form.setFieldsValue({
+        ...nextColumn,
+        formItemProps: {
+          ...(nextColumn.formItemProps ?? {}),
+          ...formItemProps,
+        },
+      });
     }
   }, [dataIndexValue, entityFieldMap, form]);
 };

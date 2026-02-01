@@ -13,7 +13,6 @@ import {
   Select,
   Divider,
   Checkbox,
-  Card,
 } from "antd";
 import {
   selectEditingColumn,

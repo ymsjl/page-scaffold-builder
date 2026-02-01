@@ -3,7 +3,7 @@ import { Card, Space } from "antd";
 import { useAppSelector } from "@/store/hooks";
 import {
   ruleDescriptorsToRules,
-  selectCurrentColumnProps
+  selectCurrentColumnProps,
 } from "@/store/slices/selectRuleBuilder";
 import { BetaSchemaForm } from "@ant-design/pro-components";
 import type { RuleDescriptor } from "@/components/RuleBuilder/strategies";
@@ -29,11 +29,20 @@ const RulePreview: React.FC<{
   }, [columnProps]);
   return (
     <Card size="small" title="规则预览">
-      <Space direction="vertical" style={{ width: "100%" }}>
-        <BetaSchemaForm
-          columns={[{ ...previewColumn, name, valueType, title: label }]}
-        />
-      </Space>
+      <BetaSchemaForm
+        columns={[
+          {
+            ...previewColumn,
+            name,
+            valueType,
+            title: label,
+            fieldProps: {
+              ...(previewColumn?.fieldProps ?? {}),
+              style: { width: "100%" },
+            },
+          },
+        ]}
+      />
     </Card>
   );
 });

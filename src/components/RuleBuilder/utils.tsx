@@ -1,5 +1,4 @@
 import { PATTERN_PRESETS as VALIDATE_PRESETS } from "../../utils/validate";
-import type { RuleNode } from "./RuleParamsDateSchema";
 
 // Hoist static presets to avoid recreating them on each render
 export const UI_PATTERN_PRESETS = [
@@ -31,6 +30,12 @@ export const UI_PATTERN_PRESETS = [
     key: "numeric",
     label: "数字",
     value: VALIDATE_PRESETS?.numeric?.pattern?.source ?? "^\\d+$",
+  },
+
+  {
+    key: "alphanumeric",
+    label: "字母和数字",
+    value: VALIDATE_PRESETS?.alphanumeric?.pattern?.source ?? "^[A-Za-z0-9]+$",
   },
   { key: "custom", label: "自定义", value: "" },
 ];
