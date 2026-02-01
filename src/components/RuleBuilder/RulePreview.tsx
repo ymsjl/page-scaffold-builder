@@ -3,8 +3,8 @@ import { Card, Space } from "antd";
 import { useAppSelector } from "@/store/hooks";
 import {
   ruleDescriptorsToRules,
-  selectCurrentColumnProps,
-} from "@/store/slices/ruleBuilderSlice";
+  selectCurrentColumnProps
+} from "@/store/slices/selectRuleBuilder";
 import { BetaSchemaForm } from "@ant-design/pro-components";
 import type { RuleDescriptor } from "@/components/RuleBuilder/strategies";
 

@@ -8,8 +8,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['entityTypes', 'schemaEditor', 'ui'], // 根据需要调整要持久化的 slice
-  // whitelist: ['componentTree', 'entityTypes', 'schemaEditor', 'ui'], // 根据需要调整要持久化的 slice
+  whitelist: ['entityModel', 'schemaEditor'], // 根据需要调整要持久化的 slice
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

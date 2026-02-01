@@ -18,8 +18,8 @@ import {
 import {
   selectEditingColumn,
   selectSchemaEditorVisible,
-  selectSelectedNodeEntityTypeId,
-  entityTypesSelectors,
+  selectSelectedNodeEntityModelId,
+  entityModelSelectors,
 } from "@/store/selectors";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { schemaEditorActions } from "@/store/slices/schemaEditorSlice";
@@ -33,8 +33,8 @@ import RuleCanvas from "../RuleBuilder/RuleCanvas";
 import RulePreview from "../RuleBuilder/RulePreview";
 import {
   ruleBuilderActions,
-  selectCurrentColumnProps,
 } from "@/store/slices/ruleBuilderSlice";
+import { selectCurrentColumnProps } from "@/store/slices/selectRuleBuilder";
 
 interface SchemaBuilderModalProps {
   title?: string;
@@ -50,13 +50,13 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
   const editingColumn = useAppSelector(selectEditingColumn);
   const schemaEditorVisible = useAppSelector(selectSchemaEditorVisible);
   const currentColumnProps = useAppSelector(selectCurrentColumnProps);
-  const selectedNodeEntityTypeId = useAppSelector(
-    selectSelectedNodeEntityTypeId,
+  const selectedNodeEntityModelId = useAppSelector(
+    selectSelectedNodeEntityModelId,
   );
 
   const entityFields = useAppSelector(
     (state) =>
-      entityTypesSelectors.selectById(state, selectedNodeEntityTypeId)
+      entityModelSelectors.selectById(state, selectedNodeEntityModelId)
         ?.fields || [],
   );
 

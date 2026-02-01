@@ -1,7 +1,7 @@
 import { createSelector } from "reselect";
 import type { RootState } from "./storeTypes";
 import { componentTreeAdapter } from "./slices/componentTreeSlice";
-import { entityTypesAdapter } from "./slices/entityTypesSlice";
+import { entityModelAdapter } from "./slices/entityModelSlice";
 
 export const selectComponentTreeState = (state: RootState) =>
   state.componentTree;
@@ -15,9 +15,9 @@ export const selectSelectedNode = createSelector(
   [componentNodesSelectors.selectEntities, selectSelectedNodeId],
   (entities, id) => (id ? entities?.[id] : null),
 );
-export const selectSelectedNodeEntityTypeId = createSelector(
+export const selectSelectedNodeEntityModelId = createSelector(
   [selectSelectedNode],
-  (node) => node?.props?.entityTypeId || null,
+  (node) => node?.props?.entityModelId || null,
 );
 
 export const selectSchemaEditor = (state: RootState) => state.schemaEditor;
@@ -25,22 +25,24 @@ export const selectEditingColumn = createSelector(
   selectSchemaEditor,
   (state) => state.editingColumn,
 );
-
-export const selectUI = (state: RootState) => state.ui;
 export const selectSchemaEditorVisible = createSelector(
   selectSchemaEditor,
   (state) => state.schemaEditorVisible,
 );
 
-export const selectEntityTypesState = (state: RootState) => state.entityTypes;
-export const entityTypesSelectors = entityTypesAdapter.getSelectors(
-  selectEntityTypesState,
+export const selectEntityModelState = (state: RootState) => state.entityModel;
+export const selectEditingEntityModel = createSelector(
+  selectEntityModelState,
+  (state) => state.editingEntityModel,
+);
+export const entityModelSelectors = entityModelAdapter.getSelectors(
+  selectEntityModelState,
 );
 
 export const selectSelectedNodeEntityFields = createSelector(
-  [selectSelectedNodeEntityTypeId, entityTypesSelectors.selectEntities],
-  (entityTypeId, entities) => {
-    if (!entityTypeId) return [];
-    return entities?.[entityTypeId]?.fields || [];
+  [selectSelectedNodeEntityModelId, entityModelSelectors.selectEntities],
+  (entityModelId, entities) => {
+    if (!entityModelId) return [];
+    return entities?.[entityModelId]?.fields || [];
   },
 );

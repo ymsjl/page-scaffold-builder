@@ -10,7 +10,7 @@ import {
 import { Space } from "antd";
 import SchemaBuilderModal from "../SchemaBuilderModal/SchemaBuilderModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectSelectedNode, entityTypesSelectors } from "@/store/selectors";
+import { selectSelectedNode, entityModelSelectors } from "@/store/selectors";
 import { componentTreeActions } from "@/store/slices/componentTreeSlice";
 import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
@@ -20,7 +20,7 @@ const PropertyPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const selectedNode = useAppSelector(selectSelectedNode);
   const selectedComponentType = selectedNode?.type;
-  const entityTypes = useAppSelector(entityTypesSelectors.selectAll);
+  const entityModels = useAppSelector(entityModelSelectors.selectAll);
   const handleValuesChange = (changedValues: Record<string, any>) => {
     if (!selectedNode?.id) return;
     dispatch(
@@ -45,9 +45,9 @@ const PropertyPanel: React.FC = () => {
       getComponentPrototype(selectedComponentType)?.propsTypes ?? {},
     ).map((item) => ({
       ...item,
-      ...(item.name === "entityTypeId"
+      ...(item.name === "entityModelId"
         ? {
-            options: entityTypes.map((et) => ({
+            options: entityModels.map((et) => ({
               name: et.name,
               value: et.id,
               label: et.name,
@@ -55,7 +55,7 @@ const PropertyPanel: React.FC = () => {
           }
         : {}),
     }));
-  }, [selectedComponentType, entityTypes]);
+  }, [selectedComponentType, entityModels]);
 
   if (!selectedNode) {
     const emptyStyle: React.CSSProperties = {

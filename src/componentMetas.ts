@@ -15,11 +15,11 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> = 
       ignoreRules: false,
     },
     propsTypes: {
-      entityTypeId: {
-        name: 'entityTypeId',
+    entityModelId: {
+        name: 'entityModelId',
         type: 'select',
-        label: '实体类型',
-        description: '表格对应的数据实体类型',
+        label: '实体模型',
+        description: '表格对应的数据实体模型',
         defaultValue: '',
       },
       columns: {

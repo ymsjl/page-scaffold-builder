@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ruleNodesToColumnProps } from './ruleBuilderSlice';
+import { ruleNodesToColumnProps } from "./selectRuleBuilder";
 import { RuleNodeType } from '@/components/RuleBuilder/RuleParamsDateSchema';
 
 describe('ruleNodesToColumnProps', () => {

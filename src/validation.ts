@@ -16,7 +16,7 @@ export const SchemaFieldSchema = z.object({
 
 export type SchemaField = z.infer<typeof SchemaFieldSchema>;
 
-export const EntityTypeSchema = z
+export const EntityModelSchema = z
   .object({
     id: z.string(),
     name: z.string().min(1, 'Name is required'),
@@ -36,7 +36,7 @@ export const EntityTypeSchema = z
     }
   });
 
-export type EntityType = z.infer<typeof EntityTypeSchema>;
+export type EntityModel = z.infer<typeof EntityModelSchema>;
 
 export const PropAttributeSchema = z.object({
   name: z.string(),

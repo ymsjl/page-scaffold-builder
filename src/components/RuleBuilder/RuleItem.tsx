@@ -9,19 +9,17 @@ import { ruleNodeContext } from "./strategies";
 
 type RuleItemProps = {
   node: RuleNode;
-  isSelected: boolean;
 };
 
-const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelected }) {
+const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node }) {
   const dispatch = useAppDispatch();
   const { id, enabled, params, type } = node;
 
   const style = useMemo<React.CSSProperties>(
     () => ({
       background: enabled ? undefined : "#fafafa",
-      border: isSelected ? "1px solid #1677ff" : undefined,
     }),
-    [enabled, isSelected],
+    [enabled],
   );
 
   const updateParams = useCallback(
@@ -38,7 +36,9 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
     [dispatch, id],
   );
 
-  const Editor = ruleNodeContext.getStrategyOrThrow(type as RuleNodeType).Editor;
+  const Editor = ruleNodeContext.getStrategyOrThrow(
+    type as RuleNodeType,
+  ).Editor;
 
   return (
     <Card
@@ -66,7 +66,9 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
             {node.message || "未设置提示"}
           </Typography.Text>
 
-          {Editor ? <Editor params={params} updateParams={updateParams} /> : null}
+          {Editor ? (
+            <Editor params={params} updateParams={updateParams} />
+          ) : null}
         </div>
       </Space>
     </Card>
