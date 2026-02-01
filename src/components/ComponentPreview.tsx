@@ -73,13 +73,15 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
   };
 
   const renderComponent = () => {
+    const defaultProps = componentPrototype.defaultProps || {};
     if (typeof Component === "string") {
       const htmlElement = Component as keyof JSX.IntrinsicElements;
       const { children, ...props } = node.props;
+      console.log(node.props);
       return React.createElement(
         htmlElement,
         {
-          ...(componentPrototype.defaultProps || {}),
+          ...defaultProps,
           ...props,
           key: node.id,
         },
@@ -88,7 +90,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
     }
 
     return (
-      <Component {...node.props} key={node.id}>
+      <Component {...defaultProps} {...node.props} key={node.id}>
         {node.props.children}
       </Component>
     );

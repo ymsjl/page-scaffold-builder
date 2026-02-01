@@ -1,7 +1,7 @@
 import type React from "react";
 import { PropAttribute } from "@/types";
 
-export const COMPONENT_TYPES = ['Table', 'Container'] as const;
+export const COMPONENT_TYPES = ["Container", "Table", "Form"] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 export type ComponentId = string;
@@ -47,7 +47,8 @@ export interface ComponentPrototype {
   propsTypes?: Record<string, PropAttribute>;
 }
 
-export interface NormalizedComponentNode<P = Record<string, any>> extends Omit<ComponentInstance<P>, 'children'> {
+export interface NormalizedComponentNode<P = Record<string, any>>
+  extends Omit<ComponentInstance<P>, "children"> {
   parentId?: ComponentId | null;
   childrenIds: ComponentId[];
 }
@@ -56,4 +57,3 @@ export interface NormalizedComponentTree {
   nodesById: Record<ComponentId, NormalizedComponentNode>;
   rootIds: ComponentId[];
 }
-
