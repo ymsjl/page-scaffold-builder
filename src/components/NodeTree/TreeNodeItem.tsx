@@ -1,26 +1,33 @@
-import React from 'react';
+import React from "react";
 import type { ComponentInstance, ComponentType } from "@/types";
-import { PlusOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { uiActions } from '@/store/slices/uiSlice';
-import { componentTreeActions } from '@/store/slices/componentTreeSlice';
-import { availableComponents } from '@/componentMetas';
+import { PlusOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { componentTreeActions } from "@/store/slices/componentTreeSlice";
+import { availableComponents } from "@/componentMetas";
 
 interface TreeNodeItemProps {
   node: ComponentInstance;
   level: number;
+  showAddDropdownNodeId: string | null;
+  setShowAddDropdownNodeId: (id: string | null) => void;
 }
 
-const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
+const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
+  node,
+  level,
+  showAddDropdownNodeId,
+  setShowAddDropdownNodeId,
+}) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editingName, setEditingName] = React.useState(node.name);
 
   const dispatch = useAppDispatch();
-  const showAddDropdown = useAppSelector((s) => (s.ui as any).showAddDropdownNodeId === node.id);
-  const isSelected = useAppSelector((s) => (s.componentTree as any).selectedNodeId === node.id);
+  const isAddDropdownVisible = showAddDropdownNodeId === node.id;
+  const isSelected = useAppSelector(
+    (s) => (s.componentTree as any).selectedNodeId === node.id,
+  );
 
-  const showAddDropdownAction = (id: string | null) => dispatch(uiActions.setShowAddDropdownNodeId(id));
-  const addNewNode = (parentId: string | null, type: string) => {
+  const addNewNode = (parentId: string | null, type: ComponentType) => {
     const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     dispatch(
       componentTreeActions.addNode({
@@ -28,14 +35,16 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
         parentId,
         name: `New ${type}`,
         type,
-        isContainer: type === 'Container',
+        isContainer: type === "Container",
         props: {},
         childrenIds: [],
       }),
     );
   };
-  const updateNode = (id: string, updates: Partial<any>) => dispatch(componentTreeActions.updateNode({ id, updates }));
-  const removeNode = (id: string) => dispatch(componentTreeActions.removeNode(id));
+  const updateNode = (id: string, updates: Partial<any>) =>
+    dispatch(componentTreeActions.updateNode({ id, updates }));
+  const removeNode = (id: string) =>
+    dispatch(componentTreeActions.removeNode(id));
 
   React.useEffect(() => {
     if (!isEditing) {
@@ -45,7 +54,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
 
   const handleAddChildClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    showAddDropdownAction(node.id);
+    setShowAddDropdownNodeId(node.id);
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -62,12 +71,12 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       if (editingName && editingName.trim()) {
         updateNode(node.id, { name: editingName.trim() });
       }
       setIsEditing(false);
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       setIsEditing(false);
       setEditingName(node.name);
     }
@@ -84,80 +93,84 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
     e.stopPropagation();
     if (!node?.id) {
       // eslint-disable-next-line no-console
-      console.warn('[TreeNodeItem] handleSelectComponent: missing node id', node);
+      console.warn(
+        "[TreeNodeItem] handleSelectComponent: missing node id",
+        node,
+      );
       return;
     }
 
     addNewNode(node.id, type);
-    showAddDropdownAction(null);
+    dispatch(componentTreeActions.expandNode(node.id));
+    setShowAddDropdownNodeId(null);
   };
 
   const styles: { [key: string]: React.CSSProperties } = {
     treeNodeItem: {
-      display: 'flex',
-      alignItems: 'center',
-      padding: '8px',
-      cursor: 'pointer',
-      transition: 'background-color 0.2s',
-      backgroundColor: isSelected ? '#e6f7ff' : 'transparent',
+      display: "flex",
+      alignItems: "center",
+      padding: "8px",
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+      backgroundColor: isSelected ? "#e6f7ff" : "transparent",
     },
     treeNodeItemHover: {},
     treeNodeContent: {
       flex: 1,
-      display: 'flex',
-      alignItems: 'center',
+      display: "flex",
+      alignItems: "center",
     },
     treeNodeLabel: {
-      fontSize: '14px',
-      color: '#333',
-      userSelect: 'none',
+      fontSize: "14px",
+      color: "#333",
+      userSelect: "none",
     },
     treeNodeInput: {
-      padding: '4px 8px',
-      border: '1px solid #d9d9d9',
-      borderRadius: '2px',
-      outline: 'none',
-      fontSize: '14px',
+      padding: "4px 8px",
+      border: "1px solid #d9d9d9",
+      borderRadius: "2px",
+      outline: "none",
+      fontSize: "14px",
     },
     treeNodeActions: {
-      display: 'flex',
-      gap: '4px',
-      alignItems: 'center',
+      display: "flex",
+      gap: "4px",
+      alignItems: "center",
     },
     treeNodeBtnWrapper: {
-      position: 'relative',
+      position: "relative",
     },
     treeNodeBtn: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '28px',
-      height: '28px',
-      border: 'none',
-      background: 'transparent',
-      cursor: 'pointer',
-      borderRadius: '4px',
-      transition: 'all 0.2s',
-      color: '#8c8c8c',
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "28px",
+      height: "28px",
+      border: "none",
+      background: "transparent",
+      cursor: "pointer",
+      borderRadius: "4px",
+      transition: "all 0.2s",
+      color: "#8c8c8c",
     },
     treeNodeDropdown: {
-      position: 'absolute',
-      top: '100%',
+      position: "absolute",
+      top: "100%",
       left: 0,
       zIndex: 1000,
-      background: 'white',
-      border: '1px solid #e8e8e8',
-      borderRadius: '4px',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-      minWidth: '150px',
-      maxHeight: '300px',
-      overflowY: 'auto',
+      background: "white",
+      border: "1px solid #e8e8e8",
+      borderRadius: "4px",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+      minWidth: "150px",
+      maxHeight: "300px",
+      overflowY: "auto",
     },
     dropdownItem: {
-      padding: '8px 12px',
-      cursor: 'pointer',
-      transition: 'background-color 0.2s',
-      fontSize: '14px',
+      padding: "8px 12px",
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+      fontSize: "14px",
     },
   };
 
@@ -170,7 +183,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
               type="text"
               style={styles.treeNodeInput}
               value={editingName}
-              onChange={e => setEditingName(e.target.value)}
+              onChange={(e) => setEditingName(e.target.value)}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
               autoFocus
@@ -178,7 +191,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
           ) : (
             <span
               style={styles.treeNodeLabel}
-              onDoubleClick={e => {
+              onDoubleClick={(e) => {
                 e.stopPropagation();
                 setIsEditing(true);
                 setEditingName(node.name);
@@ -190,20 +203,32 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
         </div>
         <div style={styles.treeNodeActions}>
           {isEditing ? (
-            <button style={styles.treeNodeBtn} onClick={handleSaveEdit} type="button">
+            <button
+              style={styles.treeNodeBtn}
+              onClick={handleSaveEdit}
+              type="button"
+            >
               <CheckOutlined />
             </button>
           ) : (
             <>
               {node.isContainer && (
                 <div style={styles.treeNodeBtnWrapper}>
-                  <button style={styles.treeNodeBtn} onClick={handleAddChildClick} type="button">
+                  <button
+                    style={styles.treeNodeBtn}
+                    onClick={handleAddChildClick}
+                    type="button"
+                  >
                     <PlusOutlined />
                   </button>
-                  {showAddDropdown && (
+                  {isAddDropdownVisible && (
                     <div style={styles.treeNodeDropdown}>
-                      {availableComponents.map(comp => (
-                        <div key={comp.type} style={styles.dropdownItem} onClick={e => handleSelectComponent(e, comp.type)}>
+                      {availableComponents.map((comp) => (
+                        <div
+                          key={comp.type}
+                          style={styles.dropdownItem}
+                          onClick={(e) => handleSelectComponent(e, comp.type)}
+                        >
                           {comp.label}
                         </div>
                       ))}
@@ -211,7 +236,11 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, level }) => {
                   )}
                 </div>
               )}
-              <button style={styles.treeNodeBtn} onClick={handleDelete} type="button">
+              <button
+                style={styles.treeNodeBtn}
+                onClick={handleDelete}
+                type="button"
+              >
                 <DeleteOutlined />
               </button>
             </>

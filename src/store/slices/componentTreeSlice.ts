@@ -1,19 +1,31 @@
-import { createSlice, createEntityAdapter, PayloadAction } from '@reduxjs/toolkit';
-import type { NormalizedComponentNode } from '@/types/Component';
-import type { ProCommonColumn } from '@/types';
-import { schemaEditorActions } from './schemaEditorSlice';
-import { ProCommonColumnSchema } from '@/types/tableColumsTypes';
+import {
+  createSlice,
+  createEntityAdapter,
+  PayloadAction,
+} from "@reduxjs/toolkit";
+import type { NormalizedComponentNode } from "@/types/Component";
+import type { ProCommonColumn } from "@/types";
+import { schemaEditorActions } from "./schemaEditorSlice";
+import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
 
-const adapter = createEntityAdapter<NormalizedComponentNode>({ selectId: (n) => n.id });
+const adapter = createEntityAdapter<NormalizedComponentNode>({
+  selectId: (n) => n.id,
+});
 
 const slice = createSlice({
-  name: 'componentTree',
+  name: "componentTree",
   initialState: adapter.getInitialState({
     rootIds: [] as string[],
     selectedNodeId: null as string | null,
+    expandedKeys: [] as string[],
   }),
   reducers: {
-    addNode: (state, action: PayloadAction<NormalizedComponentNode & { parentId?: string | null }>) => {
+    addNode: (
+      state,
+      action: PayloadAction<
+        NormalizedComponentNode & { parentId?: string | null }
+      >,
+    ) => {
       const node = action.payload;
       adapter.addOne(state, node);
       if (node.parentId) {
@@ -36,7 +48,7 @@ const slice = createSlice({
           if (idx >= 0) {
             parent.childrenIds.splice(idx, 1);
           }
-        };
+        }
       } else {
         const idx = state.rootIds.indexOf(id);
         if (idx >= 0) {
@@ -51,7 +63,13 @@ const slice = createSlice({
       removeRecursively(id);
     },
 
-    updateNode: (state, action: PayloadAction<{ id: string; updates: Partial<NormalizedComponentNode> }>) => {
+    updateNode: (
+      state,
+      action: PayloadAction<{
+        id: string;
+        updates: Partial<NormalizedComponentNode>;
+      }>,
+    ) => {
       const { id, updates } = action.payload;
       adapter.updateOne(state, { id, changes: updates });
     },
@@ -60,67 +78,100 @@ const slice = createSlice({
       state.selectedNodeId = action.payload;
     },
 
-    upsertColumnForSelectedNode: (state, action: PayloadAction<ProCommonColumn>) => {
+    setExpandedKeys: (state, action: PayloadAction<string[]>) => {
+      state.expandedKeys = action.payload;
+    },
+
+    expandNode: (state, action: PayloadAction<string>) => {
+      const nodeId = action.payload;
+      if (!state.expandedKeys.includes(nodeId)) {
+        state.expandedKeys.push(nodeId);
+      }
+    },
+
+    upsertColumnForSelectedNode: (
+      state,
+      action: PayloadAction<ProCommonColumn>,
+    ) => {
       const selectedId = state.selectedNodeId;
       if (!selectedId) return;
-      const node = state.entities[selectedId] as NormalizedComponentNode<{ columns: ProCommonColumn[] }> | undefined;
+      const node = state.entities[selectedId] as
+        | NormalizedComponentNode<{ columns: ProCommonColumn[] }>
+        | undefined;
       if (!node) return;
-      const columns: ProCommonColumn[] = node.props?.columns ? [...node.props.columns] : [];
-      const idx = columns.findIndex((c) => c.key === (action.payload).key);
+      const columns: ProCommonColumn[] = node.props?.columns
+        ? [...node.props.columns]
+        : [];
+      const idx = columns.findIndex((c) => c.key === action.payload.key);
       if (idx >= 0) columns[idx] = action.payload;
       else columns.push(action.payload);
       node.props = { ...node.props, columns };
     },
 
     deleteColumnForSelectedNode: (state, action: PayloadAction<string>) => {
-      const { payload: targetKey } = action
+      const { payload: targetKey } = action;
       const selectedId = state.selectedNodeId;
       if (!selectedId) return;
-      const node = state.entities[selectedId] as NormalizedComponentNode<{ columns: ProCommonColumn[] }> | undefined;
+      const node = state.entities[selectedId] as
+        | NormalizedComponentNode<{ columns: ProCommonColumn[] }>
+        | undefined;
       if (!node) return;
-      const targetColumnIdx = (node.props?.columns ?? []).findIndex((c) => c.key === targetKey);
+      const targetColumnIdx = (node.props?.columns ?? []).findIndex(
+        (c) => c.key === targetKey,
+      );
       if (targetColumnIdx < 0) return;
       node.props.columns.splice(targetColumnIdx, 1);
     },
 
-    moveColumnForSelectedNode: (state, action: PayloadAction<{ from: number; to: number }>) => {
+    moveColumnForSelectedNode: (
+      state,
+      action: PayloadAction<{ from: number; to: number }>,
+    ) => {
       const { from, to } = action.payload;
       const selectedId = state.selectedNodeId;
       if (!selectedId) return;
-      const node = state.entities[selectedId] as NormalizedComponentNode<{ columns: ProCommonColumn[] }> | undefined;
+      const node = state.entities[selectedId] as
+        | NormalizedComponentNode<{ columns: ProCommonColumn[] }>
+        | undefined;
       if (!node) return;
       const columns: ProCommonColumn[] = node.props?.columns || [];
-      if (from < 0 || from >= columns.length || to < 0 || to >= columns.length) return;
+      if (from < 0 || from >= columns.length || to < 0 || to >= columns.length)
+        return;
       const [moved] = columns.splice(from, 1);
       columns.splice(to, 0, moved);
       node.props = { ...node.props, columns };
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(schemaEditorActions.finishSchemaChanges, (state, action) => {
-      const { payload: changes } = action;
-      if (!changes) return;
+    builder.addCase(
+      schemaEditorActions.finishSchemaChanges,
+      (state, action) => {
+        const { payload: changes } = action;
+        if (!changes) return;
 
-      const selectedId = state.selectedNodeId;
-      if (!selectedId) return;
-      const node = state.entities[selectedId] as NormalizedComponentNode<{ columns: ProCommonColumn[] }> | undefined;
-      if (!node) return;
+        const selectedId = state.selectedNodeId;
+        if (!selectedId) return;
+        const node = state.entities[selectedId] as
+          | NormalizedComponentNode<{ columns: ProCommonColumn[] }>
+          | undefined;
+        if (!node) return;
 
-      const columns = node.props?.columns;
-      if (!columns) {
-        const validatedChanges = ProCommonColumnSchema.parse(changes);
-        node.props.columns = [validatedChanges];
-      } else if (Array.isArray(columns)) {
-        const idx = columns.findIndex((c) => c.key === changes.key);
-        if (idx >= 0) {
-          Object.assign(columns[idx], changes);
-        } else {
+        const columns = node.props?.columns;
+        if (!columns) {
           const validatedChanges = ProCommonColumnSchema.parse(changes);
-          columns.push(validatedChanges);
+          node.props.columns = [validatedChanges];
+        } else if (Array.isArray(columns)) {
+          const idx = columns.findIndex((c) => c.key === changes.key);
+          if (idx >= 0) {
+            Object.assign(columns[idx], changes);
+          } else {
+            const validatedChanges = ProCommonColumnSchema.parse(changes);
+            columns.push(validatedChanges);
+          }
         }
-      }
-    });
-  }
+      },
+    );
+  },
 });
 
 export const componentTreeActions = slice.actions;

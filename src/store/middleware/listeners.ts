@@ -1,5 +1,5 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
-import type { AppDispatch, RootState } from "../store";
+import type { AppDispatch, RootState } from "../storeTypes";
 import { ruleBuilderActions } from "../slices/ruleBuilderSlice";
 
 export const listenerMiddleware =

@@ -1,7 +1,7 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RuleNodeParams } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { RootState } from "../store";
+import type { RootState } from "../storeTypes";
 import { RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import { makeIdCreator } from "./makeIdCreator";
 import { FormItemPropsZ } from "@/types/tableColumsTypes";
