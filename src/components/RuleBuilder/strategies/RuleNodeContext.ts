@@ -1,6 +1,6 @@
 import { RuleNode, RuleNodeType } from "../RuleParamsDateSchema";
 import { normalizeType } from "./utils";
-import type { AntdRule, RuleNodeStrategy } from "./types";
+import type { AntdRule, RuleDescriptor, RuleNodeStrategy } from "./types";
 
 export class RuleNodeContext {
   private registry: Record<RuleNodeType, RuleNodeStrategy>;
@@ -37,6 +37,20 @@ export class RuleNodeContext {
 
   toRule(node: RuleNode, message: string): AntdRule | null {
     const strategy = this.getStrategyForNodeOrThrow(node);
+    return strategy.toRule(node, message);
+  }
+
+  toRuleFromDescriptor(descriptor: RuleDescriptor): AntdRule | null {
+    const node: RuleNode = {
+      id: "rule_preview",
+      name: "",
+      type: descriptor.type,
+      enabled: true,
+      params: descriptor.params ?? {},
+      message: descriptor.message ?? "",
+    };
+    const strategy = this.getStrategyForNodeOrThrow(node);
+    const message = descriptor.message || strategy.buildDefaultMessage(node);
     return strategy.toRule(node, message);
   }
 

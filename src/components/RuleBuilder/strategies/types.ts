@@ -6,6 +6,7 @@ import {
 } from "../RuleParamsDateSchema";
 
 export type AntdRule = Exclude<FormItemProps["rules"], undefined>[number];
+export type RuleDescriptor = Pick<RuleNode, "type" | "params" | "message">;
 
 export type RuleEditorProps = {
   params: Record<string, any>;

@@ -4,9 +4,12 @@ import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import { RootState } from "../store";
 import { RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import { makeIdCreator } from "./makeIdCreator";
-import { FormItemProps } from "antd";
 import { FormItemPropsZ } from "@/types/tableColumsTypes";
-import { AntdRule, ruleNodeContext } from "@/components/RuleBuilder/strategies";
+import {
+  AntdRule,
+  RuleDescriptor,
+  ruleNodeContext,
+} from "@/components/RuleBuilder/strategies";
 
 export const makeRuleId = makeIdCreator("rule");
 
@@ -117,7 +120,7 @@ export const selectRuleNodes = createSelector(
 
 export const selectCurrentColumnRules = createSelector(
   selectRuleBuilder,
-  (ruleBuilder) => nodesToRules(ruleBuilder.nodes),
+  (ruleBuilder) => nodesToRuleDescriptors(ruleBuilder.nodes),
 );
 
 export const selectSelectedRuleItemId = createSelector(
@@ -132,8 +135,8 @@ export const ruleNodesToColumnProps = (
 
   const enabled = nodes.filter((n) => n.enabled);
 
-  const formItemProps: Partial<FormItemProps> = {};
-  const rules = nodesToRules(nodes);
+  const formItemProps: Partial<FormItemPropsZ> = {};
+  const rules = nodesToRuleDescriptors(nodes);
   if (rules && rules.length) formItemProps.rules = rules as any;
 
   const fieldProps: Record<string, any> = {};
@@ -153,14 +156,27 @@ export const selectCurrentColumnProps = createSelector(selectRuleNodes, (nodes) 
   ruleNodesToColumnProps(nodes),
 );
 
-export const nodesToRules = (nodes: RuleNode[] = []): AntdRule[] => nodes
-  .filter((node) => node.enabled)
-  .map((node) => {
-    try {
-      const strategy = ruleNodeContext.getStrategyForNodeOrThrow(node);
-      const message = node.message || strategy.buildDefaultMessage(node);
-      return strategy.toRule(node, message) ?? ({} as AntdRule);
-    } catch (error) { }
-    return {} as AntdRule;
-  })
-  .filter((rule) => Object.keys(rule).length > 0) as AntdRule[];
+export const nodesToRuleDescriptors = (
+  nodes: RuleNode[] = [],
+): RuleDescriptor[] =>
+  nodes
+    .filter((node) => node.enabled)
+    .map((node) => ({
+      type: node.type,
+      params: node.params ?? {},
+      message: node.message,
+    }));
+
+export const ruleDescriptorsToRules = (
+  descriptors: RuleDescriptor[] = [],
+): AntdRule[] =>
+  descriptors
+    .map((descriptor) => {
+      try {
+        return (
+          ruleNodeContext.toRuleFromDescriptor(descriptor) ?? ({} as AntdRule)
+        );
+      } catch (error) {}
+      return {} as AntdRule;
+    })
+    .filter((rule) => Object.keys(rule).length > 0) as AntdRule[];
