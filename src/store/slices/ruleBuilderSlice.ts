@@ -1,15 +1,12 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RuleNodeParams } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { buildDefaultMessage } from "@/components/RuleBuilder/utils/ruleMapping";
-import { nodesToRules } from "@/components/RuleBuilder/utils/nodesToRules";
 import { RootState } from "../store";
 import { RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import { makeIdCreator } from "./makeIdCreator";
 import { FormItemProps } from "antd";
 import { FormItemPropsZ } from "@/types/tableColumsTypes";
-import dayjs from "dayjs";
-import { RuleNodeType, RelativeDatePresets } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { AntdRule, ruleNodeContext } from "@/components/RuleBuilder/strategies";
 
 export const makeRuleId = makeIdCreator("rule");
 
@@ -41,7 +38,15 @@ const slice = createSlice({
         type,
         enabled: true,
         params: defaultParams || {},
-        message: buildDefaultMessage({ type, params: defaultParams || {} }),
+        message: ruleNodeContext
+          .getStrategyForNodeOrThrow({
+            type,
+            params: defaultParams || {},
+          } as RuleNode)
+          .buildDefaultMessage({
+            type,
+            params: defaultParams || {},
+          } as RuleNode),
       });
     },
     updateNode(state, action: PayloadAction<RuleNode>) {
@@ -58,7 +63,10 @@ const slice = createSlice({
       if (!targetNode) return;
       Object.assign(targetNode.params, {}, params);
       targetNode.message =
-        targetNode.message || buildDefaultMessage(targetNode);
+        targetNode.message ||
+        ruleNodeContext
+          .getStrategyForNodeOrThrow(targetNode)
+          .buildDefaultMessage(targetNode);
     },
     deleteNode(state, action: PayloadAction<string>) {
       state.nodes = state.nodes.filter((n) => n.id !== action.payload);
@@ -91,6 +99,9 @@ const slice = createSlice({
     replaceNodes(state, action: PayloadAction<RuleNode[]>) {
       state.nodes = action.payload;
     },
+    resetState(state) {
+      Object.assign(state, initialState);
+    }
   },
 });
 
@@ -127,80 +138,12 @@ export const ruleNodesToColumnProps = (
 
   const fieldProps: Record<string, any> = {};
 
-  const parseDateSpec = (spec: any) => {
-    if (!spec) return null;
-    if (typeof spec === "string") {
-      const d = dayjs(spec, "YYYY-MM-DD", true);
-      return d.isValid() ? d.startOf("day") : null;
-    }
-    if (typeof spec === "object") {
-      const presetRaw = (spec.preset || spec.type || "").toString();
-      const preset = presetRaw.toLowerCase();
-      let base: dayjs.Dayjs = dayjs();
-
-      if (preset === "today" || preset === RelativeDatePresets.Today.toLowerCase?.()) base = dayjs();
-      else if (preset === "yesterday") base = dayjs().add(-1, "day");
-      else if (preset === "tomorrow") base = dayjs().add(1, "day");
-      else if (preset === (RelativeDatePresets.LastDayOfMonth as any).toLowerCase?.()) base = dayjs().endOf("month");
-      else if (preset === (RelativeDatePresets.LastDayOfYear as any).toLowerCase?.()) base = dayjs().endOf("year");
-
-      if (typeof spec.offset === "number" && spec.offset !== 0) base = base.add(spec.offset, "day");
-
-      return base.startOf("day");
-    }
-
-    return null;
-  };
-
   for (const node of enabled) {
-    const { type, params = {} } = node;
-
-    if (type === RuleNodeType.TextLength) {
-      const { len, min, max } = params as any;
-      if (typeof len === "number") fieldProps.maxLength = len;
-      if (typeof max === "number") fieldProps.maxLength = Math.max(fieldProps.maxLength ?? -Infinity, max);
-      if (typeof min === "number") fieldProps.minLength = Math.min(fieldProps.minLength ?? min, min);
-    }
-
-    if (type === RuleNodeType.NumericRange) {
-      const { min, max } = params as any;
-      if (typeof min === "number") fieldProps.min = min;
-      if (typeof max === "number") fieldProps.max = max;
-    }
-
-    // if (type === RuleNodeType.Decimal) {
-    //   const prec = (params && (params.precision ?? params.decimals ?? params.scale)) as number | undefined;
-    //   if (typeof prec === "number" && prec >= 0) {
-    //     fieldProps.precision = prec;
-    //     fieldProps.step = Number((1 / Math.pow(10, prec)).toFixed(prec));
-    //   }
-    // }
-
-    if (type === RuleNodeType.TextRegexPattern) {
-      const { pattern } = params as any;
-      if (pattern) fieldProps.pattern = pattern;
-    }
-
-    if (type === RuleNodeType.DateRange) {
-      const { minDate, maxDate } = params as any;
-      const min = parseDateSpec(minDate);
-      const max = parseDateSpec(maxDate);
-      if (min) fieldProps.minDate = min.format("YYYY-MM-DD");
-      if (max) fieldProps.maxDate = max.format("YYYY-MM-DD");
-
-      fieldProps.disabledDate = (current: any) => {
-        if (!current) return false;
-        const d = dayjs(current);
-        if (!d.isValid()) return false;
-        if (min && d.isBefore(min, "day")) return true;
-        if (max && d.isAfter(max, "day")) return true;
-        return false;
-      };
-    }
+    ruleNodeContext.applyFieldProps(node, fieldProps);
   }
 
-  const result: { formItemProps?: FormItemPropsZ; fieldProps?: Record<string, any> } = {};
-  if (formItemProps.rules && formItemProps.rules.length > 0) result.formItemProps = formItemProps as any;
+  const result: { formItemProps?: FormItemPropsZ; fieldProps?: Record<string, any> } = { formItemProps: {}, fieldProps: {} };
+  if (formItemProps.rules && formItemProps.rules.length > 0) result.formItemProps = formItemProps as FormItemPropsZ;
   if (Object.keys(fieldProps).length > 0) result.fieldProps = fieldProps;
 
   return result;
@@ -209,3 +152,15 @@ export const ruleNodesToColumnProps = (
 export const selectCurrentColumnProps = createSelector(selectRuleNodes, (nodes) =>
   ruleNodesToColumnProps(nodes),
 );
+
+export const nodesToRules = (nodes: RuleNode[] = []): AntdRule[] => nodes
+  .filter((node) => node.enabled)
+  .map((node) => {
+    try {
+      const strategy = ruleNodeContext.getStrategyForNodeOrThrow(node);
+      const message = node.message || strategy.buildDefaultMessage(node);
+      return strategy.toRule(node, message) ?? ({} as AntdRule);
+    } catch (error) { }
+    return {} as AntdRule;
+  })
+  .filter((rule) => Object.keys(rule).length > 0) as AntdRule[];

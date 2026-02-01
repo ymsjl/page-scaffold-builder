@@ -5,10 +5,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { ruleBuilderActions } from "@/store/slices/ruleBuilderSlice";
 import { RuleNodeType } from "./RuleParamsDateSchema";
 import { type RuleNode } from "./RuleParamsDateSchema";
-import LengthRuleEditor from "./ruleEditors/LengthRuleEditor";
-import PatternRuleEditor from "./ruleEditors/PatternRuleEditor";
-import NumericRangeEditor from "./ruleEditors/NumericRangeEditor";
-import DateRangeEditor from "./ruleEditors/DateRangeEditor";
+import { ruleNodeContext } from "./strategies";
 
 type RuleItemProps = {
   node: RuleNode;
@@ -41,22 +38,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
     [dispatch, id],
   );
 
-  const renderEditor = () => {
-    switch (type) {
-      case RuleNodeType.TextLength:
-        return <LengthRuleEditor params={params} updateParams={updateParams} />;
-      case RuleNodeType.NumericRange:
-        return <NumericRangeEditor params={params} updateParams={updateParams} />;
-      case RuleNodeType.TextRegexPattern:
-        return <PatternRuleEditor params={params} updateParams={updateParams} />;
-      case RuleNodeType.DateRange:
-        return <DateRangeEditor params={params} updateParams={updateParams} />;
-        case RuleNodeType.DateRangeSpan:
-        return <DateRangeEditor params={params} updateParams={updateParams} />;
-      default:
-        return null;
-    }
-  };
+  const Editor = ruleNodeContext.getStrategyOrThrow(type as RuleNodeType).Editor;
 
   return (
     <Card
@@ -84,7 +66,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node, isSelec
             {node.message || "未设置提示"}
           </Typography.Text>
 
-          {renderEditor()}
+          {Editor ? <Editor params={params} updateParams={updateParams} /> : null}
         </div>
       </Space>
     </Card>

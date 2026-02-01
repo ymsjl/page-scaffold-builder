@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
   Drawer,
   Button,
@@ -31,7 +31,10 @@ import { useAutoFillByDataIndex } from "./useAutoFillByDataIndex";
 import RuleLibrary from "../RuleBuilder/RuleLibrary";
 import RuleCanvas from "../RuleBuilder/RuleCanvas";
 import RulePreview from "../RuleBuilder/RulePreview";
-import { selectCurrentColumnProps } from "@/store/slices/ruleBuilderSlice";
+import {
+  ruleBuilderActions,
+  selectCurrentColumnProps,
+} from "@/store/slices/ruleBuilderSlice";
 
 interface SchemaBuilderModalProps {
   title?: string;
@@ -77,7 +80,6 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
     try {
       const { formItemProps, fieldProps, ...values } =
         await form.validateFields();
-      console.log(currentColumnProps);
       const {
         formItemProps: currentFormItemProps,
         fieldProps: currentFieldProps,
@@ -90,6 +92,7 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
           key: editingColumn?.key ?? makeColumnId(),
         }),
       );
+      dispatch(schemaEditorActions.closeSchemaEditor());
       message.success("保存成功");
     } catch (err) {
       message.error("存在未完成或不合法的配置，请检查表单");
@@ -101,6 +104,22 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
   const hideInSearchValue = Form.useWatch("hideInSearch", form);
   const hideInFormValue = Form.useWatch("hideInForm", form);
   const valueTypeValue = Form.useWatch("valueType", form);
+
+  const formItemName = Form.useWatch(["formItemProps", "name"], form);
+  const formItemLabel = Form.useWatch(["formItemProps", "label"], form);
+
+  const lastValueTypeRef = useRef(valueTypeValue);
+
+  useEffect(() => {
+    if (!schemaEditorVisible) {
+      lastValueTypeRef.current = valueTypeValue;
+      return;
+    }
+    if (lastValueTypeRef.current !== valueTypeValue) {
+      dispatch(ruleBuilderActions.resetState());
+    }
+    lastValueTypeRef.current = valueTypeValue;
+  }, [valueTypeValue, schemaEditorVisible, dispatch]);
 
   const showFormItemAndFieldProps =
     schemaMode === "table" ? !hideInSearchValue : !hideInFormValue;
@@ -118,7 +137,7 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
 
   const initFormValues = useMemo(() => editingColumn ?? {}, [editingColumn]);
 
-  const onClose = () => dispatch(schemaEditorActions.closeSchemaEditor());
+  const onClose = () => dispatch(schemaEditorActions.closeSchemaEditor())
 
   return (
     <Drawer
@@ -241,7 +260,11 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
                 style={{ width: "100%" }}
                 size="middle"
               >
-                <RulePreview />
+                <RulePreview  
+                  name={formItemName}
+                  label={formItemLabel}
+                  valueType={valueTypeValue}
+                />
                 <RuleLibrary fieldType={valueTypeValue} />
                 <RuleCanvas />
               </Space>

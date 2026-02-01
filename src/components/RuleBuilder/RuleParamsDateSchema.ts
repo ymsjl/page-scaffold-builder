@@ -50,6 +50,14 @@ export type RuleParamsOfNumericRange = z.infer<
   typeof RuleParamsOfNumericRangeSchema
 >;
 
+// 用来表示规则节点中，小数位数类型参数的结构
+export const RuleParamsOfDecimalSchema = z.object({
+  precision: z.int().optional(),
+  decimals: z.int().optional(),
+  scale: z.int().optional(),
+});
+export type RuleParamsOfDecimal = z.infer<typeof RuleParamsOfDecimalSchema>;
+
 // 用来表示规则节点中，日期范围类型参数的结构
 // 可以是绝对日期字符串，或者相对日期对象，
 // 绝对日期的值是字符串格式的日期，例如 "2024-01-01"；
