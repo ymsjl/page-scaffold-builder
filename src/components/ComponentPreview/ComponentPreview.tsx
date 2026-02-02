@@ -1,12 +1,12 @@
 import React from "react";
-import { getComponentPrototype } from "../componentMetas";
-import { useAppSelector } from "../store/hooks";
-import { selectSelectedNode } from "../store/selectors";
+import { getComponentPrototype } from "../../componentMetas";
+import { useAppSelector } from "../../store/hooks";
+import { selectNodeForPreview } from "@/store/slices/componentTree/componentTreeSelectors";
 
-interface ComponentPreviewProps {}
+interface ComponentPreviewProps { }
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
-  const node = useAppSelector(selectSelectedNode);
+  const node = useAppSelector(selectNodeForPreview);
 
   if (!node) {
     const emptyStyle: React.CSSProperties = {
@@ -77,7 +77,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
     if (typeof Component === "string") {
       const htmlElement = Component as keyof JSX.IntrinsicElements;
       const { children, ...props } = node.props;
-      console.log(node.props);
       return React.createElement(
         htmlElement,
         {
@@ -89,8 +88,10 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
       );
     }
 
+    const props = { ...defaultProps, ...node.props };
+
     return (
-      <Component {...defaultProps} {...node.props} key={node.id}>
+      <Component {...props} key={node.id}>
         {node.props.children}
       </Component>
     );

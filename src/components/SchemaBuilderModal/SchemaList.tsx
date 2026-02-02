@@ -1,23 +1,49 @@
 import React from "react";
 import { Modal, List, Button, Space, Empty, Tag, message, Flex } from "antd";
-import { useAppDispatch } from "@/store/hooks";
-import { schemaEditorActions } from "@/store/slices/schemaEditorSlice";
-import { componentTreeActions } from "@/store/slices/componentTreeSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ComponentInstance, ProCommonColumn } from "@/types";
+import SchemaBuilderModal from "./SchemaBuilderModal";
 
-export function SchemaList({
-  selectedNode,
-}: {
+const ValueTyps =
+  [
+    { label: "文本", value: "text" },
+    { label: "文本域", value: "textarea" },
+    { label: "密码", value: "password" },
+    { label: "数字", value: "digit" },
+    { label: "日期", value: "date" },
+    { label: "日期时间", value: "dateTime" },
+    { label: "日期范围", value: "dateRange" },
+    { label: "时间", value: "time" },
+    { label: "下拉选择", value: "select" },
+    { label: "多选", value: "checkbox" },
+    { label: "单选", value: "radio" },
+    { label: "开关", value: "switch" },
+    { label: "进度条", value: "progress" },
+    { label: "百分比", value: "percent" },
+    { label: "金额", value: "money" },
+  ]
+
+interface SchemaListProps {
   selectedNode: ComponentInstance | null;
-}) {
+}
+
+export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode, }) => {
   const columns = selectedNode?.props?.columns ?? ([] as ProCommonColumn[]);
   const dispatch = useAppDispatch();
+  const editingColumn = useAppSelector((state) => state.componentTree.editingColumn);
+  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
 
-  const handleStartAdd = () => dispatch(schemaEditorActions.startAddColumn());
+  const handleStartAdd = () => {
+    setIsDrawerOpen(true);
+    dispatch(componentTreeActions.setEditingColumn({}));
+  };
 
-  const handleStartEdit = (field: ProCommonColumn) =>
-    dispatch(schemaEditorActions.startEditColumn(field));
+  const handleStartEdit = (field: ProCommonColumn) => {
+    setIsDrawerOpen(true);
+    dispatch(componentTreeActions.setEditingColumn(field));
+  };
 
   // 删除字段
   const handleDelete = (key: string) => {
@@ -31,79 +57,88 @@ export function SchemaList({
     });
   };
 
+  const handleFinish: React.ComponentProps<typeof SchemaBuilderModal>["onFinish"] = (values) => {
+    dispatch(componentTreeActions.applyChangesToColumnOfSelectedNode(values));
+    dispatch(componentTreeActions.setEditingColumn(null));
+  };
+
+  const handleFinishAndNext: React.ComponentProps<typeof SchemaBuilderModal>["onFinishAndNext"] = (values) => {
+    handleFinish(values)
+  }
+
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      {/* 添加按钮 */}
-      <Button
-        type="dashed"
-        block
-        icon={<PlusOutlined />}
-        onClick={handleStartAdd}
-        size="large"
+    <>
+      <SchemaBuilderModal
+        title={`配置 ${selectedNode?.name} 的 Columns`}
+        componentType={selectedNode?.type}
+        editingColumn={editingColumn}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onFinish={handleFinish}
+        onFinishAndNext={handleFinishAndNext}
+      />
+      <Space
+        direction="vertical"
+        style={{ width: "100%" }}
+        size="middle"
       >
-        添加新字段
-      </Button>
+        <Button
+          type="dashed"
+          block
+          icon={<PlusOutlined />}
+          onClick={handleStartAdd}
+          size="large"
+        >
+          添加新字段
+        </Button>
 
-      {/* 字段列表 */}
-      {columns.length === 0 ? (
-        <Empty
-          description="暂无字段，点击上方按钮添加"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        />
-      ) : (
-        <>
-          <List<ProCommonColumn>
-            dataSource={columns}
-            renderItem={(field, index) => {
-              const valueTypeLabel =
-                [
-                  { label: "文本", value: "text" },
-                  { label: "文本域", value: "textarea" },
-                  { label: "密码", value: "password" },
-                  { label: "数字", value: "digit" },
-                  { label: "日期", value: "date" },
-                  { label: "日期时间", value: "dateTime" },
-                  { label: "日期范围", value: "dateRange" },
-                  { label: "时间", value: "time" },
-                  { label: "下拉选择", value: "select" },
-                  { label: "多选", value: "checkbox" },
-                  { label: "单选", value: "radio" },
-                  { label: "开关", value: "switch" },
-                  { label: "进度条", value: "progress" },
-                  { label: "百分比", value: "percent" },
-                  { label: "金额", value: "money" },
-                ].find((opt) => opt.value === field.valueType)?.label ||
-                field.valueType;
+        {columns.length === 0
+          ? (
+            <Empty
+              description="暂无字段，点击上方按钮添加"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+          )
+          : (
+            <List<ProCommonColumn>
+              dataSource={columns}
+              renderItem={(field, index) => {
+                const valueTypeLabel = ValueTyps.find((opt) => opt.value === field.valueType)?.label ||
+                  field.valueType;
 
-              return (
-                <List.Item key={field.key}>
-                  <Flex gap={8} style={{ width: "100%" }}>
-                    <strong style={{ fontSize: 14, flex: "1" }}>
-                      {field.title}
-                    </strong>
-                    <Flex gap={8} wrap="wrap">
-                      <Tag color="blue">{valueTypeLabel}</Tag>
+                return (
+                  <List.Item key={field.key}>
+                    <Flex gap={8} style={{ width: "100%" }}>
+                      <strong style={{ fontSize: 14, flex: "1" }}>
+                        {field.title}
+                      </strong>
+                      <Flex gap={8} wrap="wrap">
+                        <Tag color="blue">{valueTypeLabel}</Tag>
+                      </Flex>
+                      <Space size="small">
+                        <Button
+                          size="small"
+                          icon={<EditOutlined />}
+                          onClick={() => handleStartEdit(field)}
+                        />
+                        <Button
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDelete(field.key as string)}
+                        />
+                      </Space>
                     </Flex>
-                    <Space size="small">
-                      <Button
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => handleStartEdit(field)}
-                      />
-                      <Button
-                        size="small"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDelete(field.key as string)}
-                      />
-                    </Space>
-                  </Flex>
-                </List.Item>
-              );
-            }}
-          />
-        </>
-      )}
-    </Space>
+                  </List.Item>
+                );
+              }}
+            />
+          )}
+      </Space>
+    </>
   );
-}
+});
+
+SchemaList.displayName = "SchemaList";
+
+export default SchemaList;

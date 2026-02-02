@@ -5,20 +5,55 @@ import {
 } from "@reduxjs/toolkit";
 import type { NormalizedComponentNode } from "@/types/Component";
 import type { ProCommonColumn } from "@/types";
-import { schemaEditorActions } from "./schemaEditorSlice";
 import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
+import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
+import { RuleNode, RuleNodeParams, RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { makeIdCreator } from "../makeIdCreator";
+import { original, WritableDraft } from "immer";
 
 const adapter = createEntityAdapter<NormalizedComponentNode>({
   selectId: (n) => n.id,
 });
 
+const makeColumnId = makeIdCreator("column");
+
+const initialState = adapter.getInitialState({
+  rootIds: [] as string[],
+  selectedNodeId: null as string | null,
+  expandedKeys: [] as string[],
+  editingColumn: null as Partial<ProCommonColumn> | null,
+});
+
+type ComponentTreeState = typeof initialState;
+
+const upsertColumnOfSelectedNode = (
+  state: WritableDraft<ComponentTreeState>,
+  changes: ProCommonColumn,
+) => {
+  const selectedId = state.selectedNodeId;
+  if (!selectedId) return;
+  const node = state.entities[selectedId] as
+    | NormalizedComponentNode<{ columns: ProCommonColumn[] }>
+    | undefined;
+  if (!node) return;
+  const columns = node.props?.columns;
+  if (!columns) {
+    const validatedChanges = ProCommonColumnSchema.parse(changes);
+    node.props.columns = [validatedChanges];
+  } else if (Array.isArray(columns)) {
+    const idx = columns.findIndex((c) => c.key === changes.key);
+    if (idx >= 0) {
+      Object.assign(columns[idx], changes);
+    } else {
+      const validatedChanges = ProCommonColumnSchema.parse(changes);
+      columns.push(validatedChanges);
+    }
+  }
+}
+
 const slice = createSlice({
   name: "componentTree",
-  initialState: adapter.getInitialState({
-    rootIds: [] as string[],
-    selectedNodeId: null as string | null,
-    expandedKeys: [] as string[],
-  }),
+  initialState,
   reducers: {
     addNode: (
       state,
@@ -89,23 +124,21 @@ const slice = createSlice({
       }
     },
 
-    upsertColumnForSelectedNode: (
+    applyChangesToColumnOfSelectedNode: (
+      state,
+      action: PayloadAction<Partial<ProCommonColumn>>,) => {
+      const editingColumn = state.editingColumn;
+      if (!editingColumn) return;
+      const { key = makeColumnId() } = editingColumn;
+      const nextColumn = ProCommonColumnSchema.parse({ ...action.payload, ...editingColumn, key });
+      upsertColumnOfSelectedNode(state, nextColumn);
+    },
+
+    upsertColumnOfSelectedNode: (
       state,
       action: PayloadAction<ProCommonColumn>,
     ) => {
-      const selectedId = state.selectedNodeId;
-      if (!selectedId) return;
-      const node = state.entities[selectedId] as
-        | NormalizedComponentNode<{ columns: ProCommonColumn[] }>
-        | undefined;
-      if (!node) return;
-      const columns: ProCommonColumn[] = node.props?.columns
-        ? [...node.props.columns]
-        : [];
-      const idx = columns.findIndex((c) => c.key === action.payload.key);
-      if (idx >= 0) columns[idx] = action.payload;
-      else columns.push(action.payload);
-      node.props = { ...node.props, columns };
+      upsertColumnOfSelectedNode(state, action.payload);
     },
 
     deleteColumnForSelectedNode: (state, action: PayloadAction<string>) => {
@@ -141,39 +174,65 @@ const slice = createSlice({
       columns.splice(to, 0, moved);
       node.props = { ...node.props, columns };
     },
-  },
-  extraReducers: (builder) => {
-    builder.addCase(
-      schemaEditorActions.finishSchemaChanges,
-      (state, action) => {
-        const { payload: changes } = action;
-        if (!changes) return;
 
-        const selectedId = state.selectedNodeId;
-        if (!selectedId) return;
-        const node = state.entities[selectedId] as
-          | NormalizedComponentNode<{ columns: ProCommonColumn[] }>
-          | undefined;
-        if (!node) return;
+    setEditingColumn: (
+      state,
+      action: PayloadAction<ProCommonColumn | null | {}>,
+    ) => {
+      state.editingColumn = action.payload;
+    },
 
-        const columns = node.props?.columns;
-        if (!columns) {
-          const validatedChanges = ProCommonColumnSchema.parse(changes);
-          node.props.columns = [validatedChanges];
-        } else if (Array.isArray(columns)) {
-          const idx = columns.findIndex((c) => c.key === changes.key);
-          if (idx >= 0) {
-            Object.assign(columns[idx], changes);
-          } else {
-            const validatedChanges = ProCommonColumnSchema.parse(changes);
-            columns.push(validatedChanges);
-          }
-        }
-      },
-    );
-  },
+    updateEditingColumn(state, action: PayloadAction<Partial<ProCommonColumn>>) {
+      if (!state.editingColumn) return;
+      Object.assign(state.editingColumn, action.payload);
+    },
+
+    addRuleNodeToEditingColumn(state, action: PayloadAction<RuleTemplate>) {
+      if (!state.editingColumn) return;
+      const { type, defaultParams, name } = action.payload;
+      const newRuleNode = {
+        id: makeRuleId(),
+        name,
+        enabled: true,
+        type,
+        params: defaultParams || {},
+      } as RuleNode;
+      newRuleNode.message = ruleNodeContext
+        .getStrategyForNodeOrThrow({ ...newRuleNode })
+        .buildDefaultMessage({ ...newRuleNode });
+      if (!state.editingColumn?.ruleNodes) {
+        state.editingColumn.ruleNodes = [newRuleNode];
+      } else if (Array.isArray(state.editingColumn.ruleNodes)) {
+        state.editingColumn?.ruleNodes?.push(newRuleNode);
+      }
+    },
+
+    updateRuleNodeParamsOfEditingColumn(
+      state,
+      action: PayloadAction<{ id: string; params: RuleNodeParams }>,
+    ) {
+      if (!state.editingColumn?.ruleNodes) return;
+      const { id, params } = action.payload;
+      const targetNode = state.editingColumn?.ruleNodes.find((n) => n.id === id);
+      if (!targetNode) return;
+      Object.assign(targetNode.params, {}, params);
+      targetNode.message =
+        targetNode.message ||
+        ruleNodeContext
+          .getStrategyForNodeOrThrow(targetNode)
+          .buildDefaultMessage(targetNode);
+    },
+
+    deleteRuleNodeOfEditingColumn(state, action: PayloadAction<string>) {
+      if (!state.editingColumn?.ruleNodes) return;
+      state.editingColumn.ruleNodes = state.editingColumn.ruleNodes.filter((n) => n.id !== action.payload);
+    }
+  }
 });
 
 export const componentTreeActions = slice.actions;
 export default slice.reducer;
 export const componentTreeAdapter = adapter;
+
+export const makeRuleId = makeIdCreator("rule");
+

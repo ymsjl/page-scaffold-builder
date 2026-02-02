@@ -2,16 +2,16 @@ import React, { memo, useCallback, useMemo } from "react";
 import { Card, Space, Typography } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import { useAppDispatch } from "@/store/hooks";
-import { ruleBuilderActions } from "@/store/slices/ruleBuilderSlice";
 import { RuleNodeType } from "./RuleParamsDateSchema";
 import { type RuleNode } from "./RuleParamsDateSchema";
 import { ruleNodeContext } from "./strategies";
+import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
 
 type RuleItemProps = {
   node: RuleNode;
 };
 
-const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node }) {
+const RuleItem: React.FC<RuleItemProps> = memo(({ node }) => {
   const dispatch = useAppDispatch();
   const { id, enabled, params, type } = node;
 
@@ -24,14 +24,14 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node }) {
 
   const updateParams = useCallback(
     (next: Record<string, any>) =>
-      dispatch(ruleBuilderActions.updateRuleNodeParams({ id, params: next })),
+      dispatch(componentTreeActions.updateRuleNodeParamsOfEditingColumn({ id, params: next })),
     [id, dispatch],
   );
 
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      dispatch(ruleBuilderActions.deleteRuleNode(id));
+      dispatch(componentTreeActions.deleteRuleNodeOfEditingColumn(id));
     },
     [dispatch, id],
   );
@@ -74,5 +74,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(function RuleItem({ node }) {
     </Card>
   );
 });
+
+RuleItem.displayName = "RuleItem";
 
 export default RuleItem;

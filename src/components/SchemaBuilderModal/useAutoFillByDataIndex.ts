@@ -5,14 +5,22 @@ import { getRecommendedWidth } from "./getRecommendedWidth";
 import type { ProValueEnum } from "../ColumnSchemaEditorProps";
 import type { SchemaField, ProCommonColumn } from "@/types";
 
+const VALUE_TYPE_ENUM_MAP: Record<string, ProFieldValueType> = {
+  'number': 'digit',
+  'string': 'text',
+  'boolean': 'switch',
+  'enum': 'select',
+}
+
 const createProCommonColumnFromSchemeField = (
   field?: SchemaField,
 ): Omit<ProCommonColumn, "key"> => {
+  const valueType = field?.valueType || "text";
   const result: Omit<ProCommonColumn, "key"> & { dataIndex?: string } = {
     title: field?.title ?? "",
     dataIndex: field?.key ?? "",
-    valueType: (field?.valueType || "text") as ProFieldValueType,
-    width: getRecommendedWidth(field?.valueType || "text"),
+    valueType: VALUE_TYPE_ENUM_MAP[valueType] || valueType,
+    width: getRecommendedWidth(valueType),
     hideInSearch: field ? !field?.isFilterable : false,
     formItemProps: {
       name: field?.key ?? "",
@@ -23,7 +31,6 @@ const createProCommonColumnFromSchemeField = (
   if (!field) return result;
 
   if (field.valueType === "enum") {
-    result.valueType = "select";
     if (field.extra?.options && Array.isArray(field.extra?.options)) {
       result.valueEnum = field.extra.options.reduce(
         (acc: ProValueEnum, option: any) => {

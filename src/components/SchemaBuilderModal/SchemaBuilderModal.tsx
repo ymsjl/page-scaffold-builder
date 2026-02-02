@@ -14,44 +14,45 @@ import {
   Divider,
   Checkbox,
 } from "antd";
-import {
-  selectEditingColumn,
-  selectSchemaEditorVisible,
-  selectSelectedNodeEntityModelId,
-  entityModelSelectors,
-} from "@/store/selectors";
-import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { schemaEditorActions } from "@/store/slices/schemaEditorSlice";
+import { entityModelSelectors } from "@/store/slices/entityModel/entityModelSelectors";
+import { selectSelectedNodeEntityModelId } from "@/store/slices/componentTree/componentTreeSelectors";
+import { useAppSelector } from "@/store/hooks";
 import { LeftOutlined } from "@ant-design/icons";
 import { valueTypeOptions } from "./getRecommendedWidth";
-import type { ProCommonColumn } from "@/types";
-import { makeIdCreator } from "@/store/slices/makeIdCreator";
+import type { ComponentType, ProCommonColumn } from "@/types";
 import { useAutoFillByDataIndex } from "./useAutoFillByDataIndex";
-import RuleLibrary from "../RuleBuilder/RuleLibrary";
-import RuleCanvas from "../RuleBuilder/RuleCanvas";
-import RulePreview from "../RuleBuilder/RulePreview";
-import {
-  ruleBuilderActions,
-} from "@/store/slices/ruleBuilderSlice";
-import { selectCurrentColumnProps } from "@/store/slices/selectRuleBuilder";
+import RuleBuilder from "../RuleBuilder/RuleBuilder";
+
+export type FormValues = Pick<
+  ProCommonColumn,
+  | "title"
+  | "dataIndex"
+  | "valueType"
+  | "width"
+  | "hideInSearch"
+  | "formItemProps"
+  | "fieldProps"
+>
 
 interface SchemaBuilderModalProps {
   title?: string;
-  schemaMode?: "table" | "form" | "description";
+  componentType?: ComponentType;
+  editingColumn?: Partial<ProCommonColumn> | null;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onFinish?: (values: FormValues) => void;
+  onFinishAndNext?: (values: FormValues) => void;
 }
 
-const makeColumnId = makeIdCreator("column");
-
-const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
-  schemaMode = "table",
+export const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = React.memo(({
+  isOpen,
+  editingColumn,
+  componentType,
+  onFinish,
+  onFinishAndNext,
+  onClose,
 }) => {
-  const dispatch = useAppDispatch();
-  const editingColumn = useAppSelector(selectEditingColumn);
-  const schemaEditorVisible = useAppSelector(selectSchemaEditorVisible);
-  const currentColumnProps = useAppSelector(selectCurrentColumnProps);
-  const selectedNodeEntityModelId = useAppSelector(
-    selectSelectedNodeEntityModelId,
-  );
+  const selectedNodeEntityModelId = useAppSelector(selectSelectedNodeEntityModelId);
 
   const entityFields = useAppSelector(
     (state) =>
@@ -59,40 +60,27 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
         ?.fields || [],
   );
 
-  const [form] =
-    Form.useForm<
-      Pick<
-        ProCommonColumn,
-        | "title"
-        | "dataIndex"
-        | "valueType"
-        | "width"
-        | "hideInSearch"
-        | "formItemProps"
-        | "fieldProps"
-      >
-    >();
+  const [form] = Form.useForm<FormValues>();
 
   useAutoFillByDataIndex(form, entityFields);
 
   const handleSaveField = async () => {
     try {
-      const { formItemProps, fieldProps, ...values } =
-        await form.validateFields();
-      const {
-        formItemProps: currentFormItemProps,
-        fieldProps: currentFieldProps,
-      } = currentColumnProps;
-      dispatch(
-        schemaEditorActions.finishSchemaChanges({
-          ...values,
-          formItemProps: { ...currentFormItemProps, ...formItemProps },
-          fieldProps: { ...currentFieldProps, ...fieldProps },
-          key: editingColumn?.key ?? makeColumnId(),
-        }),
-      );
-      dispatch(schemaEditorActions.closeSchemaEditor());
+      const values = await form.validateFields();
+      onFinish?.(values);
+      onClose?.();
       message.success("保存成功");
+    } catch (err) {
+      message.error("存在未完成或不合法的配置，请检查表单");
+    }
+  };
+
+  const handleSaveAndAddNext = async () => {
+    try {
+      const values = await form.validateFields();
+      onFinishAndNext?.(values);
+      form.resetFields();
+      message.success("保存成功，可以继续添加下一个字段");
     } catch (err) {
       message.error("存在未完成或不合法的配置，请检查表单");
     }
@@ -102,26 +90,13 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
 
   const hideInSearchValue = Form.useWatch("hideInSearch", form);
   const hideInFormValue = Form.useWatch("hideInForm", form);
-  const valueTypeValue = Form.useWatch("valueType", form);
 
   const formItemName = Form.useWatch(["formItemProps", "name"], form);
   const formItemLabel = Form.useWatch(["formItemProps", "label"], form);
-
-  const lastValueTypeRef = useRef(valueTypeValue);
-
-  useEffect(() => {
-    if (!schemaEditorVisible) {
-      lastValueTypeRef.current = valueTypeValue;
-      return;
-    }
-    if (lastValueTypeRef.current !== valueTypeValue) {
-      dispatch(ruleBuilderActions.resetRuleEditorState());
-    }
-    lastValueTypeRef.current = valueTypeValue;
-  }, [valueTypeValue, schemaEditorVisible, dispatch]);
+  const valueTypeValue = Form.useWatch("valueType", form);
 
   const showFormItemAndFieldProps =
-    schemaMode === "table" ? !hideInSearchValue : !hideInFormValue;
+    componentType === "Table" ? !hideInSearchValue : !hideInFormValue;
 
   const entityFieldOptions = useMemo(
     () =>
@@ -136,20 +111,23 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
 
   const initFormValues = useMemo(() => editingColumn ?? {}, [editingColumn]);
 
-  const onClose = () => dispatch(schemaEditorActions.closeSchemaEditor())
-
   return (
     <Drawer
-      open={schemaEditorVisible}
+      open={isOpen}
       width="700px"
       closeIcon={<LeftOutlined />}
       title={drawerTitle}
       onClose={onClose}
       destroyOnClose
       extra={
-        <Button type="primary" onClick={handleSaveField}>
-          完成
-        </Button>
+        <Space size='small'>
+          <Button type="primary" onClick={handleSaveField}>
+            完成
+          </Button>
+          <Button onClick={handleSaveAndAddNext}>
+            保存并继续添加
+          </Button>
+        </Space>
       }
     >
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
@@ -254,25 +232,19 @@ const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = ({
                 </Col>
               </Row>
               <Divider />
-              <Space
-                direction="vertical"
-                style={{ width: "100%" }}
-                size="middle"
-              >
-                <RulePreview  
-                  name={formItemName}
-                  label={formItemLabel}
-                  valueType={valueTypeValue}
-                />
-                <RuleLibrary fieldType={valueTypeValue} />
-                <RuleCanvas />
-              </Space>
+              <RuleBuilder
+                name={formItemName}
+                label={formItemLabel}
+                valueType={valueTypeValue}
+              />
             </>
           ) : null}
         </Form>
       </Space>
     </Drawer>
   );
-};
+});
+
+SchemaBuilderModal.displayName = "SchemaBuilderModal";
 
 export default SchemaBuilderModal;

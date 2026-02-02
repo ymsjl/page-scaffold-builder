@@ -1,11 +1,12 @@
-import React, { memo } from "react";
+import React from "react";
 import { Card, Space, Typography } from "antd";
 import RuleItem from "./RuleItem";
 import { useAppSelector } from "@/store/hooks";
-import { selectRuleNodes } from "@/store/slices/selectRuleBuilder";
+import { selectRuleNodesOfEditingColumn } from "@/store/slices/componentTree/componentTreeSelectors";
 
-export default memo(function RuleCanvas() {
-  const nodes = useAppSelector(selectRuleNodes);
+const RuleCanvas: React.FC = React.memo(() => {
+  const nodes = useAppSelector(selectRuleNodesOfEditingColumn);
+
   return (
     <Card size="small" title="规则链" style={{ minHeight: 260 }}>
       <div style={{ borderRadius: 8, padding: 4 }}>
@@ -22,3 +23,7 @@ export default memo(function RuleCanvas() {
     </Card>
   );
 });
+
+RuleCanvas.displayName = "RuleCanvas";
+
+export default RuleCanvas;

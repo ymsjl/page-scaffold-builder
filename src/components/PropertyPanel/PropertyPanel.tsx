@@ -8,10 +8,10 @@ import {
   ProFormDigit,
 } from "@ant-design/pro-components";
 import { Space } from "antd";
-import SchemaBuilderModal from "../SchemaBuilderModal/SchemaBuilderModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectSelectedNode, entityModelSelectors } from "@/store/selectors";
-import { componentTreeActions } from "@/store/slices/componentTreeSlice";
+import { entityModelSelectors } from "@/store/slices/entityModel/entityModelSelectors";
+import { selectSelectedNode } from "@/store/slices/componentTree/componentTreeSelectors";
+import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
 import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
 import { PropAttribute } from "@/types";
@@ -21,6 +21,7 @@ const PropertyPanel: React.FC = () => {
   const selectedNode = useAppSelector(selectSelectedNode);
   const selectedComponentType = selectedNode?.type;
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
+
   const handleValuesChange = (changedValues: Record<string, any>) => {
     if (!selectedNode?.id) return;
     dispatch(
@@ -31,14 +32,6 @@ const PropertyPanel: React.FC = () => {
     );
   };
 
-  const schemaMode = useMemo(() => {
-    const type = selectedComponentType as string;
-    if (type === "Form" || type === "ModalForm") return "form";
-    if (type === "Description" || type === "ProDescription")
-      return "description";
-    return "table";
-  }, [selectedComponentType]);
-
   const propAttrs = useMemo(() => {
     if (!selectedComponentType) return [] as PropAttribute[];
     return Object.values(
@@ -47,12 +40,12 @@ const PropertyPanel: React.FC = () => {
       ...item,
       ...(item.name === "entityModelId"
         ? {
-            options: entityModels.map((et) => ({
-              name: et.name,
-              value: et.id,
-              label: et.name,
-            })),
-          }
+          options: entityModels.map((et) => ({
+            name: et.name,
+            value: et.id,
+            label: et.name,
+          })),
+        }
         : {}),
     }));
   }, [selectedComponentType, entityModels]);
@@ -156,11 +149,6 @@ const PropertyPanel: React.FC = () => {
             </div>
           </ProCard>
         </div>
-        <SchemaBuilderModal
-          key={`schema-builder-${selectedNode.id}`}
-          title={`配置 ${selectedNode?.name} 的 Columns`}
-          schemaMode={schemaMode}
-        />
       </>
     );
   }
@@ -178,34 +166,27 @@ const PropertyPanel: React.FC = () => {
   );
 
   return (
-    <>
-      <div style={formStyles}>
-        {Object.entries(groupedPropAttr).map(([groupName, items]) => (
-          <ProCard
-            key={groupName}
-            title={groupName}
-            headerBordered
-            collapsible
-            defaultCollapsed={groupName !== "基础配置"}
-            style={{ marginBottom: "16px", backgroundColor: "#fafafa" }}
-            bodyStyle={{ padding: "12px" }}
+    <div style={formStyles}>
+      {Object.entries(groupedPropAttr).map(([groupName, items]) => (
+        <ProCard
+          key={groupName}
+          title={groupName}
+          headerBordered
+          collapsible
+          defaultCollapsed={groupName !== "基础配置"}
+          style={{ marginBottom: "16px", backgroundColor: "#fafafa" }}
+          bodyStyle={{ padding: "12px" }}
+        >
+          <ProForm
+            initialValues={selectedNode.props}
+            onValuesChange={handleValuesChange}
+            submitter={false}
           >
-            <ProForm
-              initialValues={selectedNode.props}
-              onValuesChange={handleValuesChange}
-              submitter={false}
-            >
-              {items.map(renderFormItem)}
-            </ProForm>
-          </ProCard>
-        ))}
-      </div>
-
-      <SchemaBuilderModal
-        title={`配置 ${selectedNode?.name} 的 Columns`}
-        schemaMode={schemaMode}
-      />
-    </>
+            {items.map(renderFormItem)}
+          </ProForm>
+        </ProCard>
+      ))}
+    </div>
   );
 };
 

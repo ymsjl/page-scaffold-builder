@@ -1,9 +1,18 @@
+import { RuleNodeSchema } from '@/components/RuleBuilder/RuleParamsDateSchema';
 import { z } from 'zod';
 
-export const ProValueEnumSchema = z.object({ text: z.string(), status: z.string().optional(), color: z.string().optional() });
+export const ProValueEnumSchema = z.object({
+  text: z.string(),
+  status: z.string().optional(),
+  color: z.string().optional()
+});
 export type ProValueEnum = z.infer<typeof ProValueEnumSchema>;
 
-export const FormItemPropsSchema = z.object({ name: z.string().optional(), label: z.string().optional(), rules: z.any().optional() });
+export const FormItemPropsSchema = z.object({
+  name: z.string().optional(),
+  label: z.string().optional(),
+  rules: z.any().optional()
+});
 export type FormItemPropsZ = z.infer<typeof FormItemPropsSchema>;
 
 export const ProCommonColumnSchema = z.object({
@@ -15,10 +24,8 @@ export const ProCommonColumnSchema = z.object({
   width: z.number().int().nonnegative().optional(),
   hideInSearch: z.boolean().optional(),
   hideInTable: z.boolean().optional(),
-  valueEnum: z.record(
-    z.string(),
-    ProValueEnumSchema
-  ).optional(),
+  ruleNodes: z.array(RuleNodeSchema).optional(),
+  valueEnum: z.record(z.string(), ProValueEnumSchema).optional(),
   formItemProps: FormItemPropsSchema.optional(),
   fieldProps: z.any().optional(),
 });

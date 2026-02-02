@@ -1,48 +1,38 @@
 import React, { useMemo } from "react";
-import { Card, Space } from "antd";
-import { useAppSelector } from "@/store/hooks";
-import {
-  ruleDescriptorsToRules,
-  selectCurrentColumnProps,
-} from "@/store/slices/selectRuleBuilder";
+import { Card } from "antd";
 import { BetaSchemaForm } from "@ant-design/pro-components";
-import type { RuleDescriptor } from "@/components/RuleBuilder/strategies";
+import { useAppSelector } from "@/store/hooks";
+import { selectEditingColumnProps } from "@/store/slices/componentTree/componentTreeSelectors";
 
 const RulePreview: React.FC<{
   name: string;
   label: string;
   valueType?: string;
 }> = React.memo(({ name, label, valueType }) => {
-  const columnProps = useAppSelector(selectCurrentColumnProps);
-  const previewColumn = useMemo(() => {
-    const formItemProps = columnProps.formItemProps ?? {};
-    const descriptorRules = (formItemProps.rules ?? []) as RuleDescriptor[];
-    const rules = ruleDescriptorsToRules(descriptorRules);
-    const nextFormItemProps = rules.length
-      ? { ...formItemProps, rules }
-      : { ...formItemProps, rules: undefined };
+  const columnProps = useAppSelector(selectEditingColumnProps);
 
+  const mergedColumnProps = useMemo(() => {
     return {
       ...columnProps,
-      formItemProps: nextFormItemProps,
+      name,
+      valueType,
+      formItemProps: {
+        ...(columnProps?.formItemProps ?? {}),
+        name,
+        label,
+      },
+      fieldProps: {
+        ...(columnProps?.fieldProps ?? {}),
+        style: { width: "100%" },
+      },
     };
-  }, [columnProps]);
+  }, [columnProps, name, label, valueType]);
+
+  const columns = useMemo(() => [mergedColumnProps], [mergedColumnProps]);
+
   return (
     <Card size="small" title="规则预览">
-      <BetaSchemaForm
-        columns={[
-          {
-            ...previewColumn,
-            name,
-            valueType,
-            title: label,
-            fieldProps: {
-              ...(previewColumn?.fieldProps ?? {}),
-              style: { width: "100%" },
-            },
-          },
-        ]}
-      />
+      <BetaSchemaForm columns={columns} />
     </Card>
   );
 });

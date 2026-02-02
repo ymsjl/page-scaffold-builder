@@ -1,4 +1,4 @@
-import ComponentPreview from './components/ComponentPreview';
+import ComponentPreview from './components/ComponentPreview/ComponentPreview';
 import React from 'react';
 import { Layout } from 'antd';
 import PropertyPanel from './components/PropertyPanel/PropertyPanel';

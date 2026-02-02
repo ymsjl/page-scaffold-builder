@@ -4,7 +4,7 @@ import type { TreeProps } from "antd";
 import type { NormalizedComponentNode } from "@/types";
 import TreeNodeItem from "./TreeNodeItem";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { componentTreeActions } from "@/store/slices/componentTreeSlice";
+import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
 
 type TreeDataNode = NonNullable<TreeProps["treeData"]>[number];
 

@@ -107,7 +107,7 @@ export const RuleNodeSchema = z.object({
   name: z.string(),
   type: z.enum(RuleNodeType),
   enabled: z.boolean().default(true),
-  params: RuleNodeParamsSchema.default({}),
+  params: z.record(z.string(), z.any()).default({}),
   message: z.string().default(""),
 });
 

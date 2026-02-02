@@ -6,12 +6,12 @@ import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/scrollbar";
 import { useAppDispatch } from "@/store/hooks";
-import { ruleBuilderActions } from "@/store/slices/ruleBuilderSlice";
 import { PlusOutlined } from "@ant-design/icons";
 import { RuleTemplate } from "./RuleParamsDateSchema";
 import { RULE_LIBRARY } from "./RULE_LIBRARY";
+import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
 
-function RuleCard({ ruleTemplate }: { ruleTemplate: RuleTemplate }) {
+const RuleCard: React.FC<{ ruleTemplate: RuleTemplate }> = React.memo(({ ruleTemplate }) => {
   const dispatch = useAppDispatch();
   return (
     <Card size="small" style={{ width: 200 }}>
@@ -29,7 +29,7 @@ function RuleCard({ ruleTemplate }: { ruleTemplate: RuleTemplate }) {
             type="text"
             icon={<PlusOutlined />}
             onClick={() =>
-              dispatch(ruleBuilderActions.addNodeFromTemplate(ruleTemplate))
+              dispatch(componentTreeActions.addRuleNodeToEditingColumn(ruleTemplate))
             }
           />
         </div>
@@ -39,15 +39,19 @@ function RuleCard({ ruleTemplate }: { ruleTemplate: RuleTemplate }) {
       </Space>
     </Card>
   );
-}
+});
 
-export default function RuleLibrary({ fieldType }: { fieldType?: string }) {
+RuleCard.displayName = "RuleCard";
+
+const RuleLibrary: React.FC<{ valueType?: string }> = React.memo(({ valueType }) => {
+  console.log('valueType', valueType)
   const items = RULE_LIBRARY.filter((item) => {
-    if (!fieldType) return true;
+    if (!valueType) return true;
     return (
-      item.applicableTo.includes("all") || item.applicableTo.includes(fieldType)
+      item.applicableTo.includes("all") || item.applicableTo.includes(valueType)
     );
   });
+
   return (
     <Swiper
       direction="horizontal"
@@ -67,4 +71,8 @@ export default function RuleLibrary({ fieldType }: { fieldType?: string }) {
       ))}
     </Swiper>
   );
-}
+});
+
+RuleLibrary.displayName = "RuleLibrary";
+
+export default RuleLibrary;
