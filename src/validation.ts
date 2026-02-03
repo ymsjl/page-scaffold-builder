@@ -42,7 +42,7 @@ export const PropAttributeSchema = z.object({
   name: z.string(),
   label: z.string(),
   group: z.string().optional(),
-  type: z.enum(['string', 'number', 'boolean', 'select', 'date', 'object', 'array', 'schema']),
+  type: z.enum(['string', 'number', 'boolean', 'enum', 'date', 'object', 'array', 'schema']),
   options: z.array(z.object({ label: z.string(), value: z.any() })).optional(),
   defaultValue: z.any().optional(),
   required: z.boolean().optional(),

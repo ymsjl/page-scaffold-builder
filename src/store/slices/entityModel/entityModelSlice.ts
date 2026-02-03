@@ -1,5 +1,5 @@
 import { createSlice, createEntityAdapter, PayloadAction } from '@reduxjs/toolkit';
-import type { EntityModel, SchemaField } from '@/types';
+import type { EntityModel } from '@/types';
 import { makeIdCreator } from '../makeIdCreator';
 
 export const makeEntityModelId = makeIdCreator('et');

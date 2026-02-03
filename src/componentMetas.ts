@@ -23,7 +23,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
     propsTypes: {
       entityModelId: {
         name: "entityModelId",
-        type: "select",
+        type: "enum",
         label: "实体模型",
         description: "表格对应的数据实体模型",
         defaultValue: "",
@@ -75,7 +75,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
     propsTypes: {
       entityModelId: {
         name: "entityModelId",
-        type: "select",
+        type: "enum",
         label: "实体模型",
         description: "表单对应的数据实体模型",
         defaultValue: "",
@@ -89,7 +89,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
       },
       layout: {
         name: "layout",
-        type: "select",
+        type: "enum",
         label: "布局方式",
         description: "表单的布局方式",
         options: [

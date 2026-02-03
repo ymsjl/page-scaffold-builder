@@ -137,6 +137,7 @@ const slice = createSlice({
       action: PayloadAction<{ id: string; updates: Partial<ComponentNode>; }>,
     ) => {
       const { id, updates } = action.payload;
+      debugger
       adapter.updateOne(state.components, { id, changes: updates });
     },
 

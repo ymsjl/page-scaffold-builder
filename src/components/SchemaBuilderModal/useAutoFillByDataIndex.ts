@@ -5,7 +5,7 @@ import type { ProValueEnum } from "../ColumnSchemaEditorProps";
 import type { SchemaField, ProCommonColumn } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "./constants";
 
-const createProCommonColumnFromSchemeField = (
+export const createProCommonColumnFromSchemeField = (
   field?: SchemaField,
 ): Omit<ProCommonColumn, "key"> => {
   const valueType = field?.valueType || "text";
@@ -13,7 +13,7 @@ const createProCommonColumnFromSchemeField = (
     title: field?.title ?? "",
     dataIndex: field?.key ?? "",
     valueType: VALUE_TYPE_ENUM_MAP[valueType] || valueType,
-    width: getRecommendedWidth(valueType),
+    // width: getRecommendedWidth(valueType),
     hideInSearch: field ? !field?.isFilterable : false,
     formItemProps: {
       name: field?.key ?? "",

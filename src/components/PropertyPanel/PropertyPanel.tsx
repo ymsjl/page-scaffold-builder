@@ -1,15 +1,10 @@
 import React, { useMemo } from "react";
 import {
-  ProForm,
   ProCard,
-  ProFormText,
-  ProFormSelect,
-  ProFormSwitch,
-  ProFormDigit,
   BetaSchemaForm,
   ProFormColumnsType
 } from "@ant-design/pro-components";
-import { Button, Flex, Space, Typography } from "antd";
+import { Button, Flex, Form, Typography } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { entityModelSelectors } from "@/store/slices/entityModel/entityModelSelectors";
 import { selectSelectedNode } from "@/store/slices/componentTree/componentTreeSelectors";
@@ -18,14 +13,17 @@ import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
 import { PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
-import { PlusOutlined } from "@ant-design/icons";
+import { NodeExpandOutlined, PlusOutlined } from "@ant-design/icons";
 import "./styles.css";
+import { createProCommonColumnFromSchemeField } from "../SchemaBuilderModal/useAutoFillByDataIndex";
 
 const PropertyPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const selectedNode = useAppSelector(selectSelectedNode);
   const selectedComponentType = selectedNode?.type;
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
+  const [form] = Form.useForm();
+  const selectedEntityModelId = Form.useWatch('entityModelId', form);
 
   const handleValuesChange = (changedValues: Record<string, any>) => {
     if (!selectedNode?.id) return;
@@ -90,49 +88,11 @@ const PropertyPanel: React.FC = () => {
     overflowY: "auto",
   };
 
-  const contentStyles: React.CSSProperties = {
-    padding: "16px",
-  };
-
-  const renderFormItem = (propAttr: PropAttribute) => {
-    // 特殊处理 columns 属性
-    if (propAttr.name === "columns") {
-      return (
-        <ProForm.Item
-          key={propAttr.name}
-          label={propAttr.label}
-          tooltip={propAttr.description}
-        >
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <SchemaList selectedNode={selectedNode} />
-          </Space>
-        </ProForm.Item>
-      );
-    }
-
-    const formItemConfig = {
-      name: propAttr.name,
-      label: propAttr.label,
-      tooltip: propAttr.description,
-    };
-
-    switch (propAttr.type) {
-      case "select":
-        return (
-          <ProFormSelect
-            key={propAttr.name}
-            {...formItemConfig}
-            options={propAttr?.options || []}
-          />
-        );
-      case "boolean":
-        return <ProFormSwitch key={propAttr.name} {...formItemConfig} />;
-      case "number":
-        return <ProFormDigit key={propAttr.name} {...formItemConfig} />;
-      default:
-        return <ProFormText key={propAttr.name} {...formItemConfig} />;
-    }
-  };
+  const generateColumnsFromEntityModel = (entityModelId: string) => {
+    const entityModel = entityModels.find((et) => et.id === entityModelId);
+    if (!entityModel) return [];
+    return entityModel.fields.map(createProCommonColumnFromSchemeField);
+  }
 
   if (!hasGroups) {
     return (
@@ -145,14 +105,18 @@ const PropertyPanel: React.FC = () => {
             <BetaSchemaForm
               initialValues={selectedNode.props}
               onValuesChange={handleValuesChange}
+              form={form}
               submitter={false}
               columns={propAttrs.map((attir) => {
-                const valueType = VALUE_TYPE_ENUM_MAP[attir.type] || "text";
+                const valueType = VALUE_TYPE_ENUM_MAP[attir.type] || attir.type || "text";
                 const result = ({
                   title: attir.label,
                   dataIndex: attir.name,
                   valueType,
                   tooltip: attir.description,
+                  fieldProps: {
+                    options: attir.options,
+                  }
                 }) as ProFormColumnsType<any>;
                 if (attir.name === 'columns') {
                   result.tooltip = undefined
@@ -160,9 +124,28 @@ const PropertyPanel: React.FC = () => {
                     className: 'schema-list-form-item',
                     label: (
                       <Flex align="center" justify="space-between" gap={8} style={{ width: '100%' }}>
-                        <Typography.Text>
+                        <Typography.Text style={{ flex: 1 }}>
                           {attir.label}
                         </Typography.Text>
+                        <Button
+                          hidden={!selectedEntityModelId}
+                          size='small'
+                          type='text'
+                          title="从实体模型添加列定义"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(componentTreeActions.updateNode({
+                              id: selectedNode.id,
+                              updates: {
+                                props: {
+                                  ...selectedNode.props,
+                                  columns: generateColumnsFromEntityModel(selectedEntityModelId)
+                                }
+                              }
+                            }))
+                          }}
+                          icon={<NodeExpandOutlined />}
+                        />
                         <Button
                           size='small'
                           type='text'
@@ -223,12 +206,15 @@ const PropertyPanel: React.FC = () => {
             onValuesChange={handleValuesChange}
             submitter={false}
             columns={items.map((item) => {
-              const valueType = VALUE_TYPE_ENUM_MAP[item.type] || "text";
+              const valueType = VALUE_TYPE_ENUM_MAP[item.type] || item.type || "text";
               const result = ({
                 title: item.label,
                 dataIndex: item.name,
                 valueType,
                 tooltip: item.description,
+                fieldProps: {
+                  options: item.options,
+                }
               }) as ProFormColumnsType<any>;
               if (item.name === 'columns') {
                 result.renderFormItem = () => (

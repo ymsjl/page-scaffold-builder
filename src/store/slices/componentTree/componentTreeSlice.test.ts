@@ -6,13 +6,13 @@ describe('componentTreeSlice', () => {
     let state = componentTreeReducer(undefined, { type: '' } as any) as any;
 
     const rootId = 'root_1';
-    state = componentTreeReducer(state, componentTreeActions.addNode({ id: rootId, parentId: null, name: 'Root', type: 'Container', isContainer: true, props: {}, childrenIds: [] }));
+    state = componentTreeReducer(state, componentTreeActions.addNode({ parentId: null, type: 'Container' }));
 
     expect(state.rootIds.length).toBe(1);
     expect(state.entities[rootId].type).toBe('Container');
 
     const childId = 'child_1';
-    state = componentTreeReducer(state, componentTreeActions.addNode({ id: childId, parentId: rootId, name: 'Child', type: 'Table', props: {}, childrenIds: [] }));
+    state = componentTreeReducer(state, componentTreeActions.addNode({ parentId: rootId, type: 'Table' }));
     expect(state.entities[rootId].childrenIds.length).toBe(1);
 
     state = componentTreeReducer(state, componentTreeActions.removeNode(rootId));
