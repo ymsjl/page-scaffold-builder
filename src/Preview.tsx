@@ -1,6 +1,6 @@
 import ComponentPreview from './components/ComponentPreview/ComponentPreview';
 import React from 'react';
-import { Layout } from 'antd';
+import { Flex, Layout, Typography } from 'antd';
 import PropertyPanel from './components/PropertyPanel/PropertyPanel';
 
 const styles: { [key: string]: React.CSSProperties } = {
@@ -15,7 +15,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     height: '100%',
   },
   header: {
-    padding: '16px 24px',
+    padding: '8px 12px',
     borderBottom: '1px solid #e8e8e8',
     background: 'white',
   },
@@ -56,9 +56,9 @@ export function PageScaffoldBuilderPreview() {
     <>
       <Layout.Content style={styles.content}>
         <Layout.Header style={styles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={styles.headerTitle}>页面脚手架构建器</h2>
-          </div>
+          <Flex align="center" justify="space-between">
+            <Typography.Title level={5} >页面脚手架构建器</Typography.Title >
+          </Flex>
         </Layout.Header>
 
         <Layout.Content style={{ height: '100%', overflow: 'hidden' }}>
@@ -68,7 +68,7 @@ export function PageScaffoldBuilderPreview() {
 
       <Layout.Sider width={300} trigger={null} style={{ background: 'white', borderLeft: '1px solid #e8e8e8' }}>
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>属性面板</h3>
+          <Typography.Title level={5} >属性面板</Typography.Title>
           <PropertyPanel />
         </div>
       </Layout.Sider>

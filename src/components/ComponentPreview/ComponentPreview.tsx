@@ -45,31 +45,9 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
   const Component = componentPrototype.component;
 
   const containerStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
     padding: "24px",
     height: "100%",
     overflow: "auto",
-    backgroundColor: "#f5f5f5",
-  };
-
-  const previewContainerStyle: React.CSSProperties = {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: "4px",
-    padding: "24px",
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.03)",
-    overflow: "auto",
-    minHeight: "400px",
-  };
-
-  const headerStyle: React.CSSProperties = {
-    fontSize: "14px",
-    color: "#666",
-    marginBottom: "16px",
-    paddingBottom: "12px",
-    borderBottom: "1px solid #e8e8e8",
   };
 
   const renderComponent = () => {
