@@ -1,5 +1,5 @@
 import type React from "react";
-import { PropAttribute } from "@/types";
+import { ProCommonColumn, PropAttribute } from "@/types";
 
 export const COMPONENT_TYPES = ["Container", "Table", "Form"] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
@@ -47,13 +47,15 @@ export interface ComponentPrototype {
   propsTypes?: Record<string, PropAttribute>;
 }
 
-export interface NormalizedComponentNode<P = Record<string, any>>
+export interface ComponentNode<P = Record<string, any>>
   extends Omit<ComponentInstance<P>, "children"> {
   parentId?: ComponentId | null;
   childrenIds: ComponentId[];
 }
 
 export interface NormalizedComponentTree {
-  nodesById: Record<ComponentId, NormalizedComponentNode>;
+  nodesById: Record<ComponentId, ComponentNode>;
   rootIds: ComponentId[];
 }
+
+export type ComponentNodeWithColumns = ComponentNode<{ columns: ProCommonColumn[] }>

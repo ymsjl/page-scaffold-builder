@@ -18,6 +18,7 @@ export const RuleTemplateSchema = z.object({
   applicableTo: z.array(z.string()),
 });
 
+/** @description 规则模板的类型定义 */
 export type RuleTemplate = z.infer<typeof RuleTemplateSchema>;
 
 export const RuleParamsOperatorSchema = z.enum(["eq", "gte", "lte", "between"]);

@@ -2,9 +2,10 @@ import React from "react";
 import { Modal, List, Button, Space, Empty, Tag, message, Flex } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
-import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ComponentInstance, ProCommonColumn } from "@/types";
 import SchemaBuilderModal from "./SchemaBuilderModal";
+import { selectComponentTreeState, selectEditingColumn } from "@/store/slices/componentTree/componentTreeSelectors";
 
 const ValueTyps =
   [
@@ -32,18 +33,10 @@ interface SchemaListProps {
 export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode, }) => {
   const columns = selectedNode?.props?.columns ?? ([] as ProCommonColumn[]);
   const dispatch = useAppDispatch();
-  const editingColumn = useAppSelector((state) => state.componentTree.editingColumn);
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+  const editingColumn = useAppSelector(selectEditingColumn);
+  const isDrawerOpen = useAppSelector((state) => selectComponentTreeState(state).isSchemaBuilderModalOpen);
 
-  const handleStartAdd = () => {
-    setIsDrawerOpen(true);
-    dispatch(componentTreeActions.setEditingColumn({}));
-  };
-
-  const handleStartEdit = (field: ProCommonColumn) => {
-    setIsDrawerOpen(true);
-    dispatch(componentTreeActions.setEditingColumn(field));
-  };
+  const handleStartEdit = (field: ProCommonColumn) => dispatch(componentTreeActions.startEditingColumn(field));
 
   // 删除字段
   const handleDelete = (key: string) => {
@@ -73,7 +66,7 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode,
         componentType={selectedNode?.type}
         editingColumn={editingColumn}
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={() => dispatch(componentTreeActions.setIsSchemaBuilderModalOpen(false))}
         onFinish={handleFinish}
         onFinishAndNext={handleFinishAndNext}
       />
@@ -82,16 +75,6 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode,
         style={{ width: "100%" }}
         size="middle"
       >
-        <Button
-          type="dashed"
-          block
-          icon={<PlusOutlined />}
-          onClick={handleStartAdd}
-          size="large"
-        >
-          添加新字段
-        </Button>
-
         {columns.length === 0
           ? (
             <Empty
@@ -109,11 +92,9 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode,
                 return (
                   <List.Item key={field.key}>
                     <Flex gap={8} style={{ width: "100%" }}>
-                      <strong style={{ fontSize: 14, flex: "1" }}>
-                        {field.title}
-                      </strong>
+                      <div style={{ flex: 1 }}>{field.title}</div>
                       <Flex gap={8} wrap="wrap">
-                        <Tag color="blue">{valueTypeLabel}</Tag>
+                        <Tag color="blue" >{valueTypeLabel}</Tag>
                       </Flex>
                       <Space size="small">
                         <Button

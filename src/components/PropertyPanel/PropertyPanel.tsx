@@ -6,8 +6,10 @@ import {
   ProFormSelect,
   ProFormSwitch,
   ProFormDigit,
+  BetaSchemaForm,
+  ProFormColumnsType
 } from "@ant-design/pro-components";
-import { Space } from "antd";
+import { Button, Flex, Space, Typography } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { entityModelSelectors } from "@/store/slices/entityModel/entityModelSelectors";
 import { selectSelectedNode } from "@/store/slices/componentTree/componentTreeSelectors";
@@ -15,6 +17,9 @@ import { componentTreeActions } from "@/store/slices/componentTree/componentTree
 import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
 import { PropAttribute } from "@/types";
+import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
+import { PlusOutlined } from "@ant-design/icons";
+import "./styles.css";
 
 const PropertyPanel: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -136,17 +141,53 @@ const PropertyPanel: React.FC = () => {
           <ProCard
             title={`配置：${selectedNode.name}`}
             headerBordered
-            bodyStyle={{ padding: 0 }}
           >
-            <div style={contentStyles}>
-              <ProForm
-                initialValues={selectedNode.props}
-                onValuesChange={handleValuesChange}
-                submitter={false}
-              >
-                {propAttrs.map(renderFormItem)}
-              </ProForm>
-            </div>
+            <BetaSchemaForm
+              initialValues={selectedNode.props}
+              onValuesChange={handleValuesChange}
+              submitter={false}
+              columns={propAttrs.map((attir) => {
+                const valueType = VALUE_TYPE_ENUM_MAP[attir.type] || "text";
+                const result = ({
+                  title: attir.label,
+                  dataIndex: attir.name,
+                  valueType,
+                  tooltip: attir.description,
+                }) as ProFormColumnsType<any>;
+                if (attir.name === 'columns') {
+                  result.tooltip = undefined
+                  result.formItemProps = {
+                    className: 'schema-list-form-item',
+                    label: (
+                      <Flex align="center" justify="space-between" gap={8} style={{ width: '100%' }}>
+                        <Typography.Text>
+                          {attir.label}
+                        </Typography.Text>
+                        <Button
+                          size='small'
+                          type='text'
+                          title="新增列定义"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(componentTreeActions.startAddingColumn())
+                          }}
+                          icon={<PlusOutlined />}
+                        />
+                      </Flex>
+                    ),
+                  };
+                  result.renderFormItem = (...args) => {
+                    return (<SchemaList selectedNode={selectedNode} />)
+                  };
+                } else if (attir.name === 'entityModelId') {
+                  result.valueEnum = entityModels.reduce((acc, et) => {
+                    acc[et.id] = { text: et.name };
+                    return acc;
+                  }, {} as Record<string, { text: string }>);
+                }
+                return result;
+              })}
+            />
           </ProCard>
         </div>
       </>
@@ -177,13 +218,31 @@ const PropertyPanel: React.FC = () => {
           style={{ marginBottom: "16px", backgroundColor: "#fafafa" }}
           bodyStyle={{ padding: "12px" }}
         >
-          <ProForm
+          <BetaSchemaForm
             initialValues={selectedNode.props}
             onValuesChange={handleValuesChange}
             submitter={false}
-          >
-            {items.map(renderFormItem)}
-          </ProForm>
+            columns={items.map((item) => {
+              const valueType = VALUE_TYPE_ENUM_MAP[item.type] || "text";
+              const result = ({
+                title: item.label,
+                dataIndex: item.name,
+                valueType,
+                tooltip: item.description,
+              }) as ProFormColumnsType<any>;
+              if (item.name === 'columns') {
+                result.renderFormItem = () => (
+                  <SchemaList selectedNode={selectedNode} />
+                );
+              } if (item.name === 'entityModelId') {
+                result.valueEnum = entityModels.reduce((acc, et) => {
+                  acc[et.id] = { text: et.name };
+                  return acc;
+                }, {} as Record<string, { text: string }>);
+              }
+              return result;
+            })}
+          />
         </ProCard>
       ))}
     </div>

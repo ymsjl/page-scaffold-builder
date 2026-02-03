@@ -9,6 +9,7 @@ const adapter = createEntityAdapter<EntityModel>({ selectId: (e) => e.id });
 const initialState = adapter.getInitialState({
   editingEntityModel: null as Partial<EntityModel> | null,
   isDrawerOpen: false,
+  editingEntityModelId: null as string | null,
 });
 
 export type EntityModelState = typeof initialState;
@@ -22,27 +23,19 @@ const entityModelSlice = createSlice({
     },
     startCreateNew(state) {
       state.isDrawerOpen = true;
-      state.editingEntityModel = {};
+      state.editingEntityModelId = null;
     },
     startEdit(state, action: PayloadAction<string>) {
       state.isDrawerOpen = true;
-      state.editingEntityModel = adapter.getSelectors().selectById(state, action.payload) || {};
+      state.editingEntityModelId = action.payload;
     },
-    setFieldsOfEditingEntityModel: (state, action: PayloadAction<ReadonlyArray<SchemaField>>) => {
-      const ed = state.editingEntityModel;
-      if (ed) ed.fields = action.payload as SchemaField[];
-    },
-    removeFieldsOfEditingEntityModel: (state, action: PayloadAction<string>) => {
-      const ed = state.editingEntityModel;
-      if (ed) ed.fields = (ed.fields || []).filter((f: SchemaField) => f.id !== action.payload);
-    },
-    finishEntityModelChange: (state, action: PayloadAction<Omit<EntityModel, 'id'>>) => {
+    applyEntityModelChange: (state, action: PayloadAction<Omit<EntityModel, 'id'>>) => {
       adapter.upsertOne(state, {
-        ...state.editingEntityModel,
         ...action.payload,
-        id: state.editingEntityModel?.id ?? makeEntityModelId(),
+        id: state.editingEntityModelId ?? makeEntityModelId(),
       });
       state.isDrawerOpen = false;
+      state.editingEntityModelId = null;
     },
     deleteEntityModel: (state, action: PayloadAction<string>) => {
       adapter.removeOne(state, action.payload);

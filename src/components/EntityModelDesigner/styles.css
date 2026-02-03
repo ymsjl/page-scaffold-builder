@@ -1,0 +1,11 @@
+.set-as-pk-button {
+  position: absolute;
+  right: 4px;
+  top: auto;
+  bottom: auto;
+  visibility: hidden;
+}
+
+.ant-table-cell:hover .set-as-pk-button {
+  visibility: visible;
+}

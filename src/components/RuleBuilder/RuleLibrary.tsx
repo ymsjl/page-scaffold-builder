@@ -44,7 +44,6 @@ const RuleCard: React.FC<{ ruleTemplate: RuleTemplate }> = React.memo(({ ruleTem
 RuleCard.displayName = "RuleCard";
 
 const RuleLibrary: React.FC<{ valueType?: string }> = React.memo(({ valueType }) => {
-  console.log('valueType', valueType)
   const items = RULE_LIBRARY.filter((item) => {
     if (!valueType) return true;
     return (

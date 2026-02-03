@@ -7,8 +7,13 @@ import { getComponentPrototype } from "@/componentMetas";
 
 export const selectComponentTreeState = (state: RootState) => state.componentTree;
 
+export const selectComponentTreeComponents = createSelector(
+  selectComponentTreeState,
+  (state) => state.components
+);
+
 export const componentNodesSelectors = componentTreeAdapter.getSelectors(
-  selectComponentTreeState
+  selectComponentTreeComponents
 );
 
 export const selectSelectedNodeId = (state: RootState) => state.componentTree.selectedNodeId;

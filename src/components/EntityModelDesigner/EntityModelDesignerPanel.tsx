@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Drawer, message, Modal, Space, Tag } from "antd";
+import { Button, Flex, message, Modal, Space, Tag } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import {
   EditableProTable,
   ProForm,
+  ProFormItemRender,
   ProFormText,
 } from "@ant-design/pro-components";
 import type { EntityModel, SchemaField } from "@/types";
@@ -17,15 +18,24 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import { SchemaFieldSchema } from "@/validation";
-import { selectEditingEntityModel } from "@/store/slices/entityModel/entityModelSelectors";
+import { entityModelSelectors, selectEditingEntityModelId } from "@/store/slices/entityModel/entityModelSelectors";
+import './styles.css';
 
 export default function EntityModelDesignerPanel() {
+  const isOpen = useAppSelector((state) => state.entityModel.isDrawerOpen);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fieldEditableKeys, setFieldEditableKeys] = useState<React.Key[]>([]);
-  const isOpen = useAppSelector((state) => state.entityModel.isDrawerOpen);
   const dispatch = useAppDispatch();
-  const editingEntityModel = useAppSelector(selectEditingEntityModel);
   const [form] = ProForm.useForm<EntityModel>();
+  const editingEntityModelId = useAppSelector(selectEditingEntityModelId);
+  const editingEntityModelSelector = useMemo(
+    () => (state: any) =>
+      !editingEntityModelId
+        ? null
+        : entityModelSelectors.selectById(state, editingEntityModelId),
+    [editingEntityModelId],
+  );
+  const editingEntityModel = useAppSelector(editingEntityModelSelector);
 
   const currentTableEditingKey = fieldEditableKeys?.length
     ? String(fieldEditableKeys[0])
@@ -35,25 +45,25 @@ export default function EntityModelDesignerPanel() {
 
   useEffect(() => {
     if (isOpen && !isOpenPrevRef.current && editingEntityModel) {
-      form.setFieldsValue({
-        title: editingEntityModel.title,
-        name: editingEntityModel.name,
-      });
+      form.setFieldsValue({ ...editingEntityModel });
     }
   }, [isOpen, editingEntityModel, form]);
+
+  const primaryKey = ProForm.useWatch("primaryKey", form);
 
   useEffect(() => {
     isOpenPrevRef.current = isOpen;
   }, [isOpen]);
 
-  const setPrimaryKey = useCallback((key: string) => {
+  const setAsPrimaryKey = useCallback((key: string) => {
     const nextKey = String(key || "").trim();
     if (!nextKey) {
       message.warning("请先填写字段 key");
       return;
     }
+    form.setFieldValue("primaryKey", nextKey);
     message.success(`已设置主键：${nextKey}`);
-  }, []);
+  }, [form]);
 
   const onClose = useCallback(() => {
     dispatch(entityModelActions.closeDrawer());
@@ -71,7 +81,7 @@ export default function EntityModelDesignerPanel() {
       return;
     }
 
-    dispatch(entityModelActions.finishEntityModelChange(form.getFieldsValue()));
+    dispatch(entityModelActions.applyEntityModelChange(form.getFieldsValue()));
     message.success("已保存");
     onClose();
   }, [editingId, onClose, isTableEditing, form]);
@@ -101,6 +111,27 @@ export default function EntityModelDesignerPanel() {
           rules: [{ required: true, whitespace: true, message: "请输入 key" }],
         },
         renderText: (val) => val || "-",
+        render: (node, item) => {
+          return (
+            <Flex style={{ width: '100%' }}>
+              {node}
+              {primaryKey !== item.key
+                ? <Button
+                  className="set-as-pk-button"
+                  size='small'
+                  type="link"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setAsPrimaryKey(item.key)
+                  }}
+                >
+                  设为主键
+                </Button>
+                : <Tag color="yellow">PK</Tag>
+              }
+            </Flex>
+          )
+        }
       },
       {
         title: "valueType",
@@ -124,32 +155,6 @@ export default function EntityModelDesignerPanel() {
         render: (_, item) => String(item.valueType || "text"),
       },
       {
-        title: "主键",
-        dataIndex: "__primaryKey",
-        editable: false,
-        width: 72,
-        render: (_, item) => {
-          const itemKey = String(item.key || "").trim();
-          const isPk =
-            !!itemKey &&
-            String(editingEntityModel?.primaryKey || "").trim() === itemKey;
-          if (isPk) return <Tag color="green">是</Tag>;
-          return (
-            <Button
-              type="link"
-              size="small"
-              disabled={!itemKey}
-              onClick={(e) => {
-                e.stopPropagation();
-                setPrimaryKey(itemKey);
-              }}
-            >
-              设为主键
-            </Button>
-          );
-        },
-      },
-      {
         title: "可为 null",
         dataIndex: "isNullable",
         valueType: "switch",
@@ -171,80 +176,11 @@ export default function EntityModelDesignerPanel() {
           unCheckedChildren: "否",
         },
       },
-
-      {
-        title: "操作",
-        valueType: "option",
-        width: 280,
-        render: (_, item, __, action) => {
-          const isComplex = ["object", "array"].includes(
-            String(item.valueType || ""),
-          );
-          const itemId = String(item.id);
-          const disableEditBtn =
-            isTableEditing && String(currentTableEditingKey) !== itemId;
-
-          return [
-            <Button
-              key="edit"
-              size="small"
-              disabled={disableEditBtn}
-              icon={<EditOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
-                const ok = action?.startEditable?.(item.id);
-                if (ok === false) return;
-                setFieldEditableKeys([item.id]);
-              }}
-            >
-              编辑
-            </Button>,
-            <Button
-              key="advEdit"
-              size="small"
-              icon={<SettingOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingId(String(item.id));
-              }}
-            >
-              高级
-            </Button>,
-            <Button
-              key="del"
-              danger
-              icon={<DeleteOutlined />}
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                Modal.confirm({
-                  title: "确认删除？",
-                  content: "删除后不可恢复",
-                  okText: "删除",
-                  okButtonProps: { danger: true },
-                  cancelText: "取消",
-                  onOk: () => {
-                    dispatch(
-                      entityModelActions.removeFieldsOfEditingEntityModel(
-                        String(item.id),
-                      ),
-                    );
-                    message.success("已删除");
-                  },
-                });
-              }}
-            >
-              删除
-            </Button>,
-          ].filter(Boolean);
-        },
-      },
     ];
   }, [
     currentTableEditingKey,
     isTableEditing,
-    setPrimaryKey,
-    editingEntityModel,
+    primaryKey,
     setEditingId,
     setFieldEditableKeys,
   ]);
@@ -260,129 +196,196 @@ export default function EntityModelDesignerPanel() {
         onOk={handleSaveEntity}
         okText="保存"
       >
-        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-          <ProForm
-            layout="horizontal"
-            grid
-            labelAlign="left"
-            form={form}
-            labelCol={{ xs: 5 }}
-            submitter={false}
+        <ProForm<EntityModel>
+          grid
+          labelAlign="left"
+          form={form}
+          submitter={false}
+        >
+          <ProFormText
+            label="title"
+            name="title"
+            tooltip="展示名称（用于页面/字段面板提示）"
+            placeholder="例如：用户"
+            colProps={{ xs: 12 }}
+          />
+          <ProFormText
+            label="name"
+            name="name"
+            tooltip="程序化标识（用于生成 TS 类型名，建议英文/驼峰）"
+            placeholder="例如：User"
+            colProps={{ xs: 12 }}
+          />
+          <ProFormText
+            label="primaryKey"
+            name="primaryKey"
+            hidden
+          />
+          <ProFormItemRender
+            name='fields'
+            label="字段列表"
+            layout="vertical"
+            tooltip="定义该实体类型包含的字段"
+            style={{ width: '100%' }}
           >
-            <ProFormText
-              label="title"
-              name="title"
-              tooltip="展示名称（用于页面/字段面板提示）"
-              placeholder="例如：用户"
-              colProps={{ xs: 12 }}
-            />
-            <ProFormText
-              label="name"
-              name="name"
-              tooltip="程序化标识（用于生成 TS 类型名，建议英文/驼峰）"
-              placeholder="例如：User"
-              colProps={{ xs: 12 }}
-            />
-          </ProForm>
+            {(props) => (
+              <EditableProTable<SchemaField>
+                rowKey="id"
+                size="small"
+                columns={fieldTableColumns.concat([
+                  {
+                    title: "操作",
+                    valueType: "option",
+                    width: 280,
+                    render: (_, item, _index, action) => {
+                      const isComplex = ["object", "array"].includes(
+                        String(item.valueType || ""),
+                      );
+                      const itemId = String(item.id);
+                      const disableEditBtn =
+                        isTableEditing && String(currentTableEditingKey) !== itemId;
 
-          <EditableProTable<SchemaField>
-            rowKey="id"
-            columns={fieldTableColumns}
-            tableLayout="fixed"
-            value={editingEntityModel?.fields}
-            onChange={(nextFields) => {
-              dispatch(
-                entityModelActions.setFieldsOfEditingEntityModel(
-                  nextFields || [],
-                ),
-              );
-            }}
-            search={false}
-            options={false}
-            ghost
-            controlled
-            recordCreatorProps={
-              isTableEditing
-                ? false
-                : {
-                  position: "bottom",
-                  newRecordType: "dataSource",
-                  creatorButtonText: "添加一行数据",
-                  record: () => {
-                    const newField: SchemaField = {
-                      id: `field_${Math.random().toString(36).slice(2, 9)}`,
-                      key: "",
-                      title: "",
-                      valueType: "text",
-                      isNullable: false,
-                      isUnique: false,
-                      isFilterable: true,
-                      isAutoGenerate: false,
-                      description: "",
-                      defaultValue: undefined,
-                      extra: {},
-                    };
-                    return newField;
-                  },
-                }
-            }
-            pagination={false}
-            locale={{ emptyText: "暂无字段，请点击“添加字段”" }}
-            editable={{
-              type: "single",
-              editableKeys: fieldEditableKeys,
-              onChange: (keys) =>
-                setFieldEditableKeys((keys || []).slice(0, 1)),
-              actionRender: (row, _config, defaultDom) => {
-                const saveDom = React.isValidElement(defaultDom.save)
-                  ? React.cloneElement(defaultDom.save as any, {
-                    children: (
-                      <Button size='small' type="primary"
-                        onClick={(e) => {
-                          const { error } =
-                            SchemaFieldSchema.safeParse(row);
-                          if (error) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            message.error(error.message);
-                          }
-                        }}
-                      >
-                        <SaveOutlined />
-                        保存
-                      </Button>
-                    ),
-                  })
-                  : defaultDom.save;
-
-
-                const cancelDom =
-                  React.isValidElement(defaultDom.cancel)
-                    ? React.cloneElement(defaultDom.cancel as any, {
-                      children: (
-                        <Button size='small' type="default"
+                      return [
+                        <Button
+                          key="edit"
+                          size="small"
+                          disabled={disableEditBtn}
+                          icon={<EditOutlined />}
                           onClick={(e) => {
-                            const { error } =
-                              SchemaFieldSchema.safeParse(row);
-                            if (error) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              message.error(error.message);
-                            }
+                            e.stopPropagation();
+                            const ok = action?.startEditable?.(item.id);
+                            if (ok === false) return;
+                            setFieldEditableKeys([item.id]);
                           }}
                         >
-                          <CloseOutlined />
-                          取消
-                        </Button>
-                      ),
-                    })
-                    : defaultDom.cancel;
-                console.log('cancelDom', cancelDom)
-                return [saveDom, cancelDom];
-              },
-            }}
-          />
-        </Space>
+                          编辑
+                        </Button>,
+                        <Button
+                          key="advEdit"
+                          size="small"
+                          icon={<SettingOutlined />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // TODO 打开高级编辑弹窗
+                          }}
+                        >
+                          高级
+                        </Button>,
+                        <Button
+                          key="del"
+                          danger
+                          icon={<DeleteOutlined />}
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            Modal.confirm({
+                              title: "确认删除？",
+                              content: "删除后不可恢复",
+                              okText: "删除",
+                              okButtonProps: { danger: true },
+                              cancelText: "取消",
+                              onOk: () => {
+                                const next = (props.value as SchemaField[] || []).filter((r) => r.id !== itemId);
+                                props.onChange?.(next);
+                              },
+                            });
+                          }}
+                        >
+                          删除
+                        </Button>,
+                      ].filter(Boolean);
+                    },
+                  },
+                ])}
+                tableLayout="fixed"
+                value={props.value || []}
+                bordered
+                onChange={(nextFields) => props.onChange && props.onChange(nextFields)}
+                search={false}
+                options={false}
+                ghost
+                controlled
+                recordCreatorProps={
+                  isTableEditing
+                    ? false
+                    : {
+                      position: "bottom",
+                      newRecordType: "dataSource",
+                      creatorButtonText: "添加一行数据",
+                      record: () => {
+                        const newField: SchemaField = {
+                          id: `field_${Math.random().toString(36).slice(2, 9)}`,
+                          key: "",
+                          title: "",
+                          valueType: "text",
+                          isNullable: false,
+                          isUnique: false,
+                          isFilterable: true,
+                          isAutoGenerate: false,
+                          description: "",
+                          defaultValue: undefined,
+                          extra: {},
+                        };
+                        return newField;
+                      },
+                    }
+                }
+                pagination={false}
+                locale={{ emptyText: "暂无字段，请点击“添加字段”" }}
+                editable={{
+                  type: "single",
+                  editableKeys: fieldEditableKeys,
+                  onChange: (keys) => setFieldEditableKeys((keys || []).slice(0, 1)),
+                  actionRender: (row, _config, defaultDom) => {
+                    const saveDom = React.isValidElement(defaultDom.save)
+                      ? React.cloneElement(defaultDom.save as any, {
+                        children: (
+                          <Button size='small' type="primary"
+                            onClick={(e) => {
+                              const { error } =
+                                SchemaFieldSchema.safeParse(row);
+                              if (error) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                message.error(error.message);
+                              }
+                            }}
+                          >
+                            <SaveOutlined />
+                            保存
+                          </Button>
+                        ),
+                      })
+                      : defaultDom.save;
+
+
+                    const cancelDom =
+                      React.isValidElement(defaultDom.cancel)
+                        ? React.cloneElement(defaultDom.cancel as any, {
+                          children: (
+                            <Button size='small' type="default"
+                              onClick={(e) => {
+                                const { error } =
+                                  SchemaFieldSchema.safeParse(row);
+                                if (error) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  message.error(error.message);
+                                }
+                              }}
+                            >
+                              <CloseOutlined />
+                              取消
+                            </Button>
+                          ),
+                        })
+                        : defaultDom.cancel;
+                    return [saveDom, cancelDom];
+                  },
+                }}
+              />)}
+          </ProFormItemRender>
+        </ProForm>
       </Modal>
     </>
   );

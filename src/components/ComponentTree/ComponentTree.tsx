@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
 import { Tree } from "antd";
 import type { TreeProps } from "antd";
-import type { NormalizedComponentNode } from "@/types";
+import type { ComponentNode } from "@/types";
 import TreeNodeItem from "./TreeNodeItem";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
+import { componentNodesSelectors, selectComponentTreeComponents } from "@/store/slices/componentTree/componentTreeSelectors";
 
 type TreeDataNode = NonNullable<TreeProps["treeData"]>[number];
 
@@ -13,7 +14,7 @@ const ComponentTree: React.FC = () => {
   const selectedNodeId = useAppSelector(
     (s) => (s.componentTree as any).selectedNodeId,
   );
-  const nodesById = useAppSelector((s) => s.componentTree.entities);
+  const nodesById = useAppSelector(componentNodesSelectors.selectEntities);
   const rootIds = useAppSelector((s) => s.componentTree.rootIds);
   const expandedKeys = useAppSelector(
     (s) => s.componentTree.expandedKeys ?? [],
@@ -38,7 +39,7 @@ const ComponentTree: React.FC = () => {
   }, [allNodeKeys, expandedKeys.length, dispatch]);
 
   const treeNodes = useMemo<TreeDataNode[]>(() => {
-    const buildNode = (node: NormalizedComponentNode): TreeDataNode => {
+    const buildNode = (node: ComponentNode): TreeDataNode => {
       return {
         key: node.id,
         title: (
@@ -51,12 +52,12 @@ const ComponentTree: React.FC = () => {
         ),
         children:
           node.childrenIds?.map((childId) =>
-            buildNode(nodesById?.[childId] as NormalizedComponentNode),
+            buildNode(nodesById?.[childId] as ComponentNode),
           ) || [],
       };
     };
     return (rootIds || []).map((id) =>
-      buildNode(nodesById[id] as NormalizedComponentNode),
+      buildNode(nodesById[id] as ComponentNode),
     );
   }, [nodesById, rootIds, showAddDropdownNodeId]);
 

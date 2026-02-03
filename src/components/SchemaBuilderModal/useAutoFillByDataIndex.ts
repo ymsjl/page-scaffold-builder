@@ -1,16 +1,9 @@
 import { useMemo, useRef, useEffect } from "react";
-import { ProFieldValueType } from "@ant-design/pro-components";
 import { Form, FormInstance } from "antd";
 import { getRecommendedWidth } from "./getRecommendedWidth";
 import type { ProValueEnum } from "../ColumnSchemaEditorProps";
 import type { SchemaField, ProCommonColumn } from "@/types";
-
-const VALUE_TYPE_ENUM_MAP: Record<string, ProFieldValueType> = {
-  'number': 'digit',
-  'string': 'text',
-  'boolean': 'switch',
-  'enum': 'select',
-}
+import { VALUE_TYPE_ENUM_MAP } from "./constants";
 
 const createProCommonColumnFromSchemeField = (
   field?: SchemaField,

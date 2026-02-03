@@ -10,8 +10,8 @@ export const SchemaFieldSchema = z.object({
   isFilterable: z.boolean().optional(),
   isAutoGenerate: z.boolean().optional(),
   description: z.string().optional(),
-  defaultValue: z.unknown().optional(),
-  extra: z.record(z.string(), z.unknown()).optional(),
+  defaultValue: z.any().optional(),
+  extra: z.record(z.string(), z.any()).optional(),
 });
 
 export type SchemaField = z.infer<typeof SchemaFieldSchema>;

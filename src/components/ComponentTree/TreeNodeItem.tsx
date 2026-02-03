@@ -4,6 +4,7 @@ import { PlusOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
 import { availableComponents } from "@/componentMetas";
+import { Button, Input, Space, Dropdown, Typography } from "antd";
 
 interface TreeNodeItemProps {
   node: ComponentInstance;
@@ -23,23 +24,9 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
   const dispatch = useAppDispatch();
   const isAddDropdownVisible = showAddDropdownNodeId === node.id;
-  const isSelected = useAppSelector(
-    (s) => (s.componentTree as any).selectedNodeId === node.id,
-  );
 
   const addNewNode = (parentId: string | null, type: ComponentType) => {
-    const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    dispatch(
-      componentTreeActions.addNode({
-        id,
-        parentId,
-        name: `New ${type}`,
-        type,
-        isContainer: type === "Container",
-        props: {},
-        childrenIds: [],
-      }),
-    );
+    dispatch(componentTreeActions.addNode({ parentId, type }));
   };
   const updateNode = (id: string, updates: Partial<any>) =>
     dispatch(componentTreeActions.updateNode({ id, updates }));
@@ -52,30 +39,22 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
     }
   }, [node.name, isEditing]);
 
-  const handleAddChildClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowAddDropdownNodeId(node.id);
-  };
-
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeNode(node.id);
   };
 
-  const handleSaveEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSaveEdit = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (editingName && editingName.trim()) {
       updateNode(node.id, { name: editingName.trim() });
     }
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      if (editingName && editingName.trim()) {
-        updateNode(node.id, { name: editingName.trim() });
-      }
-      setIsEditing(false);
+      handleSaveEdit();
     } else if (e.key === "Escape") {
       setIsEditing(false);
       setEditingName(node.name);
@@ -83,105 +62,33 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   };
 
   const handleBlur = () => {
-    if (editingName && editingName.trim()) {
-      updateNode(node.id, { name: editingName.trim() });
-    }
-    setIsEditing(false);
+    handleSaveEdit();
   };
 
-  const handleSelectComponent = (e: React.MouseEvent, type: ComponentType) => {
-    e.stopPropagation();
+  const handleSelectComponentFromMenu = ({ key }: { key: string }) => {
+    const type = key as ComponentType;
     if (!node?.id) {
       // eslint-disable-next-line no-console
-      console.warn(
-        "[TreeNodeItem] handleSelectComponent: missing node id",
-        node,
-      );
+      console.warn("[TreeNodeItem] handleSelectComponent: missing node id", node);
       return;
     }
-
     addNewNode(node.id, type);
     dispatch(componentTreeActions.expandNode(node.id));
     setShowAddDropdownNodeId(null);
   };
 
-  const styles: { [key: string]: React.CSSProperties } = {
-    treeNodeItem: {
-      display: "flex",
-      alignItems: "center",
-      padding: "8px",
-      cursor: "pointer",
-      transition: "background-color 0.2s",
-      backgroundColor: isSelected ? "#e6f7ff" : "transparent",
-    },
-    treeNodeItemHover: {},
-    treeNodeContent: {
-      flex: 1,
-      display: "flex",
-      alignItems: "center",
-    },
-    treeNodeLabel: {
-      fontSize: "14px",
-      color: "#333",
-      userSelect: "none",
-    },
-    treeNodeInput: {
-      padding: "4px 8px",
-      border: "1px solid #d9d9d9",
-      borderRadius: "2px",
-      outline: "none",
-      fontSize: "14px",
-    },
-    treeNodeActions: {
-      display: "flex",
-      gap: "4px",
-      alignItems: "center",
-    },
-    treeNodeBtnWrapper: {
-      position: "relative",
-    },
-    treeNodeBtn: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: "28px",
-      height: "28px",
-      border: "none",
-      background: "transparent",
-      cursor: "pointer",
-      borderRadius: "4px",
-      transition: "all 0.2s",
-      color: "#8c8c8c",
-    },
-    treeNodeDropdown: {
-      position: "absolute",
-      top: "100%",
-      left: 0,
-      zIndex: 1000,
-      background: "white",
-      border: "1px solid #e8e8e8",
-      borderRadius: "4px",
-      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-      minWidth: "150px",
-      maxHeight: "300px",
-      overflowY: "auto",
-    },
-    dropdownItem: {
-      padding: "8px 12px",
-      cursor: "pointer",
-      transition: "background-color 0.2s",
-      fontSize: "14px",
-    },
-  };
+  const dropdownItems = availableComponents.map((comp) => ({
+    key: comp.type,
+    label: comp.label,
+  }));
 
   return (
-    <div>
-      <div style={{ ...styles.treeNodeItem, paddingLeft: `${level * 20}px` }}>
-        <div style={styles.treeNodeContent}>
+    <div style={{ padding: '4px', paddingLeft: `${level * 20}px` }}>
+      <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+        <div style={{ flex: 1 }}>
           {isEditing ? (
-            <input
-              type="text"
-              style={styles.treeNodeInput}
+            <Input
+              size="small"
               value={editingName}
               onChange={(e) => setEditingName(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -189,8 +96,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               autoFocus
             />
           ) : (
-            <span
-              style={styles.treeNodeLabel}
+            <Typography.Text
               onDoubleClick={(e) => {
                 e.stopPropagation();
                 setIsEditing(true);
@@ -198,54 +104,50 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               }}
             >
               {node.name}
-            </span>
+            </Typography.Text>
           )}
         </div>
-        <div style={styles.treeNodeActions}>
+
+        <Space size={4}>
           {isEditing ? (
-            <button
-              style={styles.treeNodeBtn}
+            <Button
+              size="small"
+              icon={<CheckOutlined />}
               onClick={handleSaveEdit}
-              type="button"
-            >
-              <CheckOutlined />
-            </button>
+            />
           ) : (
             <>
               {node.isContainer && (
-                <div style={styles.treeNodeBtnWrapper}>
-                  <button
-                    style={styles.treeNodeBtn}
-                    onClick={handleAddChildClick}
-                    type="button"
-                  >
-                    <PlusOutlined />
-                  </button>
-                  {isAddDropdownVisible && (
-                    <div style={styles.treeNodeDropdown}>
-                      {availableComponents.map((comp) => (
-                        <div
-                          key={comp.type}
-                          style={styles.dropdownItem}
-                          onClick={(e) => handleSelectComponent(e, comp.type)}
-                        >
-                          {comp.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Dropdown
+                  menu={{ items: dropdownItems, onClick: handleSelectComponentFromMenu }}
+                  trigger={['click']}
+                  open={isAddDropdownVisible}
+                  onOpenChange={(open) => {
+                    if (open) {
+                      setShowAddDropdownNodeId(node.id);
+                    } else {
+                      setShowAddDropdownNodeId(null);
+                    }
+                  }}
+                >
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<PlusOutlined />}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </Dropdown>
               )}
-              <button
-                style={styles.treeNodeBtn}
+
+              <Button
+                size="small"
+                type="text"
+                icon={<DeleteOutlined />}
                 onClick={handleDelete}
-                type="button"
-              >
-                <DeleteOutlined />
-              </button>
+              />
             </>
           )}
-        </div>
+        </Space>
       </div>
     </div>
   );
