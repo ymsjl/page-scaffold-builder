@@ -18,7 +18,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
       fontSize: "14px",
       backgroundColor: "#fafafa",
       border: "2px dashed #e8e8e8",
-      borderRadius: "4px",
+      borderRadius: "16px",
     };
 
     return <div style={emptyStyle}>请选择一个组件实例以查看预览</div>;
@@ -48,6 +48,9 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
     padding: "24px",
     height: "100%",
     overflow: "auto",
+    backgroundColor: "#fafafa",
+    border: "2px dashed #e8e8e8",
+    borderRadius: "16px",
   };
 
   const renderComponent = () => {

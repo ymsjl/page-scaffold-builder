@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import {
   ProCard,
   BetaSchemaForm,
@@ -13,9 +13,8 @@ import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
 import { PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
-import { NodeExpandOutlined, PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import "./styles.css";
-import { createProCommonColumnFromSchemeField } from "../SchemaBuilderModal/useAutoFillByDataIndex";
 
 const EMPTY_STATE_STYLE: React.CSSProperties = {
   border: "1px solid #e8e8e8",
@@ -48,7 +47,10 @@ const PropertyPanel: React.FC = () => {
   const selectedComponentType = selectedNode?.type;
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
   const [form] = Form.useForm();
-  const selectedEntityModelId = Form.useWatch("entityModelId", form);
+
+  useEffect(() => {
+    form.resetFields();
+  }, [selectedNode?.id, form])
 
   const handleValuesChange = useCallback(
     (changedValues: Record<string, any>) => {
@@ -167,17 +169,23 @@ const PropertyPanel: React.FC = () => {
 
   if (!hasGroups) {
     return (
-      <div style={FORM_STYLES}>
-        <ProCard title={`配置：${selectedNode.name}`} headerBordered>
-          <BetaSchemaForm
-            initialValues={selectedNode.props}
-            onValuesChange={handleValuesChange}
-            form={form}
-            submitter={false}
-            columns={propAttrs.map((item) => createColumn(item, true))}
-          />
-        </ProCard>
-      </div>
+      <ProCard
+        title={`属性面板：${selectedNode.name}`}
+        headerBordered
+        bordered
+        size="small"
+        style={{ borderRadius: "8px" }}
+        bodyStyle={{ padding: "12px" }}
+      >
+        <BetaSchemaForm
+          initialValues={selectedNode.props}
+          onValuesChange={handleValuesChange}
+          clearOnDestroy={false}
+          form={form}
+          submitter={false}
+          columns={propAttrs.map((item) => createColumn(item, true))}
+        />
+      </ProCard>
     );
   }
 
@@ -195,25 +203,28 @@ const PropertyPanel: React.FC = () => {
 
   return (
     <div style={FORM_STYLES}>
-      {Object.entries(groupedPropAttr).map(([groupName, items]) => (
-        <ProCard
-          key={groupName}
-          title={groupName}
-          headerBordered
-          collapsible
-          defaultCollapsed={groupName !== "基础配置"}
-          style={{ marginBottom: "16px", backgroundColor: "#fafafa" }}
-          bodyStyle={{ padding: "12px" }}
-        >
-          <BetaSchemaForm
-            initialValues={selectedNode.props}
-            onValuesChange={handleValuesChange}
-            submitter={false}
-            columns={items.map((item) => createColumn(item, false))}
-          />
-        </ProCard>
-      ))}
-    </div>
+      {
+        Object.entries(groupedPropAttr).map(([groupName, items]) => (
+          <ProCard
+            key={groupName}
+            title={groupName}
+            headerBordered
+            collapsible
+            defaultCollapsed={groupName !== "基础配置"}
+            style={{ marginBottom: "16px", backgroundColor: "#fafafa" }}
+            bodyStyle={{ padding: "12px" }}
+          >
+            <BetaSchemaForm
+              initialValues={selectedNode.props}
+              onValuesChange={handleValuesChange}
+              form={form}
+              submitter={false}
+              columns={items.map((item) => createColumn(item, false))}
+            />
+          </ProCard>
+        ))
+      }
+    </div >
   );
 };
 

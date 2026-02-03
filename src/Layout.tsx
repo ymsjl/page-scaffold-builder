@@ -1,13 +1,14 @@
 import React, { ComponentProps, useEffect } from "react";
-import { Layout, Button, Collapse, Space, Typography } from "antd";
+import { Layout, Button, Collapse, Space, Typography, Flex, Menu, Card } from "antd";
 import ComponentTree from "./components/ComponentTree/ComponentTree";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { entityModelSelectors } from "./store/slices/entityModel/entityModelSelectors";
 import { componentTreeActions } from "./store/slices/componentTree/componentTreeSlice";
 import { entityModelActions } from "./store/slices/entityModel/entityModelSlice";
 import EntityModelDesignerPanel from "./components/EntityModelDesigner/EntityModelDesignerPanel";
-import { PageScaffoldBuilderPreview } from "./Preview";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import ComponentPreview from "./components/ComponentPreview/ComponentPreview";
+import PropertyPanel from "./components/PropertyPanel/PropertyPanel";
 
 const styles: { [key: string]: React.CSSProperties } = {
   builder: {
@@ -15,54 +16,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     flexDirection: "column",
     height: "100vh",
   },
-  layout: {
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-  },
-  header: {
-    padding: "16px 24px",
-    borderBottom: "1px solid #e8e8e8",
-    background: "white",
-  },
-  headerTitle: {
-    margin: 0,
-    fontSize: "20px",
-    fontWeight: 500,
-  },
-  contentLayout: {
-    flex: 1,
-    display: "flex",
-    overflow: "hidden",
-  },
-  content: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  },
-  contentInner: {
-    flex: 1,
-    overflow: "hidden",
-  },
-  section: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-    height: "100%",
-  },
-  sectionTitle: {
-    margin: 0,
-    fontSize: "16px",
-    fontWeight: 500,
-  },
 };
+
 export function PageScaffoldBuilderLayout() {
   const dispatch = useAppDispatch();
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
 
   useEffect(() => {
-    dispatch(componentTreeActions.addNode({ parentId: null, type: "Container" }),);
+    dispatch(componentTreeActions.addNode({ parentId: null, type: "Container" }));
   }, [dispatch]);
 
   const collapseItems: ComponentProps<typeof Collapse>["items"] = [
@@ -120,14 +81,25 @@ export function PageScaffoldBuilderLayout() {
         <Layout.Sider
           width={300}
           collapsedWidth={0}
-          style={{ background: "none", paddingBlockStart: "16px" }}
+          style={{ background: "none", padding: "16px 8px" }}
           trigger={null}
           title="组件树"
         >
           <Collapse size="small" items={collapseItems} />
         </Layout.Sider>
 
-        <PageScaffoldBuilderPreview />
+        <Layout.Content style={{ height: "100%", overflow: "hidden", padding: "24px 12px" }}>
+          <ComponentPreview />
+        </Layout.Content>
+
+        <Layout.Sider
+          width={300}
+          trigger={null}
+          style={{ background: "none", padding: "16px 8px" }}
+
+        >
+          <PropertyPanel />
+        </Layout.Sider>
       </Layout>
       <EntityModelDesignerPanel />
     </Layout>
