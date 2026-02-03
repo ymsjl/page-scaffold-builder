@@ -62,18 +62,7 @@ export function PageScaffoldBuilderLayout() {
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
 
   useEffect(() => {
-    const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    dispatch(
-      componentTreeActions.addNode({
-        id,
-        parentId: null,
-        name: `New Container`,
-        type: "Container",
-        isContainer: true,
-        props: {},
-        childrenIds: [],
-      }),
-    );
+    dispatch(componentTreeActions.addNode({ parentId: null, type: "Container" }),);
   }, [dispatch]);
 
   const collapseItems: ComponentProps<typeof Collapse>["items"] = [
