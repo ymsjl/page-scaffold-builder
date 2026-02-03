@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { Modal, List, Button, Space, Empty, Tag, message, Flex } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, NodeExpandOutlined } from "@ant-design/icons";
 import type { ComponentInstance, ProCommonColumn } from "@/types";
 import SchemaBuilderModal from "./SchemaBuilderModal";
-import { selectComponentTreeState, selectEditingColumn } from "@/store/slices/componentTree/componentTreeSelectors";
+import { selectComponentTreeState, selectEditingColumn, selectEntityModelInUse, selectSelectedNode } from "@/store/slices/componentTree/componentTreeSelectors";
+import { createProCommonColumnFromSchemeField } from "./useAutoFillByDataIndex";
 
 const ValueTyps =
   [
@@ -27,15 +28,16 @@ const ValueTyps =
   ]
 
 interface SchemaListProps {
-  selectedNode: ComponentInstance | null;
+  selectedEntityModelId?: string;
 }
 
-export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode, }) => {
-  const columns = selectedNode?.props?.columns ?? ([] as ProCommonColumn[]);
+export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedEntityModelId }) => {
+  const selectedNode = useAppSelector(selectSelectedNode) as ComponentInstance | null;
+  const columns = useMemo(() => selectedNode?.props?.columns ?? ([] as ProCommonColumn[]), [selectedNode]);
   const dispatch = useAppDispatch();
   const editingColumn = useAppSelector(selectEditingColumn);
   const isDrawerOpen = useAppSelector((state) => selectComponentTreeState(state).isSchemaBuilderModalOpen);
-
+  const entityFields = useAppSelector(selectEntityModelInUse)?.fields || [];
   const handleStartEdit = (field: ProCommonColumn) => dispatch(componentTreeActions.startEditingColumn(field));
 
   // 删除字段
@@ -59,6 +61,21 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode,
     handleFinish(values)
   }
 
+  const handleAddColumnsFromEntityModel = useCallback(() => {
+    if (!selectedNode?.id || entityFields.length === 0) return;
+    dispatch(
+      componentTreeActions.updateNode({
+        id: selectedNode.id,
+        updates: {
+          props: {
+            ...selectedNode.props,
+            columns: entityFields.map(createProCommonColumnFromSchemeField),
+          },
+        },
+      }),
+    );
+  }, [dispatch, entityFields, selectedNode]);
+
   return (
     <>
       <SchemaBuilderModal
@@ -80,7 +97,16 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(({ selectedNode,
             <Empty
               description="暂无字段，点击上方按钮添加"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+            >
+              <Button
+                hidden={entityFields.length === 0}
+                title="从实体模型添加列定义"
+                onClick={handleAddColumnsFromEntityModel}
+                icon={<NodeExpandOutlined />}
+              >
+                从实体模型添加列定义
+              </Button>
+            </Empty>
           )
           : (
             <List<ProCommonColumn>

@@ -4,6 +4,7 @@ import { componentTreeAdapter } from "./componentTreeSlice";
 import { mapProCommonColumnToProps } from "./mapProCommonColumnToProps";
 import { ProCommonColumn } from "@/types";
 import { getComponentPrototype } from "@/componentMetas";
+import { entityModelSelectors } from "../entityModel/entityModelSelectors";
 
 export const selectComponentTreeState = (state: RootState) => state.componentTree;
 
@@ -59,3 +60,9 @@ export const selectEditingColumnProps = createSelector(
     return mapProCommonColumnToProps(editingColumn)
   }
 );
+
+export const selectEntityModelInUse = createSelector(
+  [selectSelectedNodeEntityModelId, entityModelSelectors.selectEntities],
+  (entityModelId, entities) => {
+    return entityModelId ? entities[entityModelId] : null;
+  });

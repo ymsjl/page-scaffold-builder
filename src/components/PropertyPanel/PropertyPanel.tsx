@@ -92,37 +92,13 @@ const PropertyPanel: React.FC = () => {
     }));
   }, [selectedComponentType, entityModelOptions]);
 
-  const generateColumnsFromEntityModel = useCallback(
-    (entityModelId: string) => {
-      const entityModel = entityModels.find((et) => et.id === entityModelId);
-      if (!entityModel) return [];
-      return entityModel.fields.map(createProCommonColumnFromSchemeField);
-    },
-    [entityModels],
-  );
-
-  const handleAddColumnsFromEntityModel = useCallback(() => {
-    if (!selectedNode?.id || !selectedEntityModelId) return;
-    dispatch(
-      componentTreeActions.updateNode({
-        id: selectedNode.id,
-        updates: {
-          props: {
-            ...selectedNode.props,
-            columns: generateColumnsFromEntityModel(selectedEntityModelId),
-          },
-        },
-      }),
-    );
-  }, [dispatch, selectedEntityModelId, generateColumnsFromEntityModel, selectedNode]);
-
   const handleStartAddingColumn = useCallback(() => {
     dispatch(componentTreeActions.startAddingColumn());
   }, [dispatch]);
 
   const renderSchemaList = useCallback(
-    () => <SchemaList selectedNode={selectedNode} />,
-    [selectedNode],
+    () => <SchemaList />,
+    [],
   );
 
   const createColumn = useCallback(
@@ -140,7 +116,6 @@ const PropertyPanel: React.FC = () => {
 
       if (item.name === "columns") {
         result.renderFormItem = renderSchemaList;
-
         if (withSchemaActions) {
           result.tooltip = undefined;
           result.formItemProps = {
@@ -150,17 +125,7 @@ const PropertyPanel: React.FC = () => {
                 <Typography.Text style={{ flex: 1 }}>
                   {item.label}
                 </Typography.Text>
-                <Button
-                  hidden={!selectedEntityModelId}
-                  size="small"
-                  type="text"
-                  title="从实体模型添加列定义"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddColumnsFromEntityModel();
-                  }}
-                  icon={<NodeExpandOutlined />}
-                />
+
                 <Button
                   size="small"
                   type="text"
@@ -183,10 +148,8 @@ const PropertyPanel: React.FC = () => {
     },
     [
       entityModelValueEnum,
-      handleAddColumnsFromEntityModel,
       handleStartAddingColumn,
       renderSchemaList,
-      selectedEntityModelId,
     ],
   );
 
