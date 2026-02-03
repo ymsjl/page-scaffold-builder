@@ -7,7 +7,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['entityModel'], // 根据需要调整要持久化的 slice
+  blacklist: ['componentTree'], // componentTree uses its own nested persist
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

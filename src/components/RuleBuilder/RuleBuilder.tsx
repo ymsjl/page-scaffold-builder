@@ -4,7 +4,7 @@ import { useAppDispatch } from "@/store/hooks";
 import RulePreview from "./RulePreview";
 import RuleLibrary from "./RuleLibrary";
 import RuleCanvas from "./RuleCanvas";
-import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 
 interface RuleBuilderProps {
   name: string;

@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Space, Typography } from "antd";
 import RuleItem from "./RuleItem";
 import { useAppSelector } from "@/store/hooks";
-import { selectRuleNodesOfEditingColumn } from "@/store/slices/componentTree/componentTreeSelectors";
+import { selectRuleNodesOfEditingColumn } from "@/store/componentTree/componentTreeSelectors";
 
 const RuleCanvas: React.FC = React.memo(() => {
   const nodes = useAppSelector(selectRuleNodesOfEditingColumn);

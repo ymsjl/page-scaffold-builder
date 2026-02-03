@@ -14,8 +14,8 @@ import {
   Divider,
   Checkbox,
 } from "antd";
-import { entityModelSelectors } from "@/store/slices/entityModel/entityModelSelectors";
-import { selectSelectedNodeEntityModelId } from "@/store/slices/componentTree/componentTreeSelectors";
+import { entityModelSelectors } from "@/store/componentTree/componentTreeSelectors";
+import { selectSelectedNodeEntityModelId } from "@/store/componentTree/componentTreeSelectors";
 import { useAppSelector } from "@/store/hooks";
 import { LeftOutlined } from "@ant-design/icons";
 import { valueTypeOptions } from "./getRecommendedWidth";

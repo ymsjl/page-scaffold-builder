@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Card } from "antd";
 import { BetaSchemaForm } from "@ant-design/pro-components";
 import { useAppSelector } from "@/store/hooks";
-import { selectEditingColumnProps } from "@/store/slices/componentTree/componentTreeSelectors";
+import { selectEditingColumnProps } from "@/store/componentTree/componentTreeSelectors";
 
 const RulePreview: React.FC<{
   name: string;

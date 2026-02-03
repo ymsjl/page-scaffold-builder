@@ -9,7 +9,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { PlusOutlined } from "@ant-design/icons";
 import { RuleTemplate } from "./RuleParamsDateSchema";
 import { RULE_LIBRARY } from "./RULE_LIBRARY";
-import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 
 const RuleCard: React.FC<{ ruleTemplate: RuleTemplate }> = React.memo(({ ruleTemplate }) => {
   const dispatch = useAppDispatch();

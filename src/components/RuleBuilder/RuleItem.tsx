@@ -5,7 +5,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { RuleNodeType } from "./RuleParamsDateSchema";
 import { type RuleNode } from "./RuleParamsDateSchema";
 import { ruleNodeContext } from "./strategies";
-import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 
 type RuleItemProps = {
   node: RuleNode;

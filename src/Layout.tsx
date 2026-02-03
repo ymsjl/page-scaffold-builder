@@ -2,9 +2,8 @@ import React, { ComponentProps, useEffect } from "react";
 import { Layout, Button, Collapse, Space, Typography, Flex, Menu, Card } from "antd";
 import ComponentTree from "./components/ComponentTree/ComponentTree";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { entityModelSelectors } from "./store/slices/entityModel/entityModelSelectors";
-import { componentTreeActions } from "./store/slices/componentTree/componentTreeSlice";
-import { entityModelActions } from "./store/slices/entityModel/entityModelSlice";
+import { entityModelSelectors } from "./store/componentTree/componentTreeSelectors";
+import { componentTreeActions } from "./store/componentTree/componentTreeSlice";
 import EntityModelDesignerPanel from "./components/EntityModelDesigner/EntityModelDesignerPanel";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import ComponentPreview from "./components/ComponentPreview/ComponentPreview";
@@ -40,7 +39,7 @@ export function PageScaffoldBuilderLayout() {
         <Button
           icon={<PlusOutlined />}
           onClick={() => {
-            dispatch(entityModelActions.startCreateNew());
+            dispatch(componentTreeActions.startCreateEntityModel());
           }}
           type="text"
         />
@@ -50,7 +49,7 @@ export function PageScaffoldBuilderLayout() {
           {entityModels?.map((et) => (
             <div
               key={et.id}
-              onClick={() => dispatch(entityModelActions.startEdit(et.id))}
+              onClick={() => dispatch(componentTreeActions.startEditEntityModel(et.id))}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -65,7 +64,7 @@ export function PageScaffoldBuilderLayout() {
                 danger
                 onClick={(e) => {
                   e.stopPropagation();
-                  dispatch(entityModelActions.deleteEntityModel(et.id));
+                  dispatch(componentTreeActions.deleteEntityModel(et.id));
                 }}
               />
             </div>

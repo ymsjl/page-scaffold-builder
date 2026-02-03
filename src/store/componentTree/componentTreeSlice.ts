@@ -3,19 +3,29 @@ import {
   createEntityAdapter,
   PayloadAction,
 } from "@reduxjs/toolkit";
-import type { ComponentNodeWithColumns, ComponentNode } from "@/types/Component";
-import type { ProCommonColumn } from "@/types";
+import { WritableDraft } from "immer";
+import type {
+  ComponentNodeWithColumns,
+  ComponentNode,
+} from "@/types/Component";
+import type { EntityModel, ProCommonColumn } from "@/types";
 import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
 import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
-import { RuleNode, RuleNodeParams, RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { makeIdCreator } from "../../utils/makeIdCreator";
-import { WritableDraft } from "immer";
+import {
+  RuleNode,
+  RuleNodeParams,
+  RuleTemplate,
+} from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { makeIdCreator } from "@/utils/makeIdCreator";
 
 const adapter = createEntityAdapter<ComponentNode>();
 
-const makeColumnId = makeIdCreator("column");
+export const entityModelAdapter = createEntityAdapter<EntityModel>();
 
-const makeNodeId = makeIdCreator("node");
+export const makeColumnId = makeIdCreator("column");
+export const makeNodeId = makeIdCreator("node");
+export const makeRuleId = makeIdCreator("rule");
+export const makeEntityModelId = makeIdCreator("et");
 
 const initialState = {
   rootIds: [] as string[],
@@ -24,7 +34,13 @@ const initialState = {
   editingColumn: null as Partial<ProCommonColumn> | null,
   components: adapter.getInitialState(),
   isSchemaBuilderModalOpen: false,
+
+  entityModel: entityModelAdapter.getInitialState({}),
+  isEntityModelModalOpen: false,
+  editingEntityModelId: null as string | null,
 };
+
+export const componentTreePersistWhitelist = ["entityModel"] as const;
 
 type ComponentTreeState = typeof initialState;
 
@@ -34,7 +50,9 @@ const upsertColumnOfSelectedNode = (
 ) => {
   const selectedId = state.selectedNodeId;
   if (!selectedId) return;
-  const node = state.components.entities[selectedId] as ComponentNodeWithColumns | undefined;
+  const node = state.components.entities[selectedId] as
+    | ComponentNodeWithColumns
+    | undefined;
   if (!node) return;
   const columns = node.props?.columns;
   if (!columns) {
@@ -49,21 +67,21 @@ const upsertColumnOfSelectedNode = (
       columns.push(validatedChanges);
     }
   }
-}
+};
 
 const slice = createSlice({
   name: "componentTree",
   initialState,
   reducers: {
     /**
-     * @description 添加组件节点 
+     * @description 添加组件节点
      * @param action.payload.id 组件节点ID
      * @param action.payload.parentId 父组件节点ID
      * @param action.payload.name 组件节点名称
      */
     addNode: (
       state,
-      action: PayloadAction<Pick<ComponentNode, 'parentId' | 'type'>>,
+      action: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
     ) => {
       const { parentId, type } = action.payload;
       const node: ComponentNode = {
@@ -74,7 +92,7 @@ const slice = createSlice({
         isContainer: type === "Container",
         props: {},
         childrenIds: [],
-      }
+      };
       adapter.addOne(state.components, node);
 
       if (!parentId) {
@@ -97,9 +115,9 @@ const slice = createSlice({
     },
 
     /**
-     * @description 移除组件节点及其子节点 
-     * @param action.payload 组件节点ID 
-     * @returns 
+     * @description 移除组件节点及其子节点
+     * @param action.payload 组件节点ID
+     * @returns
      */
     removeNode: (state, action: PayloadAction<string>) => {
       const id = action.payload;
@@ -128,20 +146,20 @@ const slice = createSlice({
     },
 
     /**
-     *  
+     *
      * @param action.payload.id 组件节点ID
      * @param action.payload.updates 组件节点更新内容
      */
     updateNode: (
       state,
-      action: PayloadAction<{ id: string; updates: Partial<ComponentNode>; }>,
+      action: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
     ) => {
       const { id, updates } = action.payload;
       adapter.updateOne(state.components, { id, changes: updates });
     },
 
     /**
-     * @description 选择组件节点 
+     * @description 选择组件节点
      * @param action.payload 组件节点ID
      */
     selectNode: (state, action: PayloadAction<string | null>) => {
@@ -149,7 +167,7 @@ const slice = createSlice({
     },
 
     /**
-     * @description 设置展开的节点ID列表 
+     * @description 设置展开的节点ID列表
      * @param action.payload 展开的节点ID列表
      */
     setExpandedKeys: (state, action: PayloadAction<string[]>) => {
@@ -157,7 +175,7 @@ const slice = createSlice({
     },
 
     /**
-     *  
+     *
      * @param action.payload 节点ID
      */
     expandNode: (state, action: PayloadAction<string>) => {
@@ -173,11 +191,16 @@ const slice = createSlice({
      */
     applyChangesToColumnOfSelectedNode: (
       state,
-      action: PayloadAction<Partial<ProCommonColumn>>,) => {
+      action: PayloadAction<Partial<ProCommonColumn>>,
+    ) => {
       const editingColumn = state.editingColumn;
       if (!editingColumn) return;
       const { key = makeColumnId() } = editingColumn;
-      const nextColumn = ProCommonColumnSchema.parse({ ...action.payload, ...editingColumn, key });
+      const nextColumn = ProCommonColumnSchema.parse({
+        ...action.payload,
+        ...editingColumn,
+        key,
+      });
       upsertColumnOfSelectedNode(state, nextColumn);
     },
 
@@ -202,7 +225,9 @@ const slice = createSlice({
       if (!selectedId) return;
       const node = adapter
         .getSelectors()
-        .selectById(state.components, selectedId) as ComponentNodeWithColumns | undefined;
+        .selectById(state.components, selectedId) as
+        | ComponentNodeWithColumns
+        | undefined;
       if (!node) return;
       const targetColumnIdx = (node.props?.columns ?? []).findIndex(
         (c) => c.key === targetKey,
@@ -232,7 +257,9 @@ const slice = createSlice({
       if (!selectedId) return;
       const readonlyNode = adapter
         .getSelectors()
-        .selectById(state.components, selectedId) as ComponentNodeWithColumns | undefined;
+        .selectById(state.components, selectedId) as
+        | ComponentNodeWithColumns
+        | undefined;
       if (!readonlyNode) return;
       const columns: ProCommonColumn[] = readonlyNode.props?.columns || [];
       if (from < 0 || from >= columns.length || to < 0 || to >= columns.length)
@@ -240,9 +267,10 @@ const slice = createSlice({
       const [moved] = columns.splice(from, 1);
       columns.splice(to, 0, moved);
       adapter.updateOne(state.components, {
-        id: selectedId, changes: {
+        id: selectedId,
+        changes: {
           props: { ...readonlyNode.props, columns },
-        }
+        },
       });
     },
 
@@ -261,7 +289,10 @@ const slice = createSlice({
      * @description 更新正在编辑的列属性部分内容
      * @param action.payload 列属性更新内容
      */
-    updateEditingColumn(state, action: PayloadAction<Partial<ProCommonColumn>>) {
+    updateEditingColumn(
+      state,
+      action: PayloadAction<Partial<ProCommonColumn>>,
+    ) {
       if (!state.editingColumn) return;
       Object.assign(state.editingColumn, action.payload);
     },
@@ -301,7 +332,9 @@ const slice = createSlice({
     ) {
       if (!state.editingColumn?.ruleNodes) return;
       const { id, params } = action.payload;
-      const targetNode = state.editingColumn?.ruleNodes.find((n) => n.id === id);
+      const targetNode = state.editingColumn?.ruleNodes.find(
+        (n) => n.id === id,
+      );
       if (!targetNode) return;
       Object.assign(targetNode.params, params);
       targetNode.message =
@@ -317,7 +350,9 @@ const slice = createSlice({
      */
     deleteRuleNodeOfEditingColumn(state, action: PayloadAction<string>) {
       if (!state.editingColumn?.ruleNodes) return;
-      state.editingColumn.ruleNodes = state.editingColumn.ruleNodes.filter((n) => n.id !== action.payload);
+      state.editingColumn.ruleNodes = state.editingColumn.ruleNodes.filter(
+        (n) => n.id !== action.payload,
+      );
     },
 
     setIsSchemaBuilderModalOpen(state, action: PayloadAction<boolean>) {
@@ -332,13 +367,36 @@ const slice = createSlice({
     startEditingColumn(state, action: PayloadAction<ProCommonColumn>) {
       state.isSchemaBuilderModalOpen = true;
       state.editingColumn = { ...action.payload };
-    }
-  }
+    },
+
+    closeEntityModelModal(state) {
+      state.isEntityModelModalOpen = false;
+    },
+    startCreateEntityModel(state) {
+      state.isEntityModelModalOpen = true;
+      state.editingEntityModelId = null;
+    },
+    startEditEntityModel(state, action: PayloadAction<string>) {
+      state.isEntityModelModalOpen = true;
+      state.editingEntityModelId = action.payload;
+    },
+    applyEntityModelChange: (
+      state,
+      action: PayloadAction<Omit<EntityModel, "id">>,
+    ) => {
+      entityModelAdapter.upsertOne(state.entityModel, {
+        ...action.payload,
+        id: state.editingEntityModelId ?? makeEntityModelId(),
+      });
+      state.isEntityModelModalOpen = false;
+      state.editingEntityModelId = null;
+    },
+    deleteEntityModel: (state, action: PayloadAction<string>) => {
+      entityModelAdapter.removeOne(state.entityModel, action.payload);
+    },
+  },
 });
 
 export const componentTreeActions = slice.actions;
 export default slice.reducer;
 export const componentTreeAdapter = adapter;
-
-export const makeRuleId = makeIdCreator("rule");
-

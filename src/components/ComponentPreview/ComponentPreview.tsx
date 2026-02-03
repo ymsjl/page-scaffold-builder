@@ -1,7 +1,7 @@
 import React from "react";
 import { getComponentPrototype } from "../../componentMetas";
 import { useAppSelector } from "../../store/hooks";
-import { selectNodeForPreview } from "@/store/slices/componentTree/componentTreeSelectors";
+import { selectNodeForPreview } from "@/store/componentTree/componentTreeSelectors";
 
 interface ComponentPreviewProps { }
 

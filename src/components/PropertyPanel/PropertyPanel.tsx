@@ -6,9 +6,9 @@ import {
 } from "@ant-design/pro-components";
 import { Button, Flex, Form, Typography } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { entityModelSelectors } from "@/store/slices/entityModel/entityModelSelectors";
-import { selectSelectedNode } from "@/store/slices/componentTree/componentTreeSelectors";
-import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
+import { entityModelSelectors } from "@/store/componentTree/componentTreeSelectors";
+import { selectSelectedNode } from "@/store/componentTree/componentTreeSelectors";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
 import { PropAttribute } from "@/types";

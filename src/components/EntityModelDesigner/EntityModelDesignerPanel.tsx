@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Flex, message, Modal, Space, Tag } from "antd";
+import { Button, Flex, message, Modal, Tag } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import {
   EditableProTable,
@@ -7,9 +7,6 @@ import {
   ProFormItemRender,
   ProFormText,
 } from "@ant-design/pro-components";
-import type { EntityModel, SchemaField } from "@/types";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { entityModelActions } from "@/store/slices/entityModel/entityModelSlice";
 import {
   EditOutlined,
   SaveOutlined,
@@ -17,25 +14,25 @@ import {
   DeleteOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
+
+import type { EntityModel, SchemaField } from "@/types";
 import { SchemaFieldSchema } from "@/validation";
-import { entityModelSelectors, selectEditingEntityModelId } from "@/store/slices/entityModel/entityModelSelectors";
-import './styles.css';
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
+import {
+  selectEditingEntityModel,
+  selectIsEntityModelModalOpen,
+} from "@/store/componentTree/componentTreeSelectors";
+
+import "./styles.css";
 
 export default function EntityModelDesignerPanel() {
-  const isOpen = useAppSelector((state) => state.entityModel.isDrawerOpen);
+  const isOpen = useAppSelector(selectIsEntityModelModalOpen);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fieldEditableKeys, setFieldEditableKeys] = useState<React.Key[]>([]);
   const dispatch = useAppDispatch();
+  const editingEntityModel = useAppSelector(selectEditingEntityModel);
   const [form] = ProForm.useForm<EntityModel>();
-  const editingEntityModelId = useAppSelector(selectEditingEntityModelId);
-  const editingEntityModelSelector = useMemo(
-    () => (state: any) =>
-      !editingEntityModelId
-        ? null
-        : entityModelSelectors.selectById(state, editingEntityModelId),
-    [editingEntityModelId],
-  );
-  const editingEntityModel = useAppSelector(editingEntityModelSelector);
 
   const currentTableEditingKey = fieldEditableKeys?.length
     ? String(fieldEditableKeys[0])
@@ -55,18 +52,21 @@ export default function EntityModelDesignerPanel() {
     isOpenPrevRef.current = isOpen;
   }, [isOpen]);
 
-  const setAsPrimaryKey = useCallback((key: string) => {
-    const nextKey = String(key || "").trim();
-    if (!nextKey) {
-      message.warning("请先填写字段 key");
-      return;
-    }
-    form.setFieldValue("primaryKey", nextKey);
-    message.success(`已设置主键：${nextKey}`);
-  }, [form]);
+  const setAsPrimaryKey = useCallback(
+    (key: string) => {
+      const nextKey = String(key || "").trim();
+      if (!nextKey) {
+        message.warning("请先填写字段 key");
+        return;
+      }
+      form.setFieldValue("primaryKey", nextKey);
+      message.success(`已设置主键：${nextKey}`);
+    },
+    [form],
+  );
 
   const onClose = useCallback(() => {
-    dispatch(entityModelActions.closeDrawer());
+    dispatch(componentTreeActions.closeEntityModelModal());
     form.resetFields();
   }, [dispatch, form]);
 
@@ -81,7 +81,9 @@ export default function EntityModelDesignerPanel() {
       return;
     }
 
-    dispatch(entityModelActions.applyEntityModelChange(form.getFieldsValue()));
+    dispatch(
+      componentTreeActions.applyEntityModelChange(form.getFieldsValue()),
+    );
     message.success("已保存");
     onClose();
   }, [editingId, onClose, isTableEditing, form]);
@@ -113,25 +115,26 @@ export default function EntityModelDesignerPanel() {
         renderText: (val) => val || "-",
         render: (node, item) => {
           return (
-            <Flex style={{ width: '100%' }}>
+            <Flex style={{ width: "100%" }}>
               {node}
-              {primaryKey !== item.key
-                ? <Button
+              {primaryKey !== item.key ? (
+                <Button
                   className="set-as-pk-button"
-                  size='small'
+                  size="small"
                   type="link"
                   onClick={(e) => {
-                    e.stopPropagation()
-                    setAsPrimaryKey(item.key)
+                    e.stopPropagation();
+                    setAsPrimaryKey(item.key);
                   }}
                 >
                   设为主键
                 </Button>
-                : <Tag color="yellow">PK</Tag>
-              }
+              ) : (
+                <Tag color="yellow">PK</Tag>
+              )}
             </Flex>
-          )
-        }
+          );
+        },
       },
       {
         title: "valueType",
@@ -190,7 +193,7 @@ export default function EntityModelDesignerPanel() {
       <Modal
         open={isOpen}
         onCancel={onClose}
-        width='1200px'
+        width="1200px"
         title="实体类型设计器"
         destroyOnClose
         onOk={handleSaveEntity}
@@ -216,17 +219,13 @@ export default function EntityModelDesignerPanel() {
             placeholder="例如：User"
             colProps={{ xs: 12 }}
           />
-          <ProFormText
-            label="primaryKey"
-            name="primaryKey"
-            hidden
-          />
+          <ProFormText label="primaryKey" name="primaryKey" hidden />
           <ProFormItemRender
-            name='fields'
+            name="fields"
             label="字段列表"
             layout="vertical"
             tooltip="定义该实体类型包含的字段"
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           >
             {(props) => (
               <EditableProTable<SchemaField>
@@ -243,7 +242,8 @@ export default function EntityModelDesignerPanel() {
                       );
                       const itemId = String(item.id);
                       const disableEditBtn =
-                        isTableEditing && String(currentTableEditingKey) !== itemId;
+                        isTableEditing &&
+                        String(currentTableEditingKey) !== itemId;
 
                       return [
                         <Button
@@ -285,7 +285,9 @@ export default function EntityModelDesignerPanel() {
                               okButtonProps: { danger: true },
                               cancelText: "取消",
                               onOk: () => {
-                                const next = (props.value as SchemaField[] || []).filter((r) => r.id !== itemId);
+                                const next = (
+                                  (props.value as SchemaField[]) || []
+                                ).filter((r) => r.id !== itemId);
                                 props.onChange?.(next);
                               },
                             });
@@ -300,7 +302,9 @@ export default function EntityModelDesignerPanel() {
                 tableLayout="fixed"
                 value={props.value || []}
                 bordered
-                onChange={(nextFields) => props.onChange && props.onChange(nextFields)}
+                onChange={(nextFields) =>
+                  props.onChange && props.onChange(nextFields)
+                }
                 search={false}
                 options={false}
                 ghost
@@ -309,61 +313,64 @@ export default function EntityModelDesignerPanel() {
                   isTableEditing
                     ? false
                     : {
-                      position: "bottom",
-                      newRecordType: "dataSource",
-                      creatorButtonText: "添加一行数据",
-                      record: () => {
-                        const newField: SchemaField = {
-                          id: `field_${Math.random().toString(36).slice(2, 9)}`,
-                          key: "",
-                          title: "",
-                          valueType: "text",
-                          isNullable: false,
-                          isUnique: false,
-                          isFilterable: true,
-                          isAutoGenerate: false,
-                          description: "",
-                          defaultValue: undefined,
-                          extra: {},
-                        };
-                        return newField;
-                      },
-                    }
+                        position: "bottom",
+                        newRecordType: "dataSource",
+                        creatorButtonText: "添加一行数据",
+                        record: () => {
+                          const newField: SchemaField = {
+                            id: `field_${Math.random().toString(36).slice(2, 9)}`,
+                            key: "",
+                            title: "",
+                            valueType: "text",
+                            isNullable: false,
+                            isUnique: false,
+                            isFilterable: true,
+                            isAutoGenerate: false,
+                            description: "",
+                            defaultValue: undefined,
+                            extra: {},
+                          };
+                          return newField;
+                        },
+                      }
                 }
                 pagination={false}
                 locale={{ emptyText: "暂无字段，请点击“添加字段”" }}
                 editable={{
                   type: "single",
                   editableKeys: fieldEditableKeys,
-                  onChange: (keys) => setFieldEditableKeys((keys || []).slice(0, 1)),
+                  onChange: (keys) =>
+                    setFieldEditableKeys((keys || []).slice(0, 1)),
                   actionRender: (row, _config, defaultDom) => {
                     const saveDom = React.isValidElement(defaultDom.save)
                       ? React.cloneElement(defaultDom.save as any, {
-                        children: (
-                          <Button size='small' type="primary"
-                            onClick={(e) => {
-                              const { error } =
-                                SchemaFieldSchema.safeParse(row);
-                              if (error) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                message.error(error.message);
-                              }
-                            }}
-                          >
-                            <SaveOutlined />
-                            保存
-                          </Button>
-                        ),
-                      })
+                          children: (
+                            <Button
+                              size="small"
+                              type="primary"
+                              onClick={(e) => {
+                                const { error } =
+                                  SchemaFieldSchema.safeParse(row);
+                                if (error) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  message.error(error.message);
+                                }
+                              }}
+                            >
+                              <SaveOutlined />
+                              保存
+                            </Button>
+                          ),
+                        })
                       : defaultDom.save;
 
-
-                    const cancelDom =
-                      React.isValidElement(defaultDom.cancel)
-                        ? React.cloneElement(defaultDom.cancel as any, {
+                    const cancelDom = React.isValidElement(defaultDom.cancel)
+                      ? React.cloneElement(defaultDom.cancel as any, {
                           children: (
-                            <Button size='small' type="default"
+                            <Button
+                              size="small"
+                              type="default"
                               onClick={(e) => {
                                 const { error } =
                                   SchemaFieldSchema.safeParse(row);
@@ -379,11 +386,12 @@ export default function EntityModelDesignerPanel() {
                             </Button>
                           ),
                         })
-                        : defaultDom.cancel;
+                      : defaultDom.cancel;
                     return [saveDom, cancelDom];
                   },
                 }}
-              />)}
+              />
+            )}
           </ProFormItemRender>
         </ProForm>
       </Modal>

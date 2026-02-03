@@ -2,7 +2,7 @@ import React from "react";
 import type { ComponentInstance, ComponentType } from "@/types";
 import { PlusOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { availableComponents } from "@/componentMetas";
 import { Button, Input, Space, Dropdown, Typography } from "antd";
 

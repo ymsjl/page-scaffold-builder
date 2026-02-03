@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo } from "react";
 import { Modal, List, Button, Space, Empty, Tag, message, Flex } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { componentTreeActions } from "@/store/slices/componentTree/componentTreeSlice";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { DeleteOutlined, EditOutlined, NodeExpandOutlined } from "@ant-design/icons";
 import type { ComponentInstance, ProCommonColumn } from "@/types";
 import SchemaBuilderModal from "./SchemaBuilderModal";
-import { selectComponentTreeState, selectEditingColumn, selectEntityModelInUse, selectSelectedNode } from "@/store/slices/componentTree/componentTreeSelectors";
+import { selectComponentTreeState, selectEditingColumn, selectEntityModelInUse, selectSelectedNode } from "@/store/componentTree/componentTreeSelectors";
 import { createProCommonColumnFromSchemeField } from "./useAutoFillByDataIndex";
 
 const ValueTyps =
