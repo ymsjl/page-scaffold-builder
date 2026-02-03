@@ -34,11 +34,11 @@ export const ruleNodesToColumnProps = (
 };
 
 export const mapProCommonColumnToProps = (column: Partial<ProCommonColumn>): Omit<ProCommonColumn, 'ruleNodes'> => {
-  const { ruleNodes, formItemProps, fieldProps, ...resetColumnProps } = column;
+  const { ruleNodes, formItemProps, fieldProps, ...restColumnProps } = column;
   const columnPropsCalcByRules = ruleNodesToColumnProps(ruleNodes || []);
   return ({
     ...({ title: '', dataIndex: '', key: '', }),
-    ...resetColumnProps,
+    ...restColumnProps,
     formItemProps: Object.assign({}, columnPropsCalcByRules.formItemProps, formItemProps),
     fieldProps: Object.assign({}, columnPropsCalcByRules.fieldProps, fieldProps),
   });

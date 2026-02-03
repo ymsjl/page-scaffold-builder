@@ -1,6 +1,6 @@
 import { createSlice, createEntityAdapter, PayloadAction } from '@reduxjs/toolkit';
 import type { EntityModel } from '@/types';
-import { makeIdCreator } from '../makeIdCreator';
+import { makeIdCreator } from '../../utils/makeIdCreator';
 
 export const makeEntityModelId = makeIdCreator('et');
 

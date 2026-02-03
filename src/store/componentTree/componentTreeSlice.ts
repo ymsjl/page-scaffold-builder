@@ -8,7 +8,7 @@ import type { ProCommonColumn } from "@/types";
 import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
 import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
 import { RuleNode, RuleNodeParams, RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { makeIdCreator } from "../makeIdCreator";
+import { makeIdCreator } from "../../utils/makeIdCreator";
 import { WritableDraft } from "immer";
 
 const adapter = createEntityAdapter<ComponentNode>();
@@ -303,7 +303,7 @@ const slice = createSlice({
       const { id, params } = action.payload;
       const targetNode = state.editingColumn?.ruleNodes.find((n) => n.id === id);
       if (!targetNode) return;
-      Object.assign(targetNode.params, {}, params);
+      Object.assign(targetNode.params, params);
       targetNode.message =
         targetNode.message ||
         ruleNodeContext
