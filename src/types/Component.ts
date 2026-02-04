@@ -25,6 +25,8 @@ export interface ComponentInstance<P = Record<string, any>> {
   children?: ComponentInstance[];
 }
 
+
+
 // 组件类型元信息，相当于组件的“类定义”
 export interface ComponentPrototype {
   // 组件类型名称
@@ -45,6 +47,14 @@ export interface ComponentPrototype {
 
   /** 组件属性定义，用于属性面板生成 */
   propsTypes?: Record<string, PropAttribute>;
+
+  /**
+   * 组件支持的操作列表。
+   *
+   * 每个字符串表示一个操作标识符（例如点击、提交、自定义动作的 key），
+   * 用于声明由该组件原型创建的组件实例在设计器或运行时中可触发的行为。
+   */
+  actions?: string[];
 }
 
 export interface ComponentNode<P = Record<string, any>>

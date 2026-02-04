@@ -15,6 +15,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
       ignoreRules: false,
       search: {
         layout: 'vertical',
+        defaultCollapsed: false,
       },
       form: {
         ignoreRules: false,
@@ -32,6 +33,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         name: "columns",
         type: "array",
         label: "表格列配置",
+        group: '列配置',
         description: "定义表格的列信息",
         defaultValue: [],
       },
@@ -51,6 +53,22 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
           defaultPageSize: 10,
           showSizeChanger: true,
         },
+        children: [
+          {
+            name: "defaultPageSize",
+            label: "默认每页条数",
+            type: "number",
+            description: "每页显示的数据条数",
+            defaultValue: 10,
+          },
+          {
+            name: "showSizeChanger",
+            label: "显示页码切换器",
+            type: "boolean",
+            description: "是否显示改变每页条数的选择器",
+            defaultValue: true,
+          },
+        ],
       },
       rowKey: {
         name: "rowKey",
@@ -59,6 +77,39 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         description: "表格行 key 的取值",
         defaultValue: "id",
       },
+      ghost: {
+        name: "ghost",
+        type: "boolean",
+        label: "幽灵模式",
+        description: "表格是否启用幽灵模式",
+        defaultValue: false,
+      },
+      search: {
+        name: "search",
+        type: "object",
+        label: "搜索配置",
+        description: "搜索表单的配置",
+        children: [
+          {
+            name: "layout",
+            label: "布局方式",
+            type: "enum",
+            description: "搜索表单的布局方式",
+            options: [
+              { label: "垂直", value: "vertical" },
+              { label: "水平", value: "horizontal" },
+            ],
+            defaultValue: "vertical",
+          },
+          {
+            name: "defaultCollapsed",
+            label: "默认折叠",
+            type: "boolean",
+            description: "搜索表单是否默认折叠",
+            defaultValue: false,
+          }
+        ],
+      }
     },
   },
   Form: {
@@ -70,6 +121,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
     defaultProps: {
       layout: "vertical",
       ignoreRules: false,
+      grid: true,
       columns: [],
     },
     propsTypes: {
@@ -84,6 +136,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         name: "columns",
         type: "array",
         label: "表单列配置",
+        group: '列配置',
         description: "定义表单的列信息",
         defaultValue: [],
       },
@@ -91,6 +144,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         name: "layout",
         type: "enum",
         label: "布局方式",
+        group: "布局配置",
         description: "表单的布局方式",
         options: [
           { label: "垂直", value: "vertical" },

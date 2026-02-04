@@ -1,9 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import {
-  ProCard,
-  BetaSchemaForm,
-  ProFormColumnsType
-} from "@ant-design/pro-components";
+import { ProCard, BetaSchemaForm, ProFormColumnsType } from "@ant-design/pro-components";
 import { Button, Flex, Form, Typography } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { entityModelSelectors } from "@/store/componentTree/componentTreeSelectors";
@@ -14,7 +10,44 @@ import { getComponentPrototype } from "@/componentMetas";
 import { PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
 import { PlusOutlined } from "@ant-design/icons";
+import { merge } from "lodash-es";
+
 import "./styles.css";
+
+// 深合并工具函数
+function deepMerge(target: any, source: any): any {
+  // 使用 lodash.merge 实现深合并，并保持返回新对象的语义
+  return merge({}, target, source);
+}
+
+interface FlattenedPropAttribute extends Omit<PropAttribute, 'name'> {
+  name: string | string[];
+  isObjectChild?: boolean; // 标记是否为对象的子属性
+}
+
+function flattenPropAttributes(attrs: PropAttribute[]): FlattenedPropAttribute[] {
+  const result: FlattenedPropAttribute[] = [];
+
+  for (const attr of attrs) {
+    // 如果是对象类型且有 children，则创建分组并展开子属性
+    if (attr.type === 'object' && attr.children && attr.children.length > 0) {
+      // 为每个子属性添加路径前缀和分组信息
+      for (const child of attr.children) {
+        result.push({
+          ...child,
+          name: [attr.name, child.name], // 使用数组路径
+          group: attr.label, // 使用父属性的 label 作为分组名
+          isObjectChild: true,
+        });
+      }
+    } else {
+      // 普通属性保持不变
+      result.push(attr);
+    }
+  }
+
+  return result;
+}
 
 const EMPTY_STATE_STYLE: React.CSSProperties = {
   border: "1px solid #e8e8e8",
@@ -55,10 +88,12 @@ const PropertyPanel: React.FC = () => {
   const handleValuesChange = useCallback(
     (changedValues: Record<string, any>) => {
       if (!selectedNode?.id) return;
+      // 使用深合并避免覆盖嵌套对象的其他属性
+      const mergedProps = deepMerge(selectedNode.props, changedValues);
       dispatch(
         componentTreeActions.updateNode({
           id: selectedNode.id,
-          updates: { props: { ...selectedNode.props, ...changedValues } },
+          updates: { props: mergedProps },
         }),
       );
     },
@@ -85,13 +120,15 @@ const PropertyPanel: React.FC = () => {
   );
 
   const propAttrs = useMemo(() => {
-    if (!selectedComponentType) return [] as PropAttribute[];
-    return Object.values(
+    if (!selectedComponentType) return [] as FlattenedPropAttribute[];
+    const attrs = Object.values(
       getComponentPrototype(selectedComponentType)?.propsTypes ?? {},
     ).map((item) => ({
       ...item,
       ...(item.name === "entityModelId" ? { options: entityModelOptions } : {}),
     }));
+    // 扁平化对象类型属性
+    return flattenPropAttributes(attrs);
   }, [selectedComponentType, entityModelOptions]);
 
   const handleStartAddingColumn = useCallback(() => {
@@ -104,11 +141,14 @@ const PropertyPanel: React.FC = () => {
   );
 
   const createColumn = useCallback(
-    (item: PropAttribute, withSchemaActions: boolean) => {
+    (item: FlattenedPropAttribute) => {
       const valueType = VALUE_TYPE_ENUM_MAP[item.type] || item.type || "text";
+      // 支持数组路径（用于嵌套对象属性）
+      const nameOrPath = item.name;
       const result = {
         title: item.label,
-        dataIndex: item.name,
+        dataIndex: nameOrPath,
+        name: nameOrPath, // ProFormColumnsType 也需要 name 字段
         valueType,
         tooltip: item.description,
         fieldProps: {
@@ -116,33 +156,34 @@ const PropertyPanel: React.FC = () => {
         },
       } as ProFormColumnsType<any>;
 
-      if (item.name === "columns") {
-        result.renderFormItem = renderSchemaList;
-        if (withSchemaActions) {
-          result.tooltip = undefined;
-          result.formItemProps = {
-            className: "schema-list-form-item",
-            label: (
-              <Flex align="center" justify="space-between" gap={8} style={{ width: "100%" }}>
-                <Typography.Text style={{ flex: 1 }}>
-                  {item.label}
-                </Typography.Text>
+      // 检查 name 是否为 "columns"（兼容字符串和数组路径）
+      const itemName = Array.isArray(item.name) ? item.name[item.name.length - 1] : item.name;
 
-                <Button
-                  size="small"
-                  type="text"
-                  title="新增列定义"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStartAddingColumn();
-                  }}
-                  icon={<PlusOutlined />}
-                />
-              </Flex>
-            ),
-          };
-        }
-      } else if (item.name === "entityModelId") {
+      if (itemName === "columns") {
+        result.renderFormItem = renderSchemaList;
+        result.tooltip = undefined;
+        result.formItemProps = {
+          className: "schema-list-form-item",
+          label: (
+            <Flex align="center" justify="space-between" gap={8} style={{ width: "100%" }}>
+              <Typography.Text style={{ flex: 1 }}>
+                {item.label}
+              </Typography.Text>
+
+              <Button
+                size="small"
+                type="text"
+                title="新增列定义"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartAddingColumn();
+                }}
+                icon={<PlusOutlined />}
+              />
+            </Flex>
+          ),
+        };
+      } else if (itemName === "entityModelId") {
         result.valueEnum = entityModelValueEnum;
       }
 
@@ -175,7 +216,7 @@ const PropertyPanel: React.FC = () => {
         bordered
         size="small"
         style={{ borderRadius: "8px" }}
-        bodyStyle={{ padding: "12px" }}
+        bodyStyle={{ padding: "16px" }}
       >
         <BetaSchemaForm
           initialValues={selectedNode.props}
@@ -183,7 +224,7 @@ const PropertyPanel: React.FC = () => {
           clearOnDestroy={false}
           form={form}
           submitter={false}
-          columns={propAttrs.map((item) => createColumn(item, true))}
+          columns={propAttrs.map((item) => createColumn(item))}
         />
       </ProCard>
     );
@@ -198,7 +239,7 @@ const PropertyPanel: React.FC = () => {
       acc[group].push(propAttr);
       return acc;
     },
-    {} as Record<string, PropAttribute[]>,
+    {} as Record<string, FlattenedPropAttribute[]>,
   );
 
   return (
@@ -207,19 +248,22 @@ const PropertyPanel: React.FC = () => {
         Object.entries(groupedPropAttr).map(([groupName, items]) => (
           <ProCard
             key={groupName}
+            size="small"
             title={groupName}
             headerBordered
             collapsible
-            defaultCollapsed={groupName !== "基础配置"}
-            style={{ marginBottom: "16px", backgroundColor: "#fafafa" }}
-            bodyStyle={{ padding: "12px" }}
+            defaultCollapsed={false}
+            bordered
+            style={{ borderRadius: "8px" }}
+            bodyStyle={{ padding: "16px" }}
           >
             <BetaSchemaForm
               initialValues={selectedNode.props}
               onValuesChange={handleValuesChange}
               form={form}
               submitter={false}
-              columns={items.map((item) => createColumn(item, false))}
+              columns={items.map((item) => createColumn(item))}
+              defaultCollapsed={groupName !== "基础配置"}
             />
           </ProCard>
         ))

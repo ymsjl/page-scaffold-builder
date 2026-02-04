@@ -7,7 +7,6 @@ interface ComponentPreviewProps { }
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
   const node = useAppSelector(selectNodeForPreview);
-
   if (!node) {
     const emptyStyle: React.CSSProperties = {
       display: "flex",
@@ -17,7 +16,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
       color: "#999",
       fontSize: "14px",
       backgroundColor: "#fafafa",
-      border: "2px dashed #e8e8e8",
+      border: "4px solid #e8e8e8",
       borderRadius: "16px",
     };
 
@@ -45,11 +44,11 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
   const Component = componentPrototype.component;
 
   const containerStyle: React.CSSProperties = {
-    padding: "24px",
+    padding: "20px",
     height: "100%",
     overflow: "auto",
     backgroundColor: "#fafafa",
-    border: "2px dashed #e8e8e8",
+    border: "4px solid #e8e8e8",
     borderRadius: "16px",
   };
 

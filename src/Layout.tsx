@@ -87,7 +87,7 @@ export function PageScaffoldBuilderLayout() {
           <Collapse size="small" items={collapseItems} />
         </Layout.Sider>
 
-        <Layout.Content style={{ height: "100%", overflow: "hidden", padding: "24px 12px" }}>
+        <Layout.Content style={{ height: "100%", overflow: "hidden", padding: "16px 12px" }}>
           <ComponentPreview />
         </Layout.Content>
 

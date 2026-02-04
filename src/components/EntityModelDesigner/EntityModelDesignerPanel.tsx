@@ -313,26 +313,26 @@ export default function EntityModelDesignerPanel() {
                   isTableEditing
                     ? false
                     : {
-                        position: "bottom",
-                        newRecordType: "dataSource",
-                        creatorButtonText: "添加一行数据",
-                        record: () => {
-                          const newField: SchemaField = {
-                            id: `field_${Math.random().toString(36).slice(2, 9)}`,
-                            key: "",
-                            title: "",
-                            valueType: "text",
-                            isNullable: false,
-                            isUnique: false,
-                            isFilterable: true,
-                            isAutoGenerate: false,
-                            description: "",
-                            defaultValue: undefined,
-                            extra: {},
-                          };
-                          return newField;
-                        },
-                      }
+                      position: "bottom",
+                      newRecordType: "dataSource",
+                      creatorButtonText: "添加一行数据",
+                      record: () => {
+                        const newField: SchemaField = {
+                          id: `field_${Math.random().toString(36).slice(2, 9)}`,
+                          key: "",
+                          title: "",
+                          valueType: "text",
+                          isNullable: false,
+                          isUnique: false,
+                          isFilterable: true,
+                          isAutoGenerate: false,
+                          description: "",
+                          defaultValue: undefined,
+                          extra: {},
+                        };
+                        return newField;
+                      },
+                    }
                 }
                 pagination={false}
                 locale={{ emptyText: "暂无字段，请点击“添加字段”" }}
@@ -344,48 +344,48 @@ export default function EntityModelDesignerPanel() {
                   actionRender: (row, _config, defaultDom) => {
                     const saveDom = React.isValidElement(defaultDom.save)
                       ? React.cloneElement(defaultDom.save as any, {
-                          children: (
-                            <Button
-                              size="small"
-                              type="primary"
-                              onClick={(e) => {
-                                const { error } =
-                                  SchemaFieldSchema.safeParse(row);
-                                if (error) {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  message.error(error.message);
-                                }
-                              }}
-                            >
-                              <SaveOutlined />
-                              保存
-                            </Button>
-                          ),
-                        })
+                        children: (
+                          <Button
+                            size="small"
+                            type="primary"
+                            onClick={(e) => {
+                              const { error } =
+                                SchemaFieldSchema.safeParse(row);
+                              if (error) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                message.error(error.message);
+                              }
+                            }}
+                          >
+                            <SaveOutlined />
+                            保存
+                          </Button>
+                        ),
+                      })
                       : defaultDom.save;
 
                     const cancelDom = React.isValidElement(defaultDom.cancel)
                       ? React.cloneElement(defaultDom.cancel as any, {
-                          children: (
-                            <Button
-                              size="small"
-                              type="default"
-                              onClick={(e) => {
-                                const { error } =
-                                  SchemaFieldSchema.safeParse(row);
-                                if (error) {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  message.error(error.message);
-                                }
-                              }}
-                            >
-                              <CloseOutlined />
-                              取消
-                            </Button>
-                          ),
-                        })
+                        children: (
+                          <Button
+                            size="small"
+                            type="default"
+                            onClick={(e) => {
+                              const { error } =
+                                SchemaFieldSchema.safeParse(row);
+                              if (error) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                message.error(error.message);
+                              }
+                            }}
+                          >
+                            <CloseOutlined />
+                            取消
+                          </Button>
+                        ),
+                      })
                       : defaultDom.cancel;
                     return [saveDom, cancelDom];
                   },
