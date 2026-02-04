@@ -1,21 +1,11 @@
-import {
-  createSlice,
-  createEntityAdapter,
-  PayloadAction,
-} from "@reduxjs/toolkit";
+import { createSlice, createEntityAdapter, PayloadAction } from "@reduxjs/toolkit";
 import { WritableDraft } from "immer";
-import type {
-  ComponentNodeWithColumns,
-  ComponentNode,
-} from "@/types/Component";
+import type { ComponentNodeWithColumns, ComponentNode } from "@/types/Component";
 import type { EntityModel, ProCommonColumn } from "@/types";
 import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
 import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
-import {
-  RuleNode,
-  RuleNodeParams,
-  RuleTemplate,
-} from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { RuleNode, RuleNodeParams, RuleTemplate, } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/useAutoFillByDataIndex";
 import { makeIdCreator } from "@/utils/makeIdCreator";
 
 const adapter = createEntityAdapter<ComponentNode>();
@@ -183,6 +173,33 @@ const slice = createSlice({
       if (!state.expandedKeys.includes(nodeId)) {
         state.expandedKeys.push(nodeId);
       }
+    },
+
+
+    /**
+     * @description 从当前节点相关的实体模型字段中生成列配置
+     * (会覆盖当前已有的列配置)
+     */
+    addColumnsFromEntityModelToSelectedNode: (state) => {
+      const selectedId = state.selectedNodeId;
+      if (!selectedId) return;
+      const node = state.components.entities[selectedId] as
+        | ComponentNodeWithColumns
+        | undefined;
+      if (!node) return;
+      const entityModelId = node.props?.entityModelId;
+      if (!entityModelId) return;
+      const entityModel = state.entityModel.entities[entityModelId];
+      if (!entityModel || !Array.isArray(entityModel.fields)) return;
+      const currentColumns = node.props.columns;
+      const existingKeys = new Set(currentColumns?.map(c => c.key) ?? [])
+      const newColumns = entityModel.fields
+        .filter(field => !existingKeys.has(field.key))
+        .map((field) => ({
+          key: makeColumnId(),
+          ...createProCommonColumnFromSchemeField(field),
+        }));
+      node.props.columns = [...(currentColumns || []), ...newColumns];
     },
 
     /**

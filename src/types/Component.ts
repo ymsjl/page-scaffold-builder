@@ -58,4 +58,7 @@ export interface NormalizedComponentTree {
   rootIds: ComponentId[];
 }
 
-export type ComponentNodeWithColumns = ComponentNode<{ columns: ProCommonColumn[] }>
+export type ComponentNodeWithColumns = ComponentNode<{
+  entityModelId?: string;
+  columns: ProCommonColumn[];
+}>;

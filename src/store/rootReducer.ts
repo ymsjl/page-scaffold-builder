@@ -1,9 +1,7 @@
 import { combineReducers } from '@reduxjs/toolkit';
 import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
-import componentTree, {
-	componentTreePersistWhitelist,
-} from './componentTree/componentTreeSlice';
+import componentTree, { componentTreePersistWhitelist, } from './componentTree/componentTreeSlice';
 
 const componentTreePersistConfig = {
 	key: 'componentTree',

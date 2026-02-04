@@ -26,6 +26,16 @@ export const selectSelectedNode = createSelector(
   (entities, id) => (id ? entities?.[id] : null),
 );
 
+export const selectColumnsOfSelectedNode = createSelector(
+  selectSelectedNode,
+  (node) => (node ? node.props?.columns ?? [] : []) as ProCommonColumn[],
+);
+
+export const selectTypeOfSelectedNode = createSelector(
+  selectSelectedNode,
+  (node) => (node ? node.type : null),
+);
+
 export const selectNodeForPreview = createSelector(
   selectSelectedNode,
   (node) => {

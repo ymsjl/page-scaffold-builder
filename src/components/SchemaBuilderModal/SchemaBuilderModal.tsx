@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Drawer,
   Button,
@@ -14,14 +14,15 @@ import {
   Divider,
   Checkbox,
 } from "antd";
-import { entityModelSelectors } from "@/store/componentTree/componentTreeSelectors";
+import { entityModelSelectors, selectComponentTreeState, selectEditingColumn, selectTypeOfSelectedNode } from "@/store/componentTree/componentTreeSelectors";
 import { selectSelectedNodeEntityModelId } from "@/store/componentTree/componentTreeSelectors";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { LeftOutlined } from "@ant-design/icons";
 import { valueTypeOptions } from "./getRecommendedWidth";
-import type { ComponentType, ProCommonColumn } from "@/types";
+import type { ProCommonColumn } from "@/types";
 import { useAutoFillByDataIndex } from "./useAutoFillByDataIndex";
 import RuleBuilder from "../RuleBuilder/RuleBuilder";
+import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 
 export type FormValues = Pick<
   ProCommonColumn,
@@ -35,24 +36,23 @@ export type FormValues = Pick<
 >
 
 interface SchemaBuilderModalProps {
-  title?: string;
-  componentType?: ComponentType;
-  editingColumn?: Partial<ProCommonColumn> | null;
-  isOpen?: boolean;
-  onClose?: () => void;
-  onFinish?: (values: FormValues) => void;
-  onFinishAndNext?: (values: FormValues) => void;
+
 }
 
 export const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = React.memo(({
-  isOpen,
-  editingColumn,
-  componentType,
-  onFinish,
-  onFinishAndNext,
-  onClose,
 }) => {
+  const dispatch = useAppDispatch();
+  const isOpen = useAppSelector((state) => selectComponentTreeState(state).isSchemaBuilderModalOpen);
   const selectedNodeEntityModelId = useAppSelector(selectSelectedNodeEntityModelId);
+  const editingColumn = useAppSelector(selectEditingColumn);
+  const onClose = useCallback(() => dispatch(componentTreeActions.setIsSchemaBuilderModalOpen(false)), [dispatch]);
+  const componentType = useAppSelector(selectTypeOfSelectedNode);
+
+  const onFinish = (values: FormValues) => {
+    dispatch(componentTreeActions.applyChangesToColumnOfSelectedNode(values));
+    dispatch(componentTreeActions.setEditingColumn(null));
+
+  };
 
   const entityFields = useAppSelector(
     (state) =>
@@ -67,8 +67,8 @@ export const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = React.memo(
   const handleSaveField = async () => {
     try {
       const values = await form.validateFields();
-      onFinish?.(values);
-      onClose?.();
+      onFinish(values);
+      onClose();
       message.success("保存成功");
     } catch (err) {
       message.error("存在未完成或不合法的配置，请检查表单");
@@ -78,8 +78,7 @@ export const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = React.memo(
   const handleSaveAndAddNext = async () => {
     try {
       const values = await form.validateFields();
-      onFinishAndNext?.(values);
-      form.resetFields();
+      onFinish(values);
       message.success("保存成功，可以继续添加下一个字段");
     } catch (err) {
       message.error("存在未完成或不合法的配置，请检查表单");
