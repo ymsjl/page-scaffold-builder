@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   Drawer,
   Button,
@@ -14,8 +14,12 @@ import {
   Divider,
   Checkbox,
 } from "antd";
-import { entityModelSelectors, selectComponentTreeState, selectEditingColumn, selectTypeOfSelectedNode } from "@/store/componentTree/componentTreeSelectors";
-import { selectSelectedNodeEntityModelId } from "@/store/componentTree/componentTreeSelectors";
+import {
+  selectComponentTreeState,
+  selectEditingColumn,
+  selectEntityModelInUse,
+  selectTypeOfSelectedNode
+} from "@/store/componentTree/componentTreeSelectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { LeftOutlined } from "@ant-design/icons";
 import { valueTypeOptions } from "./getRecommendedWidth";
@@ -35,32 +39,25 @@ export type FormValues = Pick<
   | "fieldProps"
 >
 
-interface SchemaBuilderModalProps {
-
-}
+interface SchemaBuilderModalProps { }
 
 export const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = React.memo(({
 }) => {
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => selectComponentTreeState(state).isSchemaBuilderModalOpen);
-  const selectedNodeEntityModelId = useAppSelector(selectSelectedNodeEntityModelId);
   const editingColumn = useAppSelector(selectEditingColumn);
-  const onClose = useCallback(() => dispatch(componentTreeActions.setIsSchemaBuilderModalOpen(false)), [dispatch]);
   const componentType = useAppSelector(selectTypeOfSelectedNode);
+
+  const onClose = useCallback(() => dispatch(componentTreeActions.setIsSchemaBuilderModalOpen(false)), [dispatch]);
 
   const onFinish = (values: FormValues) => {
     dispatch(componentTreeActions.applyChangesToColumnOfSelectedNode(values));
     dispatch(componentTreeActions.setEditingColumn(null));
-
   };
 
-  const entityFields = useAppSelector(
-    (state) =>
-      entityModelSelectors.selectById(state, selectedNodeEntityModelId)
-        ?.fields || [],
-  );
-
   const [form] = Form.useForm<FormValues>();
+
+  const entityFields = useAppSelector(selectEntityModelInUse)?.fields || [];
 
   useAutoFillByDataIndex(form, entityFields);
 
