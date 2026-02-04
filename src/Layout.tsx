@@ -8,6 +8,7 @@ import EntityModelDesignerPanel from "./components/EntityModelDesigner/EntityMod
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import ComponentPreview from "./components/ComponentPreview/ComponentPreview";
 import PropertyPanel from "./components/PropertyPanel/PropertyPanel";
+import { ProCard } from "@ant-design/pro-components";
 
 const styles: { [key: string]: React.CSSProperties } = {
   builder: {
@@ -21,59 +22,6 @@ export function PageScaffoldBuilderLayout() {
   const dispatch = useAppDispatch();
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
 
-  useEffect(() => {
-    dispatch(componentTreeActions.addNode({ parentId: null, type: "Container" }));
-  }, [dispatch]);
-
-  const collapseItems: ComponentProps<typeof Collapse>["items"] = [
-    {
-      key: "componentTree",
-      label: "组件树",
-      style: { border: "none" },
-      children: <ComponentTree />,
-    },
-    {
-      key: "entityModel",
-      label: "实体类",
-      extra: !entityModels?.length && (
-        <Button
-          icon={<PlusOutlined />}
-          onClick={() => {
-            dispatch(componentTreeActions.startCreateEntityModel());
-          }}
-          type="text"
-        />
-      ),
-      children: (
-        <Space direction="vertical" style={{ width: "100%" }}>
-          {entityModels?.map((et) => (
-            <div
-              key={et.id}
-              onClick={() => dispatch(componentTreeActions.startEditEntityModel(et.id))}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography.Text>{et.title}</Typography.Text>
-              <Button
-                type="text"
-                size="small"
-                icon={<DeleteOutlined />}
-                danger
-                onClick={(e) => {
-                  e.stopPropagation();
-                  dispatch(componentTreeActions.deleteEntityModel(et.id));
-                }}
-              />
-            </div>
-          ))}
-        </Space>
-      ),
-    },
-  ];
-
   return (
     <Layout style={styles.builder}>
       <Layout>
@@ -84,7 +32,66 @@ export function PageScaffoldBuilderLayout() {
           trigger={null}
           title="组件树"
         >
-          <Collapse size="small" items={collapseItems} />
+          <ProCard
+            bordered
+            headerBordered
+            collapsible={true}
+            style={{ marginTop: 16, borderRadius: 8 }}
+            size="small"
+            title="组件树"
+            extra={
+              <Button
+                icon={<PlusOutlined />}
+                size='small'
+                onClick={() => dispatch(componentTreeActions.addNode({ parentId: null, type: "Container" }))}
+                type="text"
+              />
+            }
+          >
+            <ComponentTree />
+          </ProCard>
+          <ProCard
+            bordered
+            headerBordered
+            style={{ marginTop: 16, borderRadius: 8 }}
+            size="small"
+            collapsible={true}
+            title="实体类"
+            extra={
+              <Button
+                icon={<PlusOutlined />}
+                size='small'
+                onClick={() => dispatch(componentTreeActions.startCreateEntityModel())}
+                type="text"
+              />
+            }
+          >
+            <Space direction="vertical" style={{ width: "100%" }}>
+              {entityModels?.map((et) => (
+                <div
+                  key={et.id}
+                  onClick={() => dispatch(componentTreeActions.startEditEntityModel(et.id))}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography.Text>{et.title}</Typography.Text>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    danger
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch(componentTreeActions.deleteEntityModel(et.id));
+                    }}
+                  />
+                </div>
+              ))}
+            </Space>
+          </ProCard>
         </Layout.Sider>
 
         <Layout.Content style={{ height: "100%", overflow: "hidden", padding: "16px 12px" }}>

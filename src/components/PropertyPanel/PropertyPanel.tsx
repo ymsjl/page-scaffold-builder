@@ -61,7 +61,6 @@ const EMPTY_STATE_STYLE: React.CSSProperties = {
 };
 
 const NO_CONFIG_STYLE: React.CSSProperties = {
-  border: "1px solid #e8e8e8",
   borderRadius: "4px",
   background: "white",
   padding: "24px",
@@ -197,12 +196,16 @@ const PropertyPanel: React.FC = () => {
   );
 
   if (!selectedNode) {
-    return <div style={EMPTY_STATE_STYLE}>请选择一个组件实例</div>;
+    return <ProCard style={EMPTY_STATE_STYLE}>请选择一个组件实例</ProCard>;
   }
 
   if (propAttrs.length === 0) {
     return (
-      <div style={NO_CONFIG_STYLE}>组件 {selectedNode.type} 暂无可配置属性</div>
+      <ProCard bordered style={{ borderRadius: "8px" }} title={`属性面板：${selectedNode.name}`} size='small' >
+        <div style={NO_CONFIG_STYLE}>
+          组件 {selectedNode.type} 暂无可配置属性
+        </div>
+      </ProCard>
     );
   }
 

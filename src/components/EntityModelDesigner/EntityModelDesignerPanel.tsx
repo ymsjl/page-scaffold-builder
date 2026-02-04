@@ -67,8 +67,7 @@ export default function EntityModelDesignerPanel() {
 
   const onClose = useCallback(() => {
     dispatch(componentTreeActions.closeEntityModelModal());
-    form.resetFields();
-  }, [dispatch, form]);
+  }, [dispatch]);
 
   const handleSaveEntity = useCallback(() => {
     if (isTableEditing) {
@@ -196,6 +195,7 @@ export default function EntityModelDesignerPanel() {
         width="1200px"
         title="实体类型设计器"
         destroyOnClose
+        afterClose={() => form.resetFields()}
         onOk={handleSaveEntity}
         okText="保存"
       >
