@@ -1,21 +1,21 @@
 import React, { useMemo } from "react";
-import { Typography, Divider } from "antd";
+import { Typography, Divider, Button } from "antd";
 import { getComponentPrototype } from "../../componentMetas";
 import { useAppSelector } from "../../store/hooks";
 import { selectNodeForPreview } from "@/store/componentTree/componentTreeSelectors";
 import { DropZone } from "@/components/DropZone";
 import { useRenderNodeRefs } from "./ReactNodeRenderer";
-import type { NodeRef, PropAttribute } from "@/types";
+import type { NodeRef, PropAttribute, ToolbarActionButtonProps } from "@/types";
 import { isNodeRef } from "@/types";
 
-interface ComponentPreviewProps { }
+interface ComponentPreviewProps {}
 
 /**
  * 从 propsTypes 中递归查找 reactNode/reactNodeArray 类型的属性
  */
 function findReactNodeProps(
   propsTypes: Record<string, PropAttribute> | undefined,
-  parentPath: string = ""
+  parentPath: string = "",
 ): Array<{ path: string; attr: PropAttribute }> {
   if (!propsTypes) return [];
 
@@ -66,7 +66,7 @@ function getValueByPath(obj: Record<string, unknown>, path: string): unknown {
  */
 function useResolvedProps(
   originalProps: Record<string, unknown>,
-  reactNodePaths: Array<{ path: string; attr: PropAttribute }>
+  reactNodePaths: Array<{ path: string; attr: PropAttribute }>,
 ): Record<string, unknown> {
   // 收集所有需要渲染的 nodeRefs
   const allNodeRefs: NodeRef[] = [];
@@ -105,7 +105,9 @@ function useResolvedProps(
 
     for (const { path } of reactNodePaths) {
       const refs = pathToRefs[path] || [];
-      const rendered = refs.map((ref) => nodeIdToElement[ref.nodeId]).filter(Boolean);
+      const rendered = refs
+        .map((ref) => nodeIdToElement[ref.nodeId])
+        .filter(Boolean);
 
       // 按路径设置值
       const parts = path.split(".");
@@ -125,6 +127,58 @@ function useResolvedProps(
 
     return newProps;
   }, [originalProps, reactNodePaths, pathToRefs, nodeIdToElement]);
+}
+
+function usePreviewProps(
+  nodeId: string,
+  componentName: string,
+  originalProps: Record<string, unknown>,
+  reactNodePaths: Array<{ path: string; attr: PropAttribute }>,
+): Record<string, unknown> {
+  const resolvedProps = useResolvedProps(originalProps, reactNodePaths);
+
+  return useMemo(() => {
+    if (componentName !== "Table") return resolvedProps;
+
+    const toolbar = (resolvedProps.toolbar ?? {}) as Record<string, unknown>;
+    const actions = Array.isArray(toolbar.actions) ? toolbar.actions : [];
+    const actionNodes = actions
+      .map((action, index) => {
+        if (React.isValidElement(action)) return action;
+        if (!action || typeof action !== "object") return null;
+
+        const { children, key, ...buttonProps } =
+          action as ToolbarActionButtonProps;
+          debugger
+        if (!children) return null;
+
+        return (
+          <Button key={key ?? `action-${index}`} {...buttonProps}>
+            {children}
+          </Button>
+        );
+      })
+      .filter(Boolean);
+
+    return {
+      ...resolvedProps,
+      toolbar: {
+        ...toolbar,
+        actions: [
+          <DropZone
+            key="11"
+            id={`${nodeId}:toolbar.actions`}
+            targetNodeId={nodeId}
+            propPath="toolbar.actions"
+            acceptTypes={["Button"]}
+            label={"表格操作按钮"}
+            placeholder={`拖入 表格操作按钮`}
+          />,
+          ...actionNodes,
+        ],
+      },
+    };
+  }, [componentName, resolvedProps]);
 }
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
@@ -187,8 +241,13 @@ const ComponentPreviewInner: React.FC<{
   const defaultProps = componentPrototype.defaultProps || {};
   const mergedProps = { ...defaultProps, ...node.props };
 
-  // 解析 NodeRef 为实际 React 元素
-  const resolvedProps = useResolvedProps(mergedProps, reactNodeProps);
+  // 解析 NodeRef 为实际 React 元素，并注入预览专用 props
+  const resolvedProps = usePreviewProps(
+    node.id,
+    componentPrototype.name,
+    mergedProps,
+    reactNodeProps,
+  );
 
   const Component = componentPrototype.component;
 
@@ -232,7 +291,14 @@ const ComponentPreviewInner: React.FC<{
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             拖拽组件到下方插槽
           </Typography.Text>
-          <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div
+            style={{
+              marginTop: 8,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
             {reactNodeProps.map(({ path, attr }) => {
               const value = getValueByPath(node.props, path);
               const nodeRefs: NodeRef[] = Array.isArray(value)
@@ -247,7 +313,10 @@ const ComponentPreviewInner: React.FC<{
                   id={`${node.id}:${path}`}
                   targetNodeId={node.id}
                   propPath={path}
-                  acceptTypes={(attr as PropAttribute & { acceptTypes?: string[] }).acceptTypes}
+                  acceptTypes={
+                    (attr as PropAttribute & { acceptTypes?: string[] })
+                      .acceptTypes
+                  }
                   nodeRefs={nodeRefs}
                   label={attr.label}
                   placeholder={`拖入 ${attr.label || path}`}

@@ -2,10 +2,10 @@ import { createSelector } from "reselect";
 import type { RootState } from "../rootReducer";
 import { componentTreeAdapter } from "./componentTreeSlice";
 import { mapProCommonColumnToProps } from "./mapProCommonColumnToProps";
-import { ProCommonColumn } from "@/types";
+import { NodeRef, ProCommonColumn } from "@/types";
 import { getComponentPrototype } from "@/componentMetas";
 import { entityModelAdapter } from "./componentTreeSlice";
-import { Button } from "antd";
+import { original } from "immer";
 
 export const selectComponentTreeState = (state: RootState) =>
   state.componentTree;
@@ -29,7 +29,7 @@ export const selectSelectedNode = createSelector(
 
 export const selectColumnsOfSelectedNode = createSelector(
   selectSelectedNode,
-  (node) => (node ? node.props?.columns ?? [] : []) as ProCommonColumn[],
+  (node) => (node ? (node.props?.columns ?? []) : []) as ProCommonColumn[],
 );
 
 export const selectTypeOfSelectedNode = createSelector(
@@ -39,24 +39,30 @@ export const selectTypeOfSelectedNode = createSelector(
 
 export const selectNodeForPreview = createSelector(
   selectSelectedNode,
-  (node) => {
+  componentNodesSelectors.selectEntities,
+  (node, entities) => {
     if (!node) return null;
     const props = { ...(node.props ?? {}) };
     const componentPrototype = getComponentPrototype(node.type);
-    if (componentPrototype?.name === "Table") {
-      props.toolbar = {
-        ...props.toolbar,
-        actions: [
-          <Button key="add" type="primary">Add</Button>,
-        ]
-      }
-    }
     if (!componentPrototype) return { ...node, props };
     if (
       "columns" in (componentPrototype.propsTypes || {}) &&
       Array.isArray(props.columns)
     ) {
       props.columns = props.columns.map(mapProCommonColumnToProps);
+    }
+    if (
+      componentPrototype.name === "Table" &&
+      Array.isArray(props.toolbar?.actions)
+    ) {
+      console.log('props.toolbar.actions',props.toolbar.actions)
+      const actions = props.toolbar.actions.map((nodeRef: NodeRef) => {
+        const referredNode = entities[nodeRef.nodeId];
+        debugger
+        if (!referredNode) return nodeRef;
+        return { ...(referredNode.props || {}) };
+      });
+      return {...node, props: { ...props, toolbar: { ...props.toolbar, actions } }};
     }
     return { ...node, props };
   },

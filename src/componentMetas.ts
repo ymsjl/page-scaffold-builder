@@ -84,10 +84,9 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         children: [
           {
             name: "actions",
-            type: "reactNodeArray",
+            type: "array",
             label: "操作按钮",
-            description: "工具栏操作按钮，可从组件树拖入 Button 组件",
-            acceptTypes: ["Button"],
+            description: "工具栏操作按钮配置（ButtonProps 子集）",
             defaultValue: [],
           }
         ]

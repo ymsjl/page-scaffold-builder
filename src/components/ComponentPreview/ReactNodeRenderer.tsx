@@ -50,7 +50,7 @@ const RenderSingleNode: React.FC<{ nodeId: string }> = ({ nodeId }) => {
 
 /**
  * 渲染多个节点引用为 React 元素数组
- * 用于 toolbar.actions 等接收 ReactNode[] 的 props
+ * 用于接收 ReactNode[] 的 props
  */
 export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
   nodeRefs,

@@ -38,7 +38,7 @@ const DroppedNodeTag: React.FC<DroppedNodeTagProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const node = useAppSelector(
-    (state) => state.componentTree.components.entities[nodeRef.nodeId]
+    (state) => state.componentTree.components.entities[nodeRef.nodeId],
   );
 
   const handleRemove = (e: React.MouseEvent) => {
@@ -48,7 +48,7 @@ const DroppedNodeTag: React.FC<DroppedNodeTagProps> = ({
         targetNodeId,
         propPath,
         refNodeId: nodeRef.nodeId,
-      })
+      }),
     );
   };
 
@@ -73,7 +73,6 @@ export const DropZone: React.FC<DropZoneProps> = ({
   propPath,
   acceptTypes,
   nodeRefs = [],
-  label,
   placeholder = "拖入组件到此处",
 }) => {
   const { isOver, setNodeRef, active } = useDroppable({
@@ -90,6 +89,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
   const dragData = active?.data?.current as
     | { type: string; nodeType: string }
     | undefined;
+
   const isAccepted =
     dragData?.type === "treeNode" &&
     (!acceptTypes ||
@@ -105,14 +105,10 @@ export const DropZone: React.FC<DropZoneProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${isInvalid ? "drop-zone--invalid" : ""
-        } ${active ? "drop-zone--dragging" : ""}`}
+      className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${
+        isInvalid ? "drop-zone--invalid" : ""
+      } ${active ? "drop-zone--dragging" : ""}`}
     >
-      {label && (
-        <Typography.Text type="secondary" className="drop-zone__label">
-          {label}
-        </Typography.Text>
-      )}
       <div className="drop-zone__content">
         {validNodeRefs.length > 0 ? (
           <Space wrap size={4}>
@@ -131,11 +127,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
           </Typography.Text>
         )}
       </div>
-      {isActive && (
-        <div className="drop-zone__indicator">
-          放置以添加
-        </div>
-      )}
+      {isActive && <div className="drop-zone__indicator">放置以添加</div>}
       {isInvalid && (
         <div className="drop-zone__indicator drop-zone__indicator--invalid">
           不支持此类型

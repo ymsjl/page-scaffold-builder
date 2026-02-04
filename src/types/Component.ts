@@ -13,6 +13,19 @@ export interface NodeRef {
   nodeId: string;
 }
 
+export interface ToolbarActionButtonProps {
+  key?: string;
+  children: React.ReactNode;
+  type?: "default" | "primary" | "dashed" | "link" | "text";
+  size?: "large" | "middle" | "small";
+  danger?: boolean;
+  disabled?: boolean;
+  loading?: boolean;
+  block?: boolean;
+  ghost?: boolean;
+  htmlType?: "button" | "submit" | "reset";
+}
+
 /**
  * 检查一个值是否为 NodeRef
  */
