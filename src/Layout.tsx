@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { entityModelSelectors } from "./store/componentTree/componentTreeSelectors";
 import { componentTreeActions } from "./store/componentTree/componentTreeSlice";
 import EntityModelDesignerPanel from "./components/EntityModelDesigner/EntityModelDesignerPanel";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, FileAddOutlined, PlusOutlined } from "@ant-design/icons";
 import ComponentPreview from "./components/ComponentPreview/ComponentPreview";
 import PropertyPanel from "./components/PropertyPanel/PropertyPanel";
 import { ProCard } from "@ant-design/pro-components";
@@ -41,9 +41,10 @@ export function PageScaffoldBuilderLayout() {
             title="组件树"
             extra={
               <Button
-                icon={<PlusOutlined />}
+                icon={<FileAddOutlined />}
                 size='small'
-                onClick={() => dispatch(componentTreeActions.addNode({ parentId: null, type: "Container" }))}
+                title="添加新页面"
+                onClick={() => dispatch(componentTreeActions.addNode({ parentId: null, type: "Page" }))}
                 type="text"
               />
             }

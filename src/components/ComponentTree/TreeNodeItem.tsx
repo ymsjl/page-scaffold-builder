@@ -1,7 +1,7 @@
 import React from "react";
 import type { ComponentInstance, ComponentType } from "@/types";
 import { PlusOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAppDispatch } from "@/store/hooks";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { availableComponents } from "@/componentMetas";
 import { Button, Input, Space, Dropdown, Typography } from "antd";
@@ -25,14 +25,6 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   const dispatch = useAppDispatch();
   const isAddDropdownVisible = showAddDropdownNodeId === node.id;
 
-  const addNewNode = (parentId: string | null, type: ComponentType) => {
-    dispatch(componentTreeActions.addNode({ parentId, type }));
-  };
-  const updateNode = (id: string, updates: Partial<any>) =>
-    dispatch(componentTreeActions.updateNode({ id, updates }));
-  const removeNode = (id: string) =>
-    dispatch(componentTreeActions.removeNode(id));
-
   React.useEffect(() => {
     if (!isEditing) {
       setEditingName(node.name);
@@ -41,13 +33,13 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    removeNode(node.id);
+    dispatch(componentTreeActions.removeNode(node.id));
   };
 
   const handleSaveEdit = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (editingName && editingName.trim()) {
-      updateNode(node.id, { name: editingName.trim() });
+      dispatch(componentTreeActions.updateNode({ id: node.id, updates: { name: editingName.trim() } }));
     }
     setIsEditing(false);
   };
@@ -72,7 +64,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
       console.warn("[TreeNodeItem] handleSelectComponent: missing node id", node);
       return;
     }
-    addNewNode(node.id, type);
+    dispatch(componentTreeActions.addNode({ parentId: node.id, type }));
     dispatch(componentTreeActions.expandNode(node.id));
     setShowAddDropdownNodeId(null);
   };

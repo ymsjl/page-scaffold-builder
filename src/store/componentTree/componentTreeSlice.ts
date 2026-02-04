@@ -7,6 +7,7 @@ import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
 import { RuleNode, RuleNodeParams, RuleTemplate, } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/useAutoFillByDataIndex";
 import { makeIdCreator } from "@/utils/makeIdCreator";
+import { getComponentPrototype } from "@/componentMetas";
 
 const adapter = createEntityAdapter<ComponentNode>();
 
@@ -74,12 +75,13 @@ const slice = createSlice({
       action: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
     ) => {
       const { parentId, type } = action.payload;
+      const prototype = getComponentPrototype(type);
       const node: ComponentNode = {
         id: makeNodeId(),
         parentId,
         type,
-        name: `New ${type}`,
-        isContainer: type === "Container",
+        name: `New ${prototype?.label}`,
+        isContainer: prototype?.isContainer,
         props: {},
         childrenIds: [],
       };

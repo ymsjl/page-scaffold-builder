@@ -4,6 +4,31 @@ import { COMPONENT_TYPES } from "./types/Component";
 
 export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
 {
+  Page: {
+    name: "Page",
+    label: "页面组件",
+    description: "页面顶层容器组件",
+    isContainer: true,
+    component: "div" as unknown as React.ComponentType<any>,
+    defaultProps: {},
+    propsTypes: {
+      path: {
+        name: "path",
+        type: "string",
+        label: "页面路径",
+        description: "页面的访问路径",
+        defaultValue: "/",
+      },
+      searchParams: {
+        name: "searchParams",
+        type: "object",
+        label: "搜索参数",
+        description: "页面的默认搜索参数",
+        defaultValue: {},
+      },
+
+    },
+  },
   Table: {
     name: "Table",
     label: "表格组件",
@@ -155,15 +180,6 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
       },
     },
   },
-  Container: {
-    name: "Container",
-    label: "容器组件",
-    description: "用于包裹其他组件的容器",
-    isContainer: true,
-    component: "div" as unknown as React.ComponentType<any>,
-    defaultProps: {},
-    propsTypes: {},
-  },
 };
 
 export const getComponentPrototype = (
@@ -172,9 +188,10 @@ export const getComponentPrototype = (
   return componentPrototypeMap[type];
 };
 
-// 为了精简来源（只保留最必要的组件以便后续扩展），此处仅返回 Table 与 Form 两种可添加组件
-export const availableComponents = COMPONENT_TYPES.map((type) => ({
-  type,
-  label: componentPrototypeMap[type]?.name ?? type,
-  isContainer: componentPrototypeMap[type]?.isContainer ?? false,
-}));
+export const availableComponents = COMPONENT_TYPES
+  .filter(type => type !== "Page")
+  .map((type) => ({
+    type,
+    label: componentPrototypeMap[type]?.name ?? type,
+    isContainer: componentPrototypeMap[type]?.isContainer ?? false,
+  }));

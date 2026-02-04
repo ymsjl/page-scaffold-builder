@@ -1,7 +1,7 @@
 import type React from "react";
 import { ProCommonColumn, PropAttribute } from "@/types";
 
-export const COMPONENT_TYPES = ["Container", "Table", "Form"] as const;
+export const COMPONENT_TYPES = ["Page", "Table", "Form"] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 export type ComponentId = string;
