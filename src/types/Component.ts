@@ -23,8 +23,14 @@ export interface ComponentInstance<P = Record<string, any>> {
 
   /** 子组件节点 */
   children?: ComponentInstance[];
+  /** 
+   * Action 绑定配置
+   * 
+   * 映射事件名到 Action Flow ID
+   * 例如: { "onClick": "flow_123", "onSubmit": "flow_456" }
+   */
+  actionBindings?: Record<string, string>;
 }
-
 
 
 // 组件类型元信息，相当于组件的“类定义”
@@ -49,12 +55,19 @@ export interface ComponentPrototype {
   propsTypes?: Record<string, PropAttribute>;
 
   /**
-   * 组件支持的操作列表。
+   * 组件支持的事件列表
    *
-   * 每个字符串表示一个操作标识符（例如点击、提交、自定义动作的 key），
-   * 用于声明由该组件原型创建的组件实例在设计器或运行时中可触发的行为。
+   * 定义该组件可以触发 Action Flow 的事件
+   * 例如: ["onClick", "onSubmit", "onLoad", "onChange"]
    */
-  actions?: string[];
+  supportedEvents?: Array<{
+    /** 事件标识符 */
+    eventName: string;
+    /** 事件显示名称 */
+    label: string;
+    /** 事件描述 */
+    description?: string;
+  }>;
 }
 
 export interface ComponentNode<P = Record<string, any>>

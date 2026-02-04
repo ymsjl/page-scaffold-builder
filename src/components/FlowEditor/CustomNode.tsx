@@ -1,0 +1,162 @@
+import React, { memo } from 'react';
+import { Handle, Position, NodeProps } from '@xyflow/react';
+import type { ActionNode } from '@/types/actions';
+import './CustomNode.css';
+
+/**
+ * 节点类型到图标的映射
+ */
+const NODE_TYPE_ICONS: Record<string, string> = {
+  'control.entry': '🚀',
+  'control.exit': '🏁',
+  'control.condition': '🔀',
+  'control.loop': '🔁',
+  'control.parallel': '⚡',
+  'control.delay': '⏱️',
+  'data.transform': '🔄',
+  'data.merge': '🔗',
+  'data.filter': '🔍',
+  'action.httpRequest': '🌐',
+  'action.navigate': '➡️',
+  'action.showMessage': '💬',
+  'action.confirm': '❓',
+  'component.table.refresh': '📊',
+  'component.form.submit': '📝',
+  'component.form.validate': '✅',
+  'component.form.reset': '🔄',
+  'component.modal.open': '📋',
+  'component.modal.close': '❌',
+};
+
+/**
+ * 节点类型到颜色的映射
+ */
+const NODE_TYPE_COLORS: Record<string, string> = {
+  control: '#1890ff',
+  data: '#52c41a',
+  action: '#fa8c16',
+  component: '#722ed1',
+};
+
+/**
+ * 获取节点类型的前缀（用于确定颜色）
+ */
+function getNodeTypePrefix(type: string): string {
+  return type.split('.')[0] || 'action';
+}
+
+/**
+ * 自定义节点组件
+ */
+export const CustomNode = memo<NodeProps>(({ data, selected }) => {
+  const { type, label, params } = data as any; // 使用 any 避免类型冲突
+  const typePrefix = getNodeTypePrefix(type);
+  const color = NODE_TYPE_COLORS[typePrefix] || NODE_TYPE_COLORS.action;
+  const icon = NODE_TYPE_ICONS[type] || '📦';
+
+  // 获取端口配置（使用正确的属性名 inputs/outputs）
+  const inputs = (data as any).inputs || [];
+  const outputs = (data as any).outputs || [];
+
+  // 检查是否有特定类型的端口
+  const hasDataInput = inputs.some((p: any) => p.type !== 'exec');
+  const hasExecInput = inputs.some((p: any) => p.type === 'exec');
+  const hasDataOutput = outputs.some((p: any) => p.type !== 'exec');
+  const hasExecOutput = outputs.some((p: any) => p.type === 'exec');
+
+  // 如果节点没有定义任何端口，显示默认的连接点
+  const showDefaultHandles = inputs.length === 0 && outputs.length === 0;
+
+  return (
+    <div
+      className={`custom-node ${selected ? 'selected' : ''}`}
+      style={{ borderColor: color }}
+    >
+      {/* 输入端口 - 如果没有定义端口，显示默认连接点 */}
+      {(showDefaultHandles || hasExecInput || hasDataInput) && (
+        <>
+          {/* 执行流输入 */}
+          {(showDefaultHandles || hasExecInput) && (
+            <Handle
+              type="target"
+              position={Position.Top}
+              id="exec-in"
+              className="handle handle-exec"
+              style={{ left: '30%' }}
+            />
+          )}
+
+          {/* 数据流输入 */}
+          {(showDefaultHandles || hasDataInput) && (
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="data-in"
+              className="handle handle-data"
+            />
+          )}
+        </>
+      )}
+
+      {/* 节点内容 */}
+      <div className="custom-node-header" style={{ backgroundColor: color }}>
+        <span className="custom-node-icon">{icon}</span>
+        <span className="custom-node-type">{type.split('.').pop()}</span>
+      </div>
+
+      <div className="custom-node-body">
+        <div className="custom-node-name">{label || '未命名节点'}</div>
+        {params && Object.keys(params).length > 0 && (
+          <div className="custom-node-params">
+            {Object.entries(params)
+              .slice(0, 2)
+              .map(([key, value]) => (
+                <div key={key} className="custom-node-param">
+                  <span className="param-key">{key}:</span>
+                  <span className="param-value">
+                    {String(value).length > 20
+                      ? String(value).slice(0, 20) + '...'
+                      : String(value)}
+                  </span>
+                </div>
+              ))}
+            {Object.keys(params).length > 2 && (
+              <div className="custom-node-param-more">
+                +{Object.keys(params).length - 2} more
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 输出端口 - 如果没有定义端口，显示默认连接点 */}
+      {(showDefaultHandles || hasExecOutput || hasDataOutput) && (
+        <>
+          {/* 执行流输出 */}
+          {(showDefaultHandles || hasExecOutput) && (
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              id="exec-out"
+              className="handle handle-exec"
+              style={{ left: '70%' }}
+            />
+          )}
+
+          {/* 数据流输出 */}
+          {(showDefaultHandles || hasDataOutput) && (
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="data-out"
+              className="handle handle-data"
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+});
+
+CustomNode.displayName = 'CustomNode';
+

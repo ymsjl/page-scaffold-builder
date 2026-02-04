@@ -11,6 +11,7 @@ import { PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
 import { PlusOutlined } from "@ant-design/icons";
 import { merge } from "lodash-es";
+import { ActionFlowSelector } from "./ActionFlowSelector";
 
 import "./styles.css";
 
@@ -118,17 +119,22 @@ const PropertyPanel: React.FC = () => {
     [entityModels],
   );
 
+  const componentPrototype = useMemo(() =>
+    selectedComponentType
+      ? getComponentPrototype(selectedComponentType)
+      : undefined,
+    [selectedComponentType]);
+
   const propAttrs = useMemo(() => {
-    if (!selectedComponentType) return [] as FlattenedPropAttribute[];
     const attrs = Object.values(
-      getComponentPrototype(selectedComponentType)?.propsTypes ?? {},
+      componentPrototype?.propsTypes ?? {},
     ).map((item) => ({
       ...item,
       ...(item.name === "entityModelId" ? { options: entityModelOptions } : {}),
     }));
     // 扁平化对象类型属性
     return flattenPropAttributes(attrs);
-  }, [selectedComponentType, entityModelOptions]);
+  }, [componentPrototype, entityModelOptions]);
 
   const handleStartAddingColumn = useCallback(() => {
     dispatch(componentTreeActions.startAddingColumn());
@@ -136,6 +142,11 @@ const PropertyPanel: React.FC = () => {
 
   const renderSchemaList = useCallback(
     () => <SchemaList />,
+    [],
+  );
+
+  const renderActionFlowSelector = useCallback(
+    () => <ActionFlowSelector />,
     [],
   );
 
@@ -184,6 +195,9 @@ const PropertyPanel: React.FC = () => {
         };
       } else if (itemName === "entityModelId") {
         result.valueEnum = entityModelValueEnum;
+      } else if (item.type === "actionFlow") {
+        // 动作流类型使用自定义渲染器
+        result.renderFormItem = renderActionFlowSelector;
       }
 
       return result;
@@ -192,6 +206,7 @@ const PropertyPanel: React.FC = () => {
       entityModelValueEnum,
       handleStartAddingColumn,
       renderSchemaList,
+      renderActionFlowSelector,
     ],
   );
 
@@ -247,6 +262,19 @@ const PropertyPanel: React.FC = () => {
 
   return (
     <div style={FORM_STYLES}>
+      <ProCard
+        key="快捷操作"
+        size="small"
+        title="快捷操作"
+        headerBordered
+        collapsible
+        defaultCollapsed={false}
+        bordered
+        style={{ borderRadius: "8px" }}
+        bodyStyle={{ padding: "16px" }}
+      >
+
+      </ProCard>
       {
         Object.entries(groupedPropAttr).map(([groupName, items]) => (
           <ProCard
@@ -257,7 +285,7 @@ const PropertyPanel: React.FC = () => {
             collapsible
             defaultCollapsed={false}
             bordered
-            style={{ borderRadius: "8px" }}
+            style={{ borderRadius: "8px", marginTop: "12px" }}
             bodyStyle={{ padding: "16px" }}
           >
             <BetaSchemaForm

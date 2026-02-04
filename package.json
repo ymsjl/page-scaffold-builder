@@ -33,6 +33,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@reduxjs/toolkit": "^1.9.5",
+    "@xyflow/react": "^12.10.0",
     "antd": "5.21.1",
     "dayjs": "^1.11.13",
     "immer": "^11.1.3",

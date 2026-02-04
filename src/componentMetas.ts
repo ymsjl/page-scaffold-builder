@@ -44,7 +44,13 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
       },
       form: {
         ignoreRules: false,
+      },
+      toolbar: {
+        actions: [
+          // { text: "提交", type: "primary", key: "submitButton" }
+        ]
       }
+
     },
     propsTypes: {
       entityModelId: {
@@ -68,6 +74,23 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         label: "表格标题",
         description: "表格的标题文字",
         defaultValue: "示例表格",
+      },
+      toolbar: {
+        name: "toolbar",
+        type: "array",
+        label: "工具栏配置",
+        group: "操作栏",
+        children: [
+          {
+            name: "submitButton",
+            type: "object",
+            label: "添加按钮",
+            description: "提交按钮配置",
+            defaultValue: {
+              text: "提交",
+            }
+          }
+        ]
       },
       pagination: {
         name: "pagination",
@@ -178,6 +201,13 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         ],
         defaultValue: "vertical",
       },
+      onFinish: {
+        name: "onFinish",
+        type: "actionFlow",
+        label: "提交成功动作流",
+        description: "表单提交成功后触发的动作流",
+        defaultValue: null,
+      }
     },
   },
 };
