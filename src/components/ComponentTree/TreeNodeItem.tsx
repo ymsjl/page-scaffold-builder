@@ -1,6 +1,7 @@
 import React from "react";
 import type { ComponentInstance, ComponentType } from "@/types";
-import { PlusOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, CheckOutlined, HolderOutlined } from "@ant-design/icons";
+import { useDraggable } from "@dnd-kit/core";
 import { useAppDispatch } from "@/store/hooks";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { availableComponents } from "@/componentMetas";
@@ -24,6 +25,31 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
   const dispatch = useAppDispatch();
   const isAddDropdownVisible = showAddDropdownNodeId === node.id;
+
+  // 仅为非容器组件启用拖拽
+  const isDraggable = !node.isContainer;
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: `tree-node-${node.id}`,
+    data: {
+      type: "treeNode",
+      nodeId: node.id,
+      nodeType: node.type,
+    },
+    disabled: !isDraggable,
+  });
+
+  const style: React.CSSProperties = transform
+    ? {
+      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      opacity: isDragging ? 0.5 : 1,
+    }
+    : {};
 
   React.useEffect(() => {
     if (!isEditing) {
@@ -75,8 +101,26 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   }));
 
   return (
-    <div style={{ padding: '4px', paddingLeft: `${level * 20}px` }}>
+    <div
+      ref={setNodeRef}
+      style={{ padding: '4px', paddingLeft: `${level * 20}px`, ...style }}
+      {...attributes}
+    >
       <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+        {/* 拖拽手柄 - 仅非容器组件显示 */}
+        {isDraggable && (
+          <div
+            {...listeners}
+            style={{
+              cursor: isDragging ? 'grabbing' : 'grab',
+              padding: '0 4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <HolderOutlined style={{ color: '#999', fontSize: 12 }} />
+          </div>
+        )}
         <div style={{ flex: 1 }}>
           {isEditing ? (
             <Input

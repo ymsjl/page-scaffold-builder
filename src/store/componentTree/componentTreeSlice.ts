@@ -420,6 +420,141 @@ const slice = createSlice({
     deleteEntityModel: (state, action: PayloadAction<string>) => {
       entityModelAdapter.removeOne(state.entityModel, action.payload);
     },
+
+    /**
+     * @description 将组件节点引用添加到目标节点的 ReactNode 类型 props
+     * @param action.payload.targetNodeId 目标节点ID（接收引用的节点）
+     * @param action.payload.propPath props 路径，如 "toolbar.actions"
+     * @param action.payload.refNodeId 被引用的组件节点ID
+     */
+    addNodeRefToProps: (
+      state,
+      action: PayloadAction<{
+        targetNodeId: string;
+        propPath: string;
+        refNodeId: string;
+      }>,
+    ) => {
+      const { targetNodeId, propPath, refNodeId } = action.payload;
+      const node = state.components.entities[targetNodeId];
+      if (!node) return;
+
+      // 解析路径并设置值
+      const pathParts = propPath.split(".");
+      let current: Record<string, any> = node.props;
+
+      // 确保路径存在
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        if (!current[part] || typeof current[part] !== "object") {
+          current[part] = {};
+        }
+        current = current[part];
+      }
+
+      const lastPart = pathParts[pathParts.length - 1];
+      const nodeRef = { type: "nodeRef" as const, nodeId: refNodeId };
+
+      // 如果是数组类型，添加到数组；否则直接设置
+      if (Array.isArray(current[lastPart])) {
+        // 检查是否已存在相同引用
+        const exists = current[lastPart].some(
+          (ref: any) => ref?.type === "nodeRef" && ref?.nodeId === refNodeId,
+        );
+        if (!exists) {
+          current[lastPart].push(nodeRef);
+        }
+      } else if (!current[lastPart]) {
+        // 初始化为数组（对于 reactNodeArray 类型）
+        current[lastPart] = [nodeRef];
+      } else {
+        // 单个值替换
+        current[lastPart] = nodeRef;
+      }
+    },
+
+    /**
+     * @description 从目标节点的 props 中移除组件引用
+     * @param action.payload.targetNodeId 目标节点ID
+     * @param action.payload.propPath props 路径
+     * @param action.payload.refNodeId 要移除的引用节点ID
+     */
+    removeNodeRefFromProps: (
+      state,
+      action: PayloadAction<{
+        targetNodeId: string;
+        propPath: string;
+        refNodeId: string;
+      }>,
+    ) => {
+      const { targetNodeId, propPath, refNodeId } = action.payload;
+      const node = state.components.entities[targetNodeId];
+      if (!node) return;
+
+      const pathParts = propPath.split(".");
+      let current: Record<string, any> = node.props;
+
+      // 遍历路径
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        if (!current[part]) return;
+        current = current[part];
+      }
+
+      const lastPart = pathParts[pathParts.length - 1];
+
+      if (Array.isArray(current[lastPart])) {
+        current[lastPart] = current[lastPart].filter(
+          (ref: any) => !(ref?.type === "nodeRef" && ref?.nodeId === refNodeId),
+        );
+      } else if (
+        current[lastPart]?.type === "nodeRef" &&
+        current[lastPart]?.nodeId === refNodeId
+      ) {
+        current[lastPart] = null;
+      }
+    },
+
+    /**
+     * @description 调整 props 中节点引用的顺序
+     * @param action.payload.targetNodeId 目标节点ID
+     * @param action.payload.propPath props 路径
+     * @param action.payload.from 源索引
+     * @param action.payload.to 目标索引
+     */
+    reorderNodeRefsInProps: (
+      state,
+      action: PayloadAction<{
+        targetNodeId: string;
+        propPath: string;
+        from: number;
+        to: number;
+      }>,
+    ) => {
+      const { targetNodeId, propPath, from, to } = action.payload;
+      const node = state.components.entities[targetNodeId];
+      if (!node) return;
+
+      const pathParts = propPath.split(".");
+      let current: Record<string, any> = node.props;
+
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        if (!current[part]) return;
+        current = current[part];
+      }
+
+      const lastPart = pathParts[pathParts.length - 1];
+
+      if (!Array.isArray(current[lastPart])) return;
+      if (from < 0 || from >= current[lastPart].length) return;
+      if (to < 0 || to >= current[lastPart].length) return;
+
+      const newArray = [...current[lastPart]];
+      const [movedItem] = newArray.splice(from, 1);
+      newArray.splice(to, 0, movedItem);
+      current[lastPart] = newArray;
+    },
   },
 });
 

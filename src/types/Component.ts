@@ -1,8 +1,31 @@
 import type React from "react";
 import { ProCommonColumn, PropAttribute } from "@/types";
 
-export const COMPONENT_TYPES = ["Page", "Table", "Form"] as const;
+export const COMPONENT_TYPES = ["Page", "Table", "Form", "Button"] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
+
+/**
+ * 表示对另一个组件节点的引用
+ * 用于 ReactNode 类型的 props，允许将组件树中的节点作为 props 传递
+ */
+export interface NodeRef {
+  type: 'nodeRef';
+  nodeId: string;
+}
+
+/**
+ * 检查一个值是否为 NodeRef
+ */
+export function isNodeRef(value: unknown): value is NodeRef {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    (value as NodeRef).type === 'nodeRef' &&
+    'nodeId' in value &&
+    typeof (value as NodeRef).nodeId === 'string'
+  );
+}
 
 export type ComponentId = string;
 

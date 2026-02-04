@@ -5,6 +5,7 @@ import { mapProCommonColumnToProps } from "./mapProCommonColumnToProps";
 import { ProCommonColumn } from "@/types";
 import { getComponentPrototype } from "@/componentMetas";
 import { entityModelAdapter } from "./componentTreeSlice";
+import { Button } from "antd";
 
 export const selectComponentTreeState = (state: RootState) =>
   state.componentTree;
@@ -42,6 +43,14 @@ export const selectNodeForPreview = createSelector(
     if (!node) return null;
     const props = { ...(node.props ?? {}) };
     const componentPrototype = getComponentPrototype(node.type);
+    if (componentPrototype?.name === "Table") {
+      props.toolbar = {
+        ...props.toolbar,
+        actions: [
+          <Button key="add" type="primary">Add</Button>,
+        ]
+      }
+    }
     if (!componentPrototype) return { ...node, props };
     if (
       "columns" in (componentPrototype.propsTypes || {}) &&
