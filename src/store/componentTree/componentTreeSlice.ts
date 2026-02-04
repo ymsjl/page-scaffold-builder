@@ -272,21 +272,28 @@ const slice = createSlice({
       const { from, to } = action.payload;
       const selectedId = state.selectedNodeId;
       if (!selectedId) return;
-      const readonlyNode = adapter
-        .getSelectors()
-        .selectById(state.components, selectedId) as
+      const node = state.components.entities[selectedId] as
         | ComponentNodeWithColumns
         | undefined;
-      if (!readonlyNode) return;
-      const columns: ProCommonColumn[] = readonlyNode.props?.columns || [];
+      if (!node) return;
+      const columns = node.props?.columns;
+      if (!columns || !Array.isArray(columns)) return;
       if (from < 0 || from >= columns.length || to < 0 || to >= columns.length)
         return;
-      const [moved] = columns.splice(from, 1);
-      columns.splice(to, 0, moved);
+
+      // 创建新数组并执行移动操作
+      const newColumns = [...columns];
+      const [movedItem] = newColumns.splice(from, 1);
+      newColumns.splice(to, 0, movedItem);
+
+      // 使用 adapter.updateOne 更新 props.columns，保持与其他 reducer 一致
       adapter.updateOne(state.components, {
         id: selectedId,
         changes: {
-          props: { ...readonlyNode.props, columns },
+          props: {
+            ...node.props,
+            columns: newColumns,
+          },
         },
       });
     },
