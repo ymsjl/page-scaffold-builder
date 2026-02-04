@@ -42,6 +42,9 @@ export const PropAttributeSchema = z.object({
   name: z.string(),
   label: z.string(),
   group: z.string().optional(),
+  // `actionFlow` represents a property whose value is an action/workflow definition,
+  // as opposed to primitive values (`string`, `number`, etc.) or structural types
+  // like `object`, `array`, or nested `schema` definitions.
   type: z.enum(['string', 'number', 'boolean', 'enum', 'date', 'object', 'array', 'schema', 'actionFlow']),
   options: z.array(z.object({ label: z.string(), value: z.any() })).optional(),
   defaultValue: z.any().optional(),
