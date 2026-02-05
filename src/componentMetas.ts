@@ -84,9 +84,10 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         children: [
           {
             name: "actions",
-            type: "array",
+            type: "reactNodeArray",
             label: "操作按钮",
-            description: "工具栏操作按钮配置（ButtonProps 子集）",
+            description: "工具栏操作按钮（可拖拽 Button 组件）",
+            acceptTypes: ["Button"],
             defaultValue: [],
           }
         ]
@@ -158,6 +159,18 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         ],
       }
     },
+    slots: [
+      {
+        id: "table.toolbar.actions",
+        path: "toolbar.actions",
+        label: "表格操作按钮",
+        kind: "reactNodeArray",
+        acceptTypes: ["Button"],
+        renderMode: "inline",
+        wrap: true,
+        placeholder: "拖入 表格操作按钮",
+      },
+    ],
   },
   Form: {
     name: "Form",

@@ -5,7 +5,6 @@ import { mapProCommonColumnToProps } from "./mapProCommonColumnToProps";
 import { NodeRef, ProCommonColumn } from "@/types";
 import { getComponentPrototype } from "@/componentMetas";
 import { entityModelAdapter } from "./componentTreeSlice";
-import { original } from "immer";
 
 export const selectComponentTreeState = (state: RootState) =>
   state.componentTree;
@@ -39,8 +38,7 @@ export const selectTypeOfSelectedNode = createSelector(
 
 export const selectNodeForPreview = createSelector(
   selectSelectedNode,
-  componentNodesSelectors.selectEntities,
-  (node, entities) => {
+  (node) => {
     if (!node) return null;
     const props = { ...(node.props ?? {}) };
     const componentPrototype = getComponentPrototype(node.type);
@@ -50,19 +48,6 @@ export const selectNodeForPreview = createSelector(
       Array.isArray(props.columns)
     ) {
       props.columns = props.columns.map(mapProCommonColumnToProps);
-    }
-    if (
-      componentPrototype.name === "Table" &&
-      Array.isArray(props.toolbar?.actions)
-    ) {
-      console.log('props.toolbar.actions',props.toolbar.actions)
-      const actions = props.toolbar.actions.map((nodeRef: NodeRef) => {
-        const referredNode = entities[nodeRef.nodeId];
-        debugger
-        if (!referredNode) return nodeRef;
-        return { ...(referredNode.props || {}) };
-      });
-      return {...node, props: { ...props, toolbar: { ...props.toolbar, actions } }};
     }
     return { ...node, props };
   },

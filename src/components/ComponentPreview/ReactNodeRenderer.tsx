@@ -3,6 +3,7 @@ import { useAppSelector } from "@/store/hooks";
 import { getComponentPrototype } from "@/componentMetas";
 import type { NodeRef, ComponentNode } from "@/types";
 import { isNodeRef } from "@/types";
+import { componentNodesSelectors } from "@/store/componentTree/componentTreeSelectors";
 
 interface ReactNodeRendererProps {
   /** 节点引用数组 */
@@ -75,7 +76,7 @@ export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
  * 用于直接传递给组件 props
  */
 export const useRenderNodeRefs = (nodeRefs: unknown[]): React.ReactNode[] => {
-  const nodes = useAppSelector((state) => state.componentTree.components.entities);
+  const nodes = useAppSelector(componentNodesSelectors.selectEntities);
 
   return React.useMemo(() => {
     return nodeRefs

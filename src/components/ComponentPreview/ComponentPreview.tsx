@@ -1,51 +1,16 @@
 import React, { useMemo } from "react";
-import { Typography, Divider, Button } from "antd";
+import { Typography, Divider } from "antd";
 import { getComponentPrototype } from "../../componentMetas";
 import { useAppSelector } from "../../store/hooks";
 import { selectNodeForPreview } from "@/store/componentTree/componentTreeSelectors";
 import { DropZone } from "@/components/DropZone";
 import { useRenderNodeRefs } from "./ReactNodeRenderer";
-import type { NodeRef, PropAttribute, ToolbarActionButtonProps } from "@/types";
+import type { NodeRef, SlotDefinition } from "@/types";
 import { isNodeRef } from "@/types";
+import SlotItemWrapper from "@/components/SlotItemWrapper";
 
-interface ComponentPreviewProps {}
+interface ComponentPreviewProps { }
 
-/**
- * 从 propsTypes 中递归查找 reactNode/reactNodeArray 类型的属性
- */
-function findReactNodeProps(
-  propsTypes: Record<string, PropAttribute> | undefined,
-  parentPath: string = "",
-): Array<{ path: string; attr: PropAttribute }> {
-  if (!propsTypes) return [];
-
-  const results: Array<{ path: string; attr: PropAttribute }> = [];
-
-  for (const [key, attr] of Object.entries(propsTypes)) {
-    const currentPath = parentPath ? `${parentPath}.${key}` : key;
-
-    if (attr.type === "reactNode" || attr.type === "reactNodeArray") {
-      results.push({ path: currentPath, attr });
-    }
-
-    // 递归查找子属性
-    if (attr.children && Array.isArray(attr.children)) {
-      for (const child of attr.children) {
-        const childPath = `${currentPath}.${child.name}`;
-        if (child.type === "reactNode" || child.type === "reactNodeArray") {
-          results.push({ path: childPath, attr: child });
-        }
-        // 可以继续递归，但通常不需要太深
-      }
-    }
-  }
-
-  return results;
-}
-
-/**
- * 从 props 对象中按路径获取值
- */
 function getValueByPath(obj: Record<string, unknown>, path: string): unknown {
   const parts = path.split(".");
   let current: unknown = obj;
@@ -61,124 +26,35 @@ function getValueByPath(obj: Record<string, unknown>, path: string): unknown {
   return current;
 }
 
-/**
- * 创建带有解析后 ReactNode 的 props
- */
-function useResolvedProps(
-  originalProps: Record<string, unknown>,
-  reactNodePaths: Array<{ path: string; attr: PropAttribute }>,
+function setValueByPath(
+  obj: Record<string, unknown>,
+  path: string,
+  value: unknown,
 ): Record<string, unknown> {
-  // 收集所有需要渲染的 nodeRefs
-  const allNodeRefs: NodeRef[] = [];
-  const pathToRefs: Record<string, NodeRef[]> = {};
+  const parts = path.split(".");
 
-  for (const { path } of reactNodePaths) {
-    const value = getValueByPath(originalProps, path);
-    const refs: NodeRef[] = [];
-
-    if (Array.isArray(value)) {
-      refs.push(...value.filter(isNodeRef));
-    } else if (isNodeRef(value)) {
-      refs.push(value);
+  const setValue = (
+    target: Record<string, unknown>,
+    index: number,
+  ): Record<string, unknown> => {
+    const key = parts[index];
+    if (index === parts.length - 1) {
+      return { ...target, [key]: value };
     }
 
-    pathToRefs[path] = refs;
-    allNodeRefs.push(...refs);
-  }
-
-  // 使用 hook 渲染所有 nodeRefs
-  const renderedNodes = useRenderNodeRefs(allNodeRefs);
-
-  // 构建映射
-  const nodeIdToElement: Record<string, React.ReactNode> = {};
-  let index = 0;
-  for (const ref of allNodeRefs) {
-    if (isNodeRef(ref)) {
-      nodeIdToElement[ref.nodeId] = renderedNodes[index];
-      index++;
-    }
-  }
-
-  // 构建新的 props 对象
-  return useMemo(() => {
-    const newProps = { ...originalProps };
-
-    for (const { path } of reactNodePaths) {
-      const refs = pathToRefs[path] || [];
-      const rendered = refs
-        .map((ref) => nodeIdToElement[ref.nodeId])
-        .filter(Boolean);
-
-      // 按路径设置值
-      const parts = path.split(".");
-      let current: Record<string, unknown> = newProps;
-
-      for (let i = 0; i < parts.length - 1; i++) {
-        const part = parts[i];
-        if (!current[part] || typeof current[part] !== "object") {
-          current[part] = {};
-        }
-        current = current[part] as Record<string, unknown>;
-      }
-
-      const lastPart = parts[parts.length - 1];
-      current[lastPart] = rendered.length > 0 ? rendered : undefined;
-    }
-
-    return newProps;
-  }, [originalProps, reactNodePaths, pathToRefs, nodeIdToElement]);
-}
-
-function usePreviewProps(
-  nodeId: string,
-  componentName: string,
-  originalProps: Record<string, unknown>,
-  reactNodePaths: Array<{ path: string; attr: PropAttribute }>,
-): Record<string, unknown> {
-  const resolvedProps = useResolvedProps(originalProps, reactNodePaths);
-
-  return useMemo(() => {
-    if (componentName !== "Table") return resolvedProps;
-
-    const toolbar = (resolvedProps.toolbar ?? {}) as Record<string, unknown>;
-    const actions = Array.isArray(toolbar.actions) ? toolbar.actions : [];
-    const actionNodes = actions
-      .map((action, index) => {
-        if (React.isValidElement(action)) return action;
-        if (!action || typeof action !== "object") return null;
-
-        const { children, key, ...buttonProps } =
-          action as ToolbarActionButtonProps;
-          debugger
-        if (!children) return null;
-
-        return (
-          <Button key={key ?? `action-${index}`} {...buttonProps}>
-            {children}
-          </Button>
-        );
-      })
-      .filter(Boolean);
+    const currentChild = target[key];
+    const nextChild =
+      currentChild && typeof currentChild === "object"
+        ? (currentChild as Record<string, unknown>)
+        : {};
 
     return {
-      ...resolvedProps,
-      toolbar: {
-        ...toolbar,
-        actions: [
-          <DropZone
-            key="11"
-            id={`${nodeId}:toolbar.actions`}
-            targetNodeId={nodeId}
-            propPath="toolbar.actions"
-            acceptTypes={["Button"]}
-            label={"表格操作按钮"}
-            placeholder={`拖入 表格操作按钮`}
-          />,
-          ...actionNodes,
-        ],
-      },
+      ...target,
+      [key]: setValue(nextChild, index + 1),
     };
-  }, [componentName, resolvedProps]);
+  };
+
+  return setValue(obj, 0);
 }
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
@@ -218,36 +94,113 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = () => {
     return <div style={errorStyle}>未知的组件类型: {node.type}</div>;
   }
 
-  // 查找 ReactNode 类型的属性
-  const reactNodeProps = findReactNodeProps(componentPrototype.propsTypes);
-
-  return (
-    <ComponentPreviewInner
-      node={node}
-      componentPrototype={componentPrototype}
-      reactNodeProps={reactNodeProps}
-    />
-  );
+  return (<ComponentPreviewInner node={node} componentPrototype={componentPrototype} />);
 };
 
-/**
- * 内部组件，用于在 hooks 规则下正确调用
- */
 const ComponentPreviewInner: React.FC<{
   node: NonNullable<ReturnType<typeof selectNodeForPreview>>;
   componentPrototype: NonNullable<ReturnType<typeof getComponentPrototype>>;
-  reactNodeProps: Array<{ path: string; attr: PropAttribute }>;
-}> = ({ node, componentPrototype, reactNodeProps }) => {
+}> = ({ node, componentPrototype }) => {
   const defaultProps = componentPrototype.defaultProps || {};
   const mergedProps = { ...defaultProps, ...node.props };
+  const slots: SlotDefinition[] = componentPrototype.slots || [];
 
-  // 解析 NodeRef 为实际 React 元素，并注入预览专用 props
-  const resolvedProps = usePreviewProps(
-    node.id,
-    componentPrototype.name,
-    mergedProps,
-    reactNodeProps,
+  const slotRefsMap = useMemo(() => {
+    const map: Record<string, NodeRef[]> = {};
+    for (const slot of slots) {
+      const value = getValueByPath(node.props, slot.path);
+      const refs: NodeRef[] = [];
+
+      if (Array.isArray(value)) {
+        refs.push(...value.filter(isNodeRef));
+      } else if (isNodeRef(value)) {
+        refs.push(value);
+      }
+
+      map[slot.id] = refs;
+    }
+    return map;
+  }, [node.props, slots]);
+
+  const allRefs = useMemo(
+    () => Object.values(slotRefsMap).flat(),
+    [slotRefsMap],
   );
+
+  const renderedNodes = useRenderNodeRefs(allRefs);
+
+  const nodeIdToElement = useMemo(() => {
+    const map: Record<string, React.ReactNode> = {};
+    let index = 0;
+    for (const ref of allRefs) {
+      map[ref.nodeId] = renderedNodes[index];
+      index += 1;
+    }
+    return map;
+  }, [allRefs, renderedNodes]);
+
+  const resolvedProps = useMemo(() => {
+    let newProps: Record<string, unknown> = { ...mergedProps };
+
+    for (const slot of slots) {
+      const refs = slotRefsMap[slot.id] || [];
+      const elements = refs
+        .map((ref) => nodeIdToElement[ref.nodeId])
+        .filter(Boolean);
+
+      const wrappedElements = slot.wrap
+        ? refs
+          .map((ref) => {
+            const element = nodeIdToElement[ref.nodeId];
+            if (!element) return null;
+            return (
+              <SlotItemWrapper
+                key={`${slot.id}:${ref.nodeId}`}
+                nodeId={ref.nodeId}
+                targetNodeId={node.id}
+                propPath={slot.path}
+              >
+                {element}
+              </SlotItemWrapper>
+            );
+          })
+          .filter(Boolean)
+        : elements;
+
+      const dropZone = (
+        <DropZone
+          key={`${slot.id}:drop`}
+          id={`${node.id}:${slot.path}`}
+          targetNodeId={node.id}
+          propPath={slot.path}
+          acceptTypes={slot.acceptTypes}
+          label={slot.label}
+        />
+      );
+
+      // Inline slots:
+      // - For reactNodeArray slots we always render the DropZone first,
+      //   followed by any existing children. This keeps a visible primary
+      //   drop target at the start of the list.
+      // - For single reactNode slots we instead treat the DropZone as a
+      //   fallback, only showing it when there is no existing content.
+      // This asymmetry is intentional to keep single-item slots less
+      // visually intrusive while still encouraging drops into list slots.
+      if (slot.renderMode === "inline") {
+        if (slot.kind === "reactNodeArray") {
+          newProps = setValueByPath(newProps, slot.path, [dropZone, ...wrappedElements]);
+        } else {
+          newProps = setValueByPath(newProps, slot.path, wrappedElements[0] ?? dropZone);
+        }
+      } else if (slot.kind === "reactNodeArray") {
+        newProps = setValueByPath(newProps, slot.path, wrappedElements);
+      } else {
+        newProps = setValueByPath(newProps, slot.path, wrappedElements[0]);
+      }
+    }
+
+    return newProps;
+  }, [mergedProps, slots, slotRefsMap, nodeIdToElement, node.id]);
 
   const Component = componentPrototype.component;
 
@@ -281,12 +234,11 @@ const ComponentPreviewInner: React.FC<{
     );
   };
 
-  // 如果有 ReactNode 类型的属性，显示拖放区域
-  const hasDropZones = reactNodeProps.length > 0;
+  const panelSlots = slots.filter((slot) => slot.renderMode !== "inline");
 
   return (
     <div style={containerStyle}>
-      {hasDropZones && (
+      {panelSlots.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             拖拽组件到下方插槽
@@ -299,30 +251,18 @@ const ComponentPreviewInner: React.FC<{
               gap: 8,
             }}
           >
-            {reactNodeProps.map(({ path, attr }) => {
-              const value = getValueByPath(node.props, path);
-              const nodeRefs: NodeRef[] = Array.isArray(value)
-                ? value.filter(isNodeRef)
-                : isNodeRef(value)
-                  ? [value]
-                  : [];
-
-              return (
-                <DropZone
-                  key={path}
-                  id={`${node.id}:${path}`}
-                  targetNodeId={node.id}
-                  propPath={path}
-                  acceptTypes={
-                    (attr as PropAttribute & { acceptTypes?: string[] })
-                      .acceptTypes
-                  }
-                  nodeRefs={nodeRefs}
-                  label={attr.label}
-                  placeholder={`拖入 ${attr.label || path}`}
-                />
-              );
-            })}
+            {panelSlots.map((slot) => (
+              <DropZone
+                key={slot.id}
+                id={`${node.id}:${slot.path}`}
+                targetNodeId={node.id}
+                propPath={slot.path}
+                acceptTypes={slot.acceptTypes}
+                nodeRefs={slotRefsMap[slot.id] || []}
+                label={slot.label}
+                placeholder={slot.placeholder ?? `拖入 ${slot.label}`}
+              />
+            ))}
           </div>
           <Divider style={{ margin: "16px 0" }} />
         </div>

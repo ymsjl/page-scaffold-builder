@@ -1,11 +1,6 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { CloseOutlined } from "@ant-design/icons";
-import { Tag, Space, Typography } from "antd";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import type { NodeRef } from "@/types";
-import { isNodeRef } from "@/types";
+import { Typography } from "antd";
 import "./DropZone.css";
 
 interface DropZoneProps {
@@ -17,63 +12,16 @@ interface DropZoneProps {
   propPath: string;
   /** 接受的组件类型列表 */
   acceptTypes?: string[];
-  /** 当前已有的节点引用 */
-  nodeRefs?: NodeRef[];
   /** 显示标签 */
   label?: string;
-  /** 占位文本 */
-  placeholder?: string;
 }
-
-interface DroppedNodeTagProps {
-  nodeRef: NodeRef;
-  targetNodeId: string;
-  propPath: string;
-}
-
-const DroppedNodeTag: React.FC<DroppedNodeTagProps> = ({
-  nodeRef,
-  targetNodeId,
-  propPath,
-}) => {
-  const dispatch = useAppDispatch();
-  const node = useAppSelector(
-    (state) => state.componentTree.components.entities[nodeRef.nodeId],
-  );
-
-  const handleRemove = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatch(
-      componentTreeActions.removeNodeRefFromProps({
-        targetNodeId,
-        propPath,
-        refNodeId: nodeRef.nodeId,
-      }),
-    );
-  };
-
-  if (!node) return null;
-
-  return (
-    <Tag
-      closable
-      onClose={handleRemove}
-      closeIcon={<CloseOutlined />}
-      color="blue"
-      style={{ margin: "2px" }}
-    >
-      {node.name}
-    </Tag>
-  );
-};
 
 export const DropZone: React.FC<DropZoneProps> = ({
   id,
   targetNodeId,
   propPath,
   acceptTypes,
-  nodeRefs = [],
-  placeholder = "拖入组件到此处",
+  label,
 }) => {
   const { isOver, setNodeRef, active } = useDroppable({
     id,
@@ -99,34 +47,18 @@ export const DropZone: React.FC<DropZoneProps> = ({
   const isActive = isOver && isAccepted;
   const isInvalid = isOver && !isAccepted;
 
-  // 过滤出有效的 nodeRef
-  const validNodeRefs = nodeRefs.filter(isNodeRef);
 
   return (
     <div
       ref={setNodeRef}
-      className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${
-        isInvalid ? "drop-zone--invalid" : ""
-      } ${active ? "drop-zone--dragging" : ""}`}
+      className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${isInvalid ? "drop-zone--invalid" : ""
+        } ${active ? "drop-zone--dragging" : ""}`}
     >
-      <div className="drop-zone__content">
-        {validNodeRefs.length > 0 ? (
-          <Space wrap size={4}>
-            {validNodeRefs.map((ref) => (
-              <DroppedNodeTag
-                key={ref.nodeId}
-                nodeRef={ref}
-                targetNodeId={targetNodeId}
-                propPath={propPath}
-              />
-            ))}
-          </Space>
-        ) : (
-          <Typography.Text type="secondary" className="drop-zone__placeholder">
-            {placeholder}
-          </Typography.Text>
-        )}
-      </div>
+      {label && (
+        <Typography.Text type="secondary" className="drop-zone__label">
+          {label}
+        </Typography.Text>
+      )}
       {isActive && <div className="drop-zone__indicator">放置以添加</div>}
       {isInvalid && (
         <div className="drop-zone__indicator drop-zone__indicator--invalid">
