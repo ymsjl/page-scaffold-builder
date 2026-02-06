@@ -29,6 +29,17 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
       },
 
     },
+    slots: [
+      {
+        id: "page.children",
+        path: "children",
+        label: "页面内容",
+        kind: "reactNodeArray",
+        renderMode: "inline",
+        wrap: true,
+        placeholder: "拖入页面内容",
+      },
+    ],
   },
   Table: {
     name: "Table",
