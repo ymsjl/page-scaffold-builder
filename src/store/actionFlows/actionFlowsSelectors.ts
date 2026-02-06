@@ -16,7 +16,7 @@ export const flowSelectors = flowAdapter.getSelectors(
 // Flow Selectors
 // ============================================
 
-export const selectActiveFlowId = (state: RootState) => 
+export const selectActiveFlowId = (state: RootState) =>
   state.actionFlows.activeFlowId;
 
 export const selectActiveFlow = createSelector(
@@ -27,6 +27,11 @@ export const selectActiveFlow = createSelector(
 export const selectAllFlows = createSelector(
   flowSelectors.selectAll,
   (flows) => flows
+);
+
+export const selectActionFlowOptions = createSelector(
+  selectAllFlows,
+  (flows) => flows.map((flow) => ({ label: flow.name, value: flow.id }))
 );
 
 export const selectFlowById = (flowId: string) =>
@@ -150,7 +155,7 @@ export const selectHasCycle = createSelector(
     // 使用深度优先搜索检测循环
     const visited = new Set<string>();
     const recursionStack = new Set<string>();
-    
+
     const adjacencyList = new Map<string, string[]>();
     edges.forEach(edge => {
       if (!adjacencyList.has(edge.source)) {
@@ -158,11 +163,11 @@ export const selectHasCycle = createSelector(
       }
       adjacencyList.get(edge.source)!.push(edge.target);
     });
-    
+
     const hasCycleUtil = (nodeId: string): boolean => {
       visited.add(nodeId);
       recursionStack.add(nodeId);
-      
+
       const neighbors = adjacencyList.get(nodeId) || [];
       for (const neighbor of neighbors) {
         if (!visited.has(neighbor)) {
@@ -173,11 +178,11 @@ export const selectHasCycle = createSelector(
           return true;
         }
       }
-      
+
       recursionStack.delete(nodeId);
       return false;
     };
-    
+
     for (const node of nodes) {
       if (!visited.has(node.id)) {
         if (hasCycleUtil(node.id)) {
@@ -185,7 +190,7 @@ export const selectHasCycle = createSelector(
         }
       }
     }
-    
+
     return false;
   }
 );

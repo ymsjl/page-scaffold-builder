@@ -1,7 +1,5 @@
 .slot-item-wrapper {
   position: relative;
-  display: inline-flex;
-  align-items: center;
   padding: 2px;
   border-radius: 4px;
   border: 1px dashed transparent;
@@ -14,8 +12,6 @@
 }
 
 .slot-item-wrapper__content {
-  display: inline-flex;
-  align-items: center;
   gap: 4px;
 }
 
@@ -31,6 +27,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
-.slot-item-wrapper:hover .slot-item-wrapper__actions {
+.slot-item-wrapper:hover>.slot-item-wrapper__actions {
   display: inline-flex;
 }

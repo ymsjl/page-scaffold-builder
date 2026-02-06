@@ -71,6 +71,39 @@ const upsertColumnOfSelectedNode = (
   }
 };
 
+const addNodeRefToPropsPath = (
+  node: WritableDraft<ComponentNode>,
+  propPath: string,
+  refNodeId: string,
+) => {
+  const pathParts = propPath.split(".");
+  let current: Record<string, any> = node.props;
+
+  for (let i = 0; i < pathParts.length - 1; i++) {
+    const part = pathParts[i];
+    if (!current[part] || typeof current[part] !== "object") {
+      current[part] = {};
+    }
+    current = current[part];
+  }
+
+  const lastPart = pathParts[pathParts.length - 1];
+  const nodeRef = { type: "nodeRef" as const, nodeId: refNodeId };
+
+  if (Array.isArray(current[lastPart])) {
+    const exists = current[lastPart].some(
+      (ref: any) => ref?.type === "nodeRef" && ref?.nodeId === refNodeId,
+    );
+    if (!exists) {
+      current[lastPart].push(nodeRef);
+    }
+  } else if (!current[lastPart]) {
+    current[lastPart] = [nodeRef];
+  } else {
+    current[lastPart] = nodeRef;
+  }
+};
+
 const slice = createSlice({
   name: "componentTree",
   initialState,
@@ -115,6 +148,51 @@ const slice = createSlice({
         id: parentId,
         changes: { childrenIds },
       });
+    },
+
+    /**
+     * @description 新建组件节点并添加到目标 slot 中
+     * @param action.payload.targetNodeId 目标节点ID
+     * @param action.payload.propPath props 路径，如 "toolbar.actions"
+     * @param action.payload.type 新增节点的组件类型
+     */
+    addNodeToSlot: (
+      state,
+      action: PayloadAction<{
+        targetNodeId: string;
+        propPath: string;
+        type: ComponentNode["type"];
+      }>,
+    ) => {
+      const { targetNodeId, propPath, type } = action.payload;
+      const targetNode = state.components.entities[targetNodeId];
+      if (!targetNode) return;
+
+      const prototype = getComponentPrototype(type);
+      if (!prototype) return;
+
+      const newNode: ComponentNode = {
+        id: makeNodeId(),
+        parentId: targetNodeId,
+        type,
+        name: `New ${prototype?.label}`,
+        isContainer: prototype?.isContainer,
+        props: prototype?.defaultProps || {},
+        childrenIds: [],
+      };
+
+      adapter.addOne(state.components, newNode);
+
+      const childrenIds = targetNode.childrenIds?.slice() || [];
+      if (!childrenIds.includes(newNode.id)) {
+        childrenIds.push(newNode.id);
+      }
+      adapter.updateOne(state.components, {
+        id: targetNodeId,
+        changes: { childrenIds },
+      });
+
+      addNodeRefToPropsPath(targetNode, propPath, newNode.id);
     },
 
     /**
@@ -449,37 +527,7 @@ const slice = createSlice({
       const node = state.components.entities[targetNodeId];
       if (!node) return;
 
-      // 解析路径并设置值
-      const pathParts = propPath.split(".");
-      let current: Record<string, any> = node.props;
-
-      // 确保路径存在
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const part = pathParts[i];
-        if (!current[part] || typeof current[part] !== "object") {
-          current[part] = {};
-        }
-        current = current[part];
-      }
-
-      const lastPart = pathParts[pathParts.length - 1];
-      const nodeRef = { type: "nodeRef" as const, nodeId: refNodeId };
-      // 如果是数组类型，添加到数组；否则直接设置
-      if (Array.isArray(current[lastPart])) {
-        // 检查是否已存在相同引用
-        const exists = current[lastPart].some(
-          (ref: any) => ref?.type === "nodeRef" && ref?.nodeId === refNodeId,
-        );
-        if (!exists) {
-          current[lastPart].push(nodeRef);
-        }
-      } else if (!current[lastPart]) {
-        // 初始化为数组（对于 reactNodeArray 类型）
-        current[lastPart] = [nodeRef];
-      } else {
-        // 单个值替换
-        current[lastPart] = nodeRef;
-      }
+      addNodeRefToPropsPath(node, propPath, refNodeId);
     },
 
     /**

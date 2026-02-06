@@ -1,34 +1,97 @@
 import React, { useMemo } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { getComponentPrototype } from "@/componentMetas";
-import { type NodeRef, type ComponentNode, isNodeRef } from "@/types";
-import { componentNodesSelectors } from "@/store/componentTree/componentTreeSelectors";
-import { resolveNodeFromPrototype, resolveRenderableNodes, type ResolvedNode, } from "./nodeRefLogic";
+import {
+  type ComponentNode,
+  type ComponentPrototype,
+  type NodeRef,
+  isNodeRef,
+} from "@/types";
+import { buildResolvedProps, collectSlotRefs, mapNodeRefsToItems } from "./previewLogic";
+import { DropZone } from "@/components/DropZone/DropZone";
+import SlotItemWrapper from "@/components/SlotItemWrapper/SlotItemWrapper";
 
 interface ReactNodeRendererProps {
   /** 节点引用数组 */
   nodeRefs: NodeRef[];
 }
 
-const renderResolvedNode = ({
-  component,
-  mergedProps,
-  nodeId,
-}: ResolvedNode): React.ReactElement => {
-  if (typeof component === "string") {
-    const { children, ...restProps } = mergedProps;
+const buildChildrenRefs = (childrenIds: string[]): NodeRef[] =>
+  childrenIds.map((nodeId) => ({ type: "nodeRef", nodeId }));
+
+const renderComponentElement = (
+  node: ComponentNode,
+  componentPrototype: ComponentPrototype,
+  resolvedProps: Record<string, unknown>,
+): React.ReactElement => {
+  const Component = componentPrototype.component;
+  if (typeof Component === "string") {
+    const { children, ...restProps } = resolvedProps;
     return React.createElement(
-      component as keyof JSX.IntrinsicElements,
-      { ...restProps, key: nodeId },
+      Component as keyof JSX.IntrinsicElements,
+      { ...restProps, key: node.id },
       children as React.ReactNode,
     );
   }
 
-  const Component = component;
   return (
-    <Component {...mergedProps} key={nodeId}>
-      {mergedProps.children as React.ReactNode}
+    <Component {...resolvedProps} key={node.id}>
+      {resolvedProps.children as React.ReactNode}
     </Component>
+  );
+};
+
+export const useResolvedProps = (
+  node: ComponentNode,
+  componentPrototype: ComponentPrototype,
+) => {
+  const nodeProps = node.props || {};
+  const slots = componentPrototype.slots || [];
+  const slotRefsMap = useMemo(
+    () => collectSlotRefs(nodeProps, slots),
+    [nodeProps, slots],
+  );
+  const allRefs = useMemo(() => Object.values(slotRefsMap).flat(), [slotRefsMap]);
+  const renderedNodes = useRenderNodeRefs(allRefs);
+  const nodeIdToElement = useMemo(
+    () => mapNodeRefsToItems(allRefs, renderedNodes),
+    [allRefs, renderedNodes],
+  );
+
+  const mergedProps = { ...(componentPrototype.defaultProps || {}), ...nodeProps };
+  if (node.isContainer) {
+    mergedProps.children = buildChildrenRefs(node.childrenIds || []);
+  }
+
+  return useMemo(
+    () =>
+      buildResolvedProps({
+        mergedProps,
+        slots,
+        slotRefsMap,
+        nodeIdToElement,
+        createDropZone: (slot) => (
+          <DropZone
+            key={`${slot.id}:drop`}
+            id={`${node.id}:${slot.path}`}
+            targetNodeId={node.id}
+            propPath={slot.path}
+            acceptTypes={slot.acceptTypes}
+            label={slot.label}
+          />
+        ),
+        wrapElement: (slot, ref, element) => (
+          <SlotItemWrapper
+            key={`${slot.id}:${ref.nodeId}`}
+            nodeId={ref.nodeId}
+            targetNodeId={node.id}
+            propPath={slot.path}
+          >
+            {element}
+          </SlotItemWrapper>
+        ),
+      }),
+    [mergedProps, slots, slotRefsMap, nodeIdToElement, node.id],
   );
 };
 
@@ -49,8 +112,8 @@ const RenderSingleNode: React.FC<{ nodeId: string }> = ({ nodeId }) => {
     return null;
   }
 
-  const resolved = resolveNodeFromPrototype(node, prototype);
-  return renderResolvedNode(resolved);
+  const resolvedProps = useResolvedProps(node, prototype);
+  return renderComponentElement(node, prototype, resolvedProps);
 };
 
 /**
@@ -78,21 +141,14 @@ export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
  * 用于直接传递给组件 props
  */
 export const useRenderNodeRefs = (nodeRefs: unknown[]): React.ReactNode[] => {
-  const nodes = useAppSelector(componentNodesSelectors.selectEntities);
-
   const validRefs = React.useMemo(
     () => nodeRefs.filter(isNodeRef) as NodeRef[],
     [nodeRefs],
   );
 
-  const resolvedNodes = React.useMemo(
-    () => resolveRenderableNodes(validRefs, nodes, getComponentPrototype),
-    [validRefs, nodes],
-  );
-
   return React.useMemo(
-    () => resolvedNodes.map((resolved) => renderResolvedNode(resolved)),
-    [resolvedNodes],
+    () => validRefs.map((ref) => <RenderSingleNode key={ref.nodeId} nodeId={ref.nodeId} />),
+    [validRefs],
   );
 };
 

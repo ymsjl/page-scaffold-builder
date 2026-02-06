@@ -13,6 +13,7 @@
 ### Task 1: Add a Page-root preview selector
 
 **Files:**
+
 - Create: `src/store/componentTree/componentTreeSelectors.test.ts`
 - Modify: `src/store/componentTree/componentTreeSelectors.tsx`
 
@@ -20,7 +21,9 @@
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import componentTreeReducer, { componentTreeActions } from "./componentTreeSlice";
+import componentTreeReducer, {
+  componentTreeActions,
+} from "./componentTreeSlice";
 import { selectPreviewRootNodeId } from "./componentTreeSelectors";
 
 describe("selectPreviewRootNodeId", () => {
@@ -70,7 +73,7 @@ export const selectPreviewRootNodeId = createSelector(
 export const selectPreviewRootNode = createSelector(
   componentNodesSelectors.selectEntities,
   selectPreviewRootNodeId,
-  (entities, id) => (id ? entities[id] ?? null : null),
+  (entities, id) => (id ? (entities[id] ?? null) : null),
 );
 ```
 
@@ -93,6 +96,7 @@ git commit -m "test: add preview root selector"
 ### Task 2: Normalize preview props (childrenIds + columns)
 
 **Files:**
+
 - Create: `src/components/ComponentPreview/nodeRefLogic.test.ts`
 - Modify: `src/components/ComponentPreview/nodeRefLogic.ts`
 
@@ -207,6 +211,7 @@ git commit -m "test: normalize preview props for nested render"
 ### Task 3: Render full tree preview from Page root
 
 **Files:**
+
 - Modify: `src/components/ComponentPreview/ComponentPreview.tsx`
 - Modify: `src/components/ComponentPreview/ComponentPreviewInner.tsx`
 - Modify: `src/componentMetas.ts`

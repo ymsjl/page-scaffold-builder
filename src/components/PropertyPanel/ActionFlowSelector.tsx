@@ -3,6 +3,10 @@ import { Button, Select, Space, Typography, message } from 'antd';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { actionFlowsActions } from '@/store/actionFlows/actionFlowsSlice';
+import {
+  selectActionFlowOptions,
+  selectFlowById,
+} from '@/store/actionFlows/actionFlowsSelectors';
 import { ActionFlowEditorDrawer } from './ActionFlowEditorDrawer';
 
 interface ActionFlowSelectorProps {
@@ -20,12 +24,9 @@ export const ActionFlowSelector: React.FC<ActionFlowSelectorProps> = ({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingFlowId, setEditingFlowId] = useState<string | null>(null);
 
-  const flows = useAppSelector((state) =>
-    Object.values(state.actionFlows.flows.entities).filter(Boolean)
-  );
-
-  const selectedFlow = useAppSelector((state) =>
-    value ? state.actionFlows.flows.entities[value] : null
+  const options = useAppSelector(selectActionFlowOptions);
+  const selectedFlow = useAppSelector(
+    value ? selectFlowById(value) : () => null,
   );
 
   const handleEdit = useCallback(() => {
@@ -61,11 +62,6 @@ export const ActionFlowSelector: React.FC<ActionFlowSelectorProps> = ({
     setDrawerOpen(false);
     setEditingFlowId(null);
   }, []);
-
-  const options = flows.map((flow) => ({
-    label: flow.name,
-    value: flow.id,
-  }));
 
   return (
     <>
