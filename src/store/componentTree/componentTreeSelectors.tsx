@@ -53,6 +53,21 @@ export const selectNodeForPreview = createSelector(
   },
 );
 
+export const selectPreviewRootNodeId = createSelector(
+  selectComponentTreeState,
+  componentNodesSelectors.selectEntities,
+  (state, entities) => {
+    const rootId = state.rootIds.find((id) => entities[id]?.type === "Page");
+    return rootId ?? null;
+  },
+);
+
+export const selectPreviewRootNode = createSelector(
+  componentNodesSelectors.selectEntities,
+  selectPreviewRootNodeId,
+  (entities, id) => (id ? entities[id] ?? null : null),
+);
+
 export const selectFirstParentPageNode = createSelector(selectSelectedNode, componentNodesSelectors.selectEntities, (node, entities) => {
   if (!node) return null;
   let currentNode = node;
