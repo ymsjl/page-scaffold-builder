@@ -103,7 +103,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   return (
     <div
       ref={setNodeRef}
-      style={{ padding: '4px', paddingLeft: `${level * 20}px`, ...style }}
+      style={{ padding: '4px', paddingLeft: `${level * 8}px`, ...style }}
       {...attributes}
     >
       <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>

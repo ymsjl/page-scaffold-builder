@@ -1,21 +1,43 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { getComponentPrototype } from "@/componentMetas";
-import type { NodeRef, ComponentNode } from "@/types";
-import { isNodeRef } from "@/types";
+import { type NodeRef, type ComponentNode, isNodeRef } from "@/types";
 import { componentNodesSelectors } from "@/store/componentTree/componentTreeSelectors";
+import { resolveNodeFromPrototype, resolveRenderableNodes, type ResolvedNode, } from "./nodeRefLogic";
 
 interface ReactNodeRendererProps {
   /** 节点引用数组 */
   nodeRefs: NodeRef[];
 }
 
+const renderResolvedNode = ({
+  component,
+  mergedProps,
+  nodeId,
+}: ResolvedNode): React.ReactElement => {
+  if (typeof component === "string") {
+    const { children, ...restProps } = mergedProps;
+    return React.createElement(
+      component as keyof JSX.IntrinsicElements,
+      { ...restProps, key: nodeId },
+      children as React.ReactNode,
+    );
+  }
+
+  const Component = component;
+  return (
+    <Component {...mergedProps} key={nodeId}>
+      {mergedProps.children as React.ReactNode}
+    </Component>
+  );
+};
+
 /**
  * 渲染单个引用的组件节点
  */
 const RenderSingleNode: React.FC<{ nodeId: string }> = ({ nodeId }) => {
   const node = useAppSelector(
-    (state) => state.componentTree.components.entities[nodeId]
+    (state) => state.componentTree.components.entities[nodeId],
   ) as ComponentNode | undefined;
 
   if (!node) {
@@ -27,26 +49,8 @@ const RenderSingleNode: React.FC<{ nodeId: string }> = ({ nodeId }) => {
     return null;
   }
 
-  const Component = prototype.component;
-  const defaultProps = prototype.defaultProps || {};
-  const mergedProps = { ...defaultProps, ...node.props };
-
-  // 处理 HTML 元素类型
-  if (typeof Component === "string") {
-    const { children, ...restProps } = mergedProps;
-    return React.createElement(
-      Component as keyof JSX.IntrinsicElements,
-      { ...restProps, key: node.id },
-      children
-    );
-  }
-
-  // React 组件类型
-  return (
-    <Component {...mergedProps} key={node.id}>
-      {mergedProps.children}
-    </Component>
-  );
+  const resolved = resolveNodeFromPrototype(node, prototype);
+  return renderResolvedNode(resolved);
 };
 
 /**
@@ -56,7 +60,7 @@ const RenderSingleNode: React.FC<{ nodeId: string }> = ({ nodeId }) => {
 export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
   nodeRefs,
 }) => {
-  const validRefs = nodeRefs.filter(isNodeRef);
+  const validRefs = useMemo(() => nodeRefs.filter(isNodeRef), [nodeRefs]);
 
   if (validRefs.length === 0) {
     return null;
@@ -64,9 +68,7 @@ export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
 
   return (
     <>
-      {validRefs.map((ref) => (
-        <RenderSingleNode key={ref.nodeId} nodeId={ref.nodeId} />
-      ))}
+      {validRefs.map((ref) => <RenderSingleNode key={ref.nodeId} nodeId={ref.nodeId} />)}
     </>
   );
 };
@@ -78,37 +80,20 @@ export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
 export const useRenderNodeRefs = (nodeRefs: unknown[]): React.ReactNode[] => {
   const nodes = useAppSelector(componentNodesSelectors.selectEntities);
 
-  return React.useMemo(() => {
-    return nodeRefs
-      .filter(isNodeRef)
-      .map((ref) => {
-        const node = nodes[ref.nodeId] as ComponentNode | undefined;
-        if (!node) return null;
+  const validRefs = React.useMemo(
+    () => nodeRefs.filter(isNodeRef) as NodeRef[],
+    [nodeRefs],
+  );
 
-        const prototype = getComponentPrototype(node.type);
-        if (!prototype) return null;
+  const resolvedNodes = React.useMemo(
+    () => resolveRenderableNodes(validRefs, nodes, getComponentPrototype),
+    [validRefs, nodes],
+  );
 
-        const Component = prototype.component;
-        const defaultProps = prototype.defaultProps || {};
-        const mergedProps = { ...defaultProps, ...node.props };
-
-        if (typeof Component === "string") {
-          const { children, ...restProps } = mergedProps;
-          return React.createElement(
-            Component as keyof JSX.IntrinsicElements,
-            { ...restProps, key: node.id },
-            children
-          );
-        }
-
-        return React.createElement(Component, {
-          ...mergedProps,
-          key: node.id,
-          children: mergedProps.children,
-        });
-      })
-      .filter(Boolean);
-  }, [nodeRefs, nodes]);
+  return React.useMemo(
+    () => resolvedNodes.map((resolved) => renderResolvedNode(resolved)),
+    [resolvedNodes],
+  );
 };
 
 export default ReactNodeRenderer;

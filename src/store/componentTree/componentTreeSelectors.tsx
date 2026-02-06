@@ -53,6 +53,18 @@ export const selectNodeForPreview = createSelector(
   },
 );
 
+export const selectFirstParentPageNode = createSelector(selectSelectedNode, componentNodesSelectors.selectEntities, (node, entities) => {
+  if (!node) return null;
+  let currentNode = node;
+  while (currentNode.parentId) {
+    const parentNode = entities[currentNode.parentId];
+    if (!parentNode) break;
+    parentNode.type === "Page" && (currentNode = parentNode);
+    currentNode = parentNode;
+  }
+  return currentNode.type === "Page" ? currentNode : null;
+});
+
 export const selectSelectedNodeEntityModelId = createSelector(
   selectSelectedNode,
   (node) => node?.props?.entityModelId || null,
