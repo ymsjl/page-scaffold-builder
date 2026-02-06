@@ -112,17 +112,14 @@ export const DropZone: React.FC<DropZoneProps> = ({
         className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${isInvalid ? "drop-zone--invalid" : ""
           } ${active ? "drop-zone--dragging" : ""}`}
       >
-        {label && (
+        <div className="drop-zone__icon" aria-hidden>
+          +
+        </div>
+        {/* {label && (
           <Typography.Text type="secondary" className="drop-zone__label">
             {label}
           </Typography.Text>
-        )}
-        {isActive && <div className="drop-zone__indicator">放置以添加</div>}
-        {isInvalid && (
-          <div className="drop-zone__indicator drop-zone__indicator--invalid">
-            不支持此类型
-          </div>
-        )}
+        )} */}
       </div>
     </Popover>
   );

@@ -71,36 +71,47 @@ const upsertColumnOfSelectedNode = (
   }
 };
 
-const addNodeRefToPropsPath = (
+const getPropsPathTarget = (
   node: WritableDraft<ComponentNode>,
   propPath: string,
-  refNodeId: string,
-) => {
+  createMissing: boolean,
+): { parent: Record<string, any>; key: string } | null => {
   const pathParts = propPath.split(".");
   let current: Record<string, any> = node.props;
 
   for (let i = 0; i < pathParts.length - 1; i++) {
     const part = pathParts[i];
     if (!current[part] || typeof current[part] !== "object") {
+      if (!createMissing) return null;
       current[part] = {};
     }
     current = current[part];
   }
 
-  const lastPart = pathParts[pathParts.length - 1];
+  return { parent: current, key: pathParts[pathParts.length - 1] };
+};
+
+const addNodeRefToPropsPath = (
+  node: WritableDraft<ComponentNode>,
+  propPath: string,
+  refNodeId: string,
+) => {
+  const target = getPropsPathTarget(node, propPath, true);
+  if (!target) return;
+  const { parent, key } = target;
   const nodeRef = { type: "nodeRef" as const, nodeId: refNodeId };
 
-  if (Array.isArray(current[lastPart])) {
-    const exists = current[lastPart].some(
+  if (Array.isArray(parent[key])) {
+    const exists = parent[key].some(
       (ref: any) => ref?.type === "nodeRef" && ref?.nodeId === refNodeId,
     );
     if (!exists) {
-      current[lastPart].push(nodeRef);
+      parent[key].push(nodeRef);
     }
-  } else if (!current[lastPart]) {
-    current[lastPart] = [nodeRef];
+  } else if (!parent[key]) {
+    parent[key] = [nodeRef];
   } else {
-    current[lastPart] = nodeRef;
+    parent[key] = nodeRef;
   }
 };
 
@@ -548,27 +559,19 @@ const slice = createSlice({
       const node = state.components.entities[targetNodeId];
       if (!node) return;
 
-      const pathParts = propPath.split(".");
-      let current: Record<string, any> = node.props;
+      const target = getPropsPathTarget(node, propPath, false);
+      if (!target) return;
+      const { parent, key } = target;
 
-      // 遍历路径
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const part = pathParts[i];
-        if (!current[part]) return;
-        current = current[part];
-      }
-
-      const lastPart = pathParts[pathParts.length - 1];
-
-      if (Array.isArray(current[lastPart])) {
-        current[lastPart] = current[lastPart].filter(
+      if (Array.isArray(parent[key])) {
+        parent[key] = parent[key].filter(
           (ref: any) => !(ref?.type === "nodeRef" && ref?.nodeId === refNodeId),
         );
       } else if (
-        current[lastPart]?.type === "nodeRef" &&
-        current[lastPart]?.nodeId === refNodeId
+        parent[key]?.type === "nodeRef" &&
+        parent[key]?.nodeId === refNodeId
       ) {
-        current[lastPart] = null;
+        parent[key] = null;
       }
     },
 
@@ -592,25 +595,18 @@ const slice = createSlice({
       const node = state.components.entities[targetNodeId];
       if (!node) return;
 
-      const pathParts = propPath.split(".");
-      let current: Record<string, any> = node.props;
+      const target = getPropsPathTarget(node, propPath, false);
+      if (!target) return;
+      const { parent, key } = target;
 
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const part = pathParts[i];
-        if (!current[part]) return;
-        current = current[part];
-      }
+      if (!Array.isArray(parent[key])) return;
+      if (from < 0 || from >= parent[key].length) return;
+      if (to < 0 || to >= parent[key].length) return;
 
-      const lastPart = pathParts[pathParts.length - 1];
-
-      if (!Array.isArray(current[lastPart])) return;
-      if (from < 0 || from >= current[lastPart].length) return;
-      if (to < 0 || to >= current[lastPart].length) return;
-
-      const newArray = [...current[lastPart]];
+      const newArray = [...parent[key]];
       const [movedItem] = newArray.splice(from, 1);
       newArray.splice(to, 0, movedItem);
-      current[lastPart] = newArray;
+      parent[key] = newArray;
     },
   },
 });

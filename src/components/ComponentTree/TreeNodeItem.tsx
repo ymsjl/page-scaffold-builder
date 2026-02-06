@@ -90,7 +90,8 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
       console.warn("[TreeNodeItem] handleSelectComponent: missing node id", node);
       return;
     }
-    dispatch(componentTreeActions.addNode({ parentId: node.id, type }));
+    
+    dispatch(componentTreeActions.addNodeToSlot({ targetNodeId: node.id, propPath: "children", type }));
     dispatch(componentTreeActions.expandNode(node.id));
     setShowAddDropdownNodeId(null);
   };
