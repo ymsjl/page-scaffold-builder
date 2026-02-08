@@ -106,6 +106,15 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         description: "定义表格的列信息",
         defaultValue: [],
       },
+      rowActions: {
+        name: "rowActions",
+        type: "reactNodeArray",
+        label: "行操作按钮",
+        description: "表格行操作按钮（可拖拽 Button 组件）",
+        acceptTypes: ["Button"],
+        defaultValue: [],
+        group: "列配置",
+      },
       headerTitle: {
         name: "headerTitle",
         type: "string",

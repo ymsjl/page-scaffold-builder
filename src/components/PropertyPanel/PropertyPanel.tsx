@@ -1,17 +1,26 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import { ProCard, BetaSchemaForm, ProFormColumnsType } from "@ant-design/pro-components";
-import { Button, Flex, Form, Typography } from "antd";
+import {
+  ProCard,
+  BetaSchemaForm,
+  ProFormColumnsType,
+} from "@ant-design/pro-components";
+import { Button, Flex, Form, List, Typography } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { entityModelSelectors } from "@/store/componentTree/componentTreeSelectors";
-import { selectSelectedNode } from "@/store/componentTree/componentTreeSelectors";
+import {
+  componentNodesSelectors,
+  entityModelSelectors,
+  selectSelectedNode,
+} from "@/store/componentTree/componentTreeSelectors";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
-import { PropAttribute } from "@/types";
+import { ComponentNode, isNodeRef, PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
 import { PlusOutlined } from "@ant-design/icons";
 import { merge } from "lodash-es";
 import { ActionFlowSelector } from "./ActionFlowSelector";
+import RowActions from "./RowActions";
+import { getValueByPath } from "../ComponentPreview/slotPath";
 
 import "./styles.css";
 
@@ -21,17 +30,19 @@ function deepMerge(target: any, source: any): any {
   return merge({}, target, source);
 }
 
-interface FlattenedPropAttribute extends Omit<PropAttribute, 'name'> {
+interface FlattenedPropAttribute extends Omit<PropAttribute, "name"> {
   name: string | string[];
   isObjectChild?: boolean; // 标记是否为对象的子属性
 }
 
-function flattenPropAttributes(attrs: PropAttribute[]): FlattenedPropAttribute[] {
+function flattenPropAttributes(
+  attrs: PropAttribute[],
+): FlattenedPropAttribute[] {
   const result: FlattenedPropAttribute[] = [];
 
   for (const attr of attrs) {
     // 如果是对象类型且有 children，则创建分组并展开子属性
-    if (attr.type === 'object' && attr.children && attr.children.length > 0) {
+    if (attr.type === "object" && attr.children && attr.children.length > 0) {
       // 为每个子属性添加路径前缀和分组信息
       for (const child of attr.children) {
         result.push({
@@ -74,16 +85,42 @@ const FORM_STYLES: React.CSSProperties = {
   overflowY: "auto",
 };
 
+const normalizePropPath = (name: string | string[]) =>
+  Array.isArray(name) ? name.join(".") : name;
+
+const getNodeRefIdsFromProp = (
+  props: Record<string, any> | undefined,
+  propPath: string,
+): string[] => {
+  if (!props) return [];
+  const value = getValueByPath(props, propPath);
+  const nodeIds: string[] = [];
+  const collect = (ref: unknown) => {
+    if (isNodeRef(ref)) {
+      nodeIds.push(ref.nodeId);
+    }
+  };
+
+  if (Array.isArray(value)) {
+    value.forEach(collect);
+  } else if (value) {
+    collect(value);
+  }
+
+  return nodeIds;
+};
+
 const PropertyPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const selectedNode = useAppSelector(selectSelectedNode);
   const selectedComponentType = selectedNode?.type;
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
+  const nodesById = useAppSelector(componentNodesSelectors.selectEntities);
   const [form] = Form.useForm();
 
   useEffect(() => {
     form.resetFields();
-  }, [selectedNode?.id, form])
+  }, [selectedNode?.id, form]);
 
   const handleValuesChange = useCallback(
     (changedValues: Record<string, any>) => {
@@ -112,26 +149,33 @@ const PropertyPanel: React.FC = () => {
 
   const entityModelValueEnum = useMemo(
     () =>
-      entityModels.reduce((acc, et) => {
-        acc[et.id] = { text: et.name };
-        return acc;
-      }, {} as Record<string, { text: string }>),
+      entityModels.reduce(
+        (acc, et) => {
+          acc[et.id] = { text: et.name };
+          return acc;
+        },
+        {} as Record<string, { text: string }>,
+      ),
     [entityModels],
   );
 
-  const componentPrototype = useMemo(() =>
-    selectedComponentType
-      ? getComponentPrototype(selectedComponentType)
-      : undefined,
-    [selectedComponentType]);
+  const componentPrototype = useMemo(
+    () =>
+      selectedComponentType
+        ? getComponentPrototype(selectedComponentType)
+        : undefined,
+    [selectedComponentType],
+  );
 
   const propAttrs = useMemo(() => {
-    const attrs = Object.values(
-      componentPrototype?.propsTypes ?? {},
-    ).map((item) => ({
-      ...item,
-      ...(item.name === "entityModelId" ? { options: entityModelOptions } : {}),
-    }));
+    const attrs = Object.values(componentPrototype?.propsTypes ?? {}).map(
+      (item) => ({
+        ...item,
+        ...(item.name === "entityModelId"
+          ? { options: entityModelOptions }
+          : {}),
+      }),
+    );
     // 扁平化对象类型属性
     return flattenPropAttributes(attrs);
   }, [componentPrototype, entityModelOptions]);
@@ -140,14 +184,60 @@ const PropertyPanel: React.FC = () => {
     dispatch(componentTreeActions.startAddingColumn());
   }, [dispatch]);
 
-  const renderSchemaList = useCallback(
-    () => <SchemaList />,
-    [],
-  );
+  const renderSchemaList = useCallback(() => <SchemaList />, []);
 
   const renderActionFlowSelector = useCallback(
     () => <ActionFlowSelector />,
     [],
+  );
+
+  const renderRowActions = useCallback(() => <RowActions />, []);
+
+  const renderComponentPropList = useCallback(
+    (item: FlattenedPropAttribute) => {
+      if (!selectedNode) return null;
+
+      const propPath = normalizePropPath(item.name);
+      const nodeIds = getNodeRefIdsFromProp(selectedNode.props, propPath);
+      const childIdSet = new Set(selectedNode.childrenIds ?? []);
+      const items = nodeIds
+        .filter((nodeId) => childIdSet.has(nodeId))
+        .map((nodeId) => nodesById[nodeId])
+        .filter((node): node is ComponentNode => Boolean(node));
+
+      if (items.length === 0) {
+        return (
+          <Typography.Text type="secondary">
+            暂无组件，请拖拽添加
+          </Typography.Text>
+        );
+      }
+
+      return (
+        <List
+          size="small"
+          dataSource={items}
+          renderItem={(node) => (
+            <List.Item
+              key={node.id}
+              style={{ padding: "4px 0" }}
+            >
+              <Button
+                type="link"
+                size="small"
+                onClick={() =>
+                  dispatch(componentTreeActions.selectNode(node.id))
+                }
+                style={{ padding: 0 }}
+              >
+                {node.name}
+              </Button>
+            </List.Item>
+          )}
+        />
+      );
+    },
+    [dispatch, nodesById, selectedNode],
   );
 
   const createColumn = useCallback(
@@ -167,7 +257,9 @@ const PropertyPanel: React.FC = () => {
       } as ProFormColumnsType<any>;
 
       // 检查 name 是否为 "columns"（兼容字符串和数组路径）
-      const itemName = Array.isArray(item.name) ? item.name[item.name.length - 1] : item.name;
+      const itemName = Array.isArray(item.name)
+        ? item.name[item.name.length - 1]
+        : item.name;
 
       if (itemName === "columns") {
         result.renderFormItem = renderSchemaList;
@@ -175,7 +267,12 @@ const PropertyPanel: React.FC = () => {
         result.formItemProps = {
           className: "schema-list-form-item",
           label: (
-            <Flex align="center" justify="space-between" gap={8} style={{ width: "100%" }}>
+            <Flex
+              align="center"
+              justify="space-between"
+              gap={8}
+              style={{ width: "100%" }}
+            >
               <Typography.Text style={{ flex: 1 }}>
                 {item.label}
               </Typography.Text>
@@ -198,6 +295,37 @@ const PropertyPanel: React.FC = () => {
       } else if (item.type === "actionFlow") {
         // 动作流类型使用自定义渲染器
         result.renderFormItem = renderActionFlowSelector;
+      } else if (item.type === "reactNode" || item.type === "reactNodeArray") {
+        result.renderFormItem = () => renderComponentPropList(item);
+        result.valueType = "text";
+      } else if (itemName === "rowActions") {
+        result.renderFormItem = renderRowActions;
+        result.formItemProps = {
+          className: "schema-list-form-item",
+          label: (
+            <Flex
+              align="center"
+              justify="space-between"
+              gap={8}
+              style={{ width: "100%" }}
+            >
+              <Typography.Text style={{ flex: 1 }}>
+                {item.label}
+              </Typography.Text>
+
+              <Button
+                size="small"
+                type="text"
+                title="新增列定义"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartAddingColumn();
+                }}
+                icon={<PlusOutlined />}
+              />
+            </Flex>
+          ),
+        };
       }
 
       return result;
@@ -207,6 +335,8 @@ const PropertyPanel: React.FC = () => {
       handleStartAddingColumn,
       renderSchemaList,
       renderActionFlowSelector,
+      renderRowActions,
+      renderComponentPropList,
     ],
   );
 
@@ -216,7 +346,12 @@ const PropertyPanel: React.FC = () => {
 
   if (propAttrs.length === 0) {
     return (
-      <ProCard bordered style={{ borderRadius: "8px" }} title={`属性面板：${selectedNode.name}`} size='small' >
+      <ProCard
+        bordered
+        style={{ borderRadius: "8px" }}
+        title={`属性面板：${selectedNode.name}`}
+        size="small"
+      >
         <div style={NO_CONFIG_STYLE}>
           组件 {selectedNode.type} 暂无可配置属性
         </div>
@@ -273,33 +408,31 @@ const PropertyPanel: React.FC = () => {
         style={{ borderRadius: "8px" }}
         bodyStyle={{ padding: "16px" }}
       >
-
+        {/* 这里可以放一些通用的快捷操作按钮，比如复制、删除、添加子组件等 */}
       </ProCard>
-      {
-        Object.entries(groupedPropAttr).map(([groupName, items]) => (
-          <ProCard
-            key={groupName}
-            size="small"
-            title={groupName}
-            headerBordered
-            collapsible
-            defaultCollapsed={false}
-            bordered
-            style={{ borderRadius: "8px", marginTop: "12px" }}
-            bodyStyle={{ padding: "16px" }}
-          >
-            <BetaSchemaForm
-              initialValues={selectedNode.props}
-              onValuesChange={handleValuesChange}
-              form={form}
-              submitter={false}
-              columns={items.map((item) => createColumn(item))}
-              defaultCollapsed={groupName !== "基础配置"}
-            />
-          </ProCard>
-        ))
-      }
-    </div >
+      {Object.entries(groupedPropAttr).map(([groupName, items]) => (
+        <ProCard
+          key={groupName}
+          size="small"
+          title={groupName}
+          headerBordered
+          collapsible
+          defaultCollapsed={false}
+          bordered
+          style={{ borderRadius: "8px", marginTop: "12px" }}
+          bodyStyle={{ padding: "16px" }}
+        >
+          <BetaSchemaForm
+            initialValues={selectedNode.props}
+            onValuesChange={handleValuesChange}
+            form={form}
+            submitter={false}
+            columns={items.map((item) => createColumn(item))}
+            defaultCollapsed={groupName !== "基础配置"}
+          />
+        </ProCard>
+      ))}
+    </div>
   );
 };
 
