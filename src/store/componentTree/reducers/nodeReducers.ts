@@ -1,10 +1,10 @@
 import { PayloadAction } from "@reduxjs/toolkit";
 import { WritableDraft } from "immer";
-import type { ComponentNode } from "@/types/Component";
+import type { ComponentInstance, ComponentNode } from "@/types/Component";
 import type { ComponentTreeState } from "../componentTreeSlice";
 import { getComponentPrototype } from "@/componentMetas";
 import { makeNodeId } from "../componentTreeSlice";
-import { adapter } from "../componentTreeSlice";
+import { normalizeComponentTree } from "../componentTreeNormalization";
 
 /**
  * 节点管理相关的 Reducers
@@ -23,6 +23,8 @@ export const createNodeReducers = () => {
       state: State,
       action: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
     ) => {
+      const nodes = state.normalizedTree.entities.nodes;
+      const rootIds = state.normalizedTree.result;
       const { parentId, type } = action.payload;
       const prototype = getComponentPrototype(type);
       const node: ComponentNode = {
@@ -34,14 +36,14 @@ export const createNodeReducers = () => {
         props: prototype?.defaultProps ? { ...prototype.defaultProps } : {},
         childrenIds: [],
       };
-      adapter.addOne(state.components, node);
+      nodes[node.id] = node;
 
       if (!parentId) {
-        state.rootIds.push(node.id);
+        rootIds.push(node.id);
         return;
       }
 
-      const parentNode = state.components.entities[parentId];
+      const parentNode = nodes[parentId];
       if (parentNode && !parentNode.childrenIds.includes(node.id)) {
         parentNode.childrenIds.push(node.id);
       }
@@ -55,12 +57,14 @@ export const createNodeReducers = () => {
       state: State,
       action: PayloadAction<string>,
     ) => {
+      const nodes = state.normalizedTree.entities.nodes;
+      const rootIds = state.normalizedTree.result;
       const id = action.payload;
-      const node = state.components.entities[id];
+      const node = nodes[id];
       if (!node) return;
 
       if (node.parentId) {
-        const parent = state.components.entities[node.parentId];
+        const parent = nodes[node.parentId];
         if (parent?.childrenIds) {
           const idx = parent.childrenIds.indexOf(id);
           if (idx >= 0) {
@@ -68,16 +72,16 @@ export const createNodeReducers = () => {
           }
         }
       } else {
-        const idx = state.rootIds.indexOf(id);
+        const idx = rootIds.indexOf(id);
         if (idx >= 0) {
-          state.rootIds.splice(idx, 1);
+          rootIds.splice(idx, 1);
         }
       }
 
       const removeRecursively = (nodeId: string) => {
-        const n = state.components.entities[nodeId];
+        const n = nodes[nodeId];
         if (n?.childrenIds) n.childrenIds.forEach(removeRecursively);
-        adapter.removeOne(state.components, nodeId);
+        delete nodes[nodeId];
       };
       removeRecursively(id);
     },
@@ -91,8 +95,11 @@ export const createNodeReducers = () => {
       state: State,
       action: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
     ) => {
+      const nodes = state.normalizedTree.entities.nodes;
       const { id, updates } = action.payload;
-      adapter.updateOne(state.components, { id, changes: updates });
+      const node = nodes[id];
+      if (!node) return;
+      nodes[id] = { ...node, ...updates };
     },
 
     /**
@@ -129,6 +136,17 @@ export const createNodeReducers = () => {
       if (!state.expandedKeys.includes(nodeId)) {
         state.expandedKeys.push(nodeId);
       }
+    },
+
+    /**
+     * @description 使用 normalizr 结果替换整棵组件树
+     * @param action.payload 原始组件树（包含 children 嵌套）
+     */
+    setComponentTreeFromRaw: (
+      state: State,
+      action: PayloadAction<ComponentInstance | ComponentInstance[]>,
+    ) => {
+      state.normalizedTree = normalizeComponentTree(action.payload);
     },
   };
 };

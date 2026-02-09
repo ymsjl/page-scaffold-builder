@@ -5,17 +5,19 @@ import type { ComponentNode } from "@/types";
 import TreeNodeItem from "./TreeNodeItem";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import { componentNodesSelectors } from "@/store/componentTree/componentTreeSelectors";
+import {
+  componentNodesSelectors,
+  selectRootIds,
+  selectSelectedNodeId,
+} from "@/store/componentTree/componentTreeSelectors";
 
 type TreeDataNode = NonNullable<TreeProps["treeData"]>[number];
 
 const ComponentTree: React.FC = () => {
   const dispatch = useAppDispatch();
-  const selectedNodeId = useAppSelector(
-    (s) => (s.componentTree as any).selectedNodeId,
-  );
+  const selectedNodeId = useAppSelector(selectSelectedNodeId);
   const nodesById = useAppSelector(componentNodesSelectors.selectEntities);
-  const rootIds = useAppSelector((s) => s.componentTree.rootIds);
+  const rootIds = useAppSelector(selectRootIds);
   const expandedKeys = useAppSelector(
     (s) => s.componentTree.expandedKeys ?? [],
   );

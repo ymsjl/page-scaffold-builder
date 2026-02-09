@@ -12,7 +12,7 @@ describe("selectPreviewRootNodeId", () => {
       componentTreeActions.addNode({ parentId: null, type: "Page" }),
     );
 
-    const rootId = state.rootIds[0];
+    const rootId = state.normalizedTree.result[0];
     const rootState = { componentTree: state } as any;
     expect(selectPreviewRootNodeId(rootState)).toBe(rootId);
   });

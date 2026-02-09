@@ -130,8 +130,10 @@ export interface ComponentNode<P = Record<string, any>>
 }
 
 export interface NormalizedComponentTree {
-  nodesById: Record<ComponentId, ComponentNode>;
-  rootIds: ComponentId[];
+  entities: {
+    nodes: Record<ComponentId, ComponentNode>;
+  };
+  result: ComponentId[];
 }
 
 export type ComponentNodeWithColumns = ComponentNode<{

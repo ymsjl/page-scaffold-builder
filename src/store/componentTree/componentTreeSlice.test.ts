@@ -5,19 +5,19 @@ describe('componentTreeSlice', () => {
   it('adds and removes nodes recursively', () => {
     let state = componentTreeReducer(undefined, { type: '' } as any) as any;
 
-    state = componentTreeReducer(state, componentTreeActions.addNode({ parentId: null, type: 'Container' }));
+    state = componentTreeReducer(state, componentTreeActions.addNode({ parentId: null, type: 'Page' }));
 
-    expect(state.rootIds.length).toBe(1);
-    const rootId = state.rootIds[0];
-    expect(state.components.entities[rootId].type).toBe('Container');
+    expect(state.normalizedTree.result.length).toBe(1);
+    const rootId = state.normalizedTree.result[0];
+    expect(state.normalizedTree.entities.nodes[rootId].type).toBe('Page');
 
     state = componentTreeReducer(state, componentTreeActions.addNode({ parentId: rootId, type: 'Table' }));
-    expect(state.components.entities[rootId].childrenIds.length).toBe(1);
-    const childId = state.components.entities[rootId].childrenIds[0];
+    expect(state.normalizedTree.entities.nodes[rootId].childrenIds.length).toBe(1);
+    const childId = state.normalizedTree.entities.nodes[rootId].childrenIds[0];
 
     state = componentTreeReducer(state, componentTreeActions.removeNode(rootId));
-    expect(state.components.entities[rootId]).toBeUndefined();
-    expect(state.components.entities[childId]).toBeUndefined();
-    expect(state.rootIds.length).toBe(0);
+    expect(state.normalizedTree.entities.nodes[rootId]).toBeUndefined();
+    expect(state.normalizedTree.entities.nodes[childId]).toBeUndefined();
+    expect(state.normalizedTree.result.length).toBe(0);
   });
 });

@@ -4,7 +4,10 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import ComponentTree from "./components/ComponentTree/ComponentTree";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { entityModelSelectors } from "./store/componentTree/componentTreeSelectors";
+import {
+  entityModelSelectors,
+  componentNodesSelectors,
+} from "./store/componentTree/componentTreeSelectors";
 import { componentTreeActions } from "./store/componentTree/componentTreeSlice";
 import EntityModelDesignerPanel from "./components/EntityModelDesigner/EntityModelDesignerPanel";
 import { DeleteOutlined, FileAddOutlined, PlusOutlined, HolderOutlined } from "@ant-design/icons";
@@ -24,7 +27,7 @@ const styles: { [key: string]: React.CSSProperties } = {
 // 拖拽预览组件
 const DragOverlayContent: React.FC<{ nodeId: string | null }> = ({ nodeId }) => {
   const node = useAppSelector(
-    (state) => nodeId ? state.componentTree.components.entities[nodeId] : null
+    (state) => (nodeId ? componentNodesSelectors.selectById(state, nodeId) : null)
   );
 
   if (!node) return null;

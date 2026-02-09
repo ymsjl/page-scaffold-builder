@@ -9,10 +9,11 @@ import { ReactNodeRenderer } from "./ReactNodeRenderer";
 const buildStoreWithNestedPage = () => {
   const store = configureStore({ reducer: rootReducer });
   store.dispatch(componentTreeActions.addNode({ parentId: null, type: "Page" }));
-  const rootId = store.getState().componentTree.rootIds[0];
+  const rootId = store.getState().componentTree.normalizedTree.result[0];
   store.dispatch(componentTreeActions.addNode({ parentId: rootId, type: "Page" }));
   const childId =
-    store.getState().componentTree.components.entities[rootId]?.childrenIds[0];
+    store.getState().componentTree.normalizedTree.entities.nodes[rootId]
+      ?.childrenIds[0];
   if (!childId) {
     throw new Error("Expected child Page node to exist");
   }

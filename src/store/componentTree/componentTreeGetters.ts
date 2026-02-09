@@ -1,14 +1,9 @@
-import type { ComponentNode, ComponentNodeWithColumns, } from "@/types/Component";
+import type { ComponentNodeWithColumns } from "@/types/Component";
 import type { ComponentTreeState } from "./componentTreeSlice";
-import { getSelectedNode, getSelectedNodeWithColumns, MaybeWritable } from "./componentTreeSelectors";
-
-export const withSelectedNode = <T = void>(
-  state: MaybeWritable<ComponentTreeState>,
-  fn: (node: MaybeWritable<ComponentNode>) => T,
-): T | undefined => {
-  const node = getSelectedNode(state);
-  return node ? fn(node) : undefined;
-};
+import {
+  getSelectedNodeWithColumns,
+  MaybeWritable,
+} from "./componentTreeSelectors";
 
 /**
  * 对选中节点（带列配置）执行操作

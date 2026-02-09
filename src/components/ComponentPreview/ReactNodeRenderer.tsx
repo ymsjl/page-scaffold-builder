@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { useAppSelector } from "@/store/hooks";
+import { componentNodesSelectors } from "@/store/componentTree/componentTreeSelectors";
 import { getComponentPrototype } from "@/componentMetas";
 import {
   type ComponentNode,
@@ -88,7 +89,7 @@ export const useResolvedProps = (
  */
 const RenderSingleNodeOrNull: React.FC<{ nodeId: string }> = ({ nodeId }) => {
   const node = useAppSelector(
-    (state) => state.componentTree.components.entities[nodeId],
+    (state) => componentNodesSelectors.selectById(state, nodeId),
   ) as ComponentNode | undefined;
 
   if (!node) {

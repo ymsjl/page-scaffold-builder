@@ -2,7 +2,7 @@ import {
   createSlice,
   createEntityAdapter,
 } from "@reduxjs/toolkit";
-import type { ComponentNode } from "@/types/Component";
+import type { ComponentNode, NormalizedComponentTree } from "@/types/Component";
 import type { EntityModel, ProCommonColumn } from "@/types";
 import { makeIdCreator } from "@/utils/makeIdCreator";
 import {
@@ -13,6 +13,7 @@ import {
   createEntityModelReducers,
   createNodeRefReducers,
 } from "./reducers";
+import { createEmptyNormalizedTree } from "./componentTreeNormalization";
 
 const adapter = createEntityAdapter<ComponentNode>();
 
@@ -26,11 +27,10 @@ export const makeRuleId = makeIdCreator("rule");
 export const makeEntityModelId = makeIdCreator("et");
 
 export interface ComponentTreeState {
-  rootIds: string[];
   selectedNodeId: string | null;
   expandedKeys: string[];
   editingColumn: Partial<ProCommonColumn> | null;
-  components: ReturnType<typeof adapter.getInitialState>;
+  normalizedTree: NormalizedComponentTree;
   isSchemaBuilderModalOpen: boolean;
   entityModel: ReturnType<typeof entityModelAdapter.getInitialState>;
   isEntityModelModalOpen: boolean;
@@ -38,11 +38,10 @@ export interface ComponentTreeState {
 }
 
 const initialState: ComponentTreeState = {
-  rootIds: [],
   selectedNodeId: null,
   expandedKeys: [],
   editingColumn: null,
-  components: adapter.getInitialState(),
+  normalizedTree: createEmptyNormalizedTree(),
   isSchemaBuilderModalOpen: false,
   entityModel: entityModelAdapter.getInitialState({}),
   isEntityModelModalOpen: false,

@@ -4,7 +4,6 @@ import type { ComponentNode } from "@/types/Component";
 import type { ComponentTreeState } from "../componentTreeSlice";
 import { getComponentPrototype } from "@/componentMetas";
 import { makeNodeId } from "../componentTreeSlice";
-import { adapter } from "../componentTreeSlice";
 
 // Constants
 const NODE_REF_TYPE = "nodeRef" as const;
@@ -76,8 +75,9 @@ export const createNodeRefReducers = () => {
         type: ComponentNode["type"];
       }>,
     ) => {
+      const nodes = state.normalizedTree.entities.nodes;
       const { targetNodeId, propPath, type } = action.payload;
-      const targetNode = state.components.entities[targetNodeId];
+      const targetNode = nodes[targetNodeId];
       if (!targetNode) return;
 
       const prototype = getComponentPrototype(type);
@@ -93,7 +93,7 @@ export const createNodeRefReducers = () => {
         childrenIds: [],
       };
 
-      adapter.addOne(state.components, newNode);
+      nodes[newNode.id] = newNode;
 
       if (!targetNode.childrenIds.includes(newNode.id)) {
         targetNode.childrenIds.push(newNode.id);
@@ -116,8 +116,9 @@ export const createNodeRefReducers = () => {
         refNodeId: string;
       }>,
     ) => {
+      const nodes = state.normalizedTree.entities.nodes;
       const { targetNodeId, propPath, refNodeId } = action.payload;
-      const node = state.components.entities[targetNodeId];
+      const node = nodes[targetNodeId];
       if (!node) return;
 
       addNodeRefToPropsPath(node, propPath, refNodeId);
@@ -137,8 +138,9 @@ export const createNodeRefReducers = () => {
         refNodeId: string;
       }>,
     ) => {
+      const nodes = state.normalizedTree.entities.nodes;
       const { targetNodeId, propPath, refNodeId } = action.payload;
-      const node = state.components.entities[targetNodeId];
+      const node = nodes[targetNodeId];
       if (!node) return;
 
       const target = getPropsPathTarget(node, propPath, false);
@@ -174,8 +176,9 @@ export const createNodeRefReducers = () => {
         to: number;
       }>,
     ) => {
+      const nodes = state.normalizedTree.entities.nodes;
       const { targetNodeId, propPath, from, to } = action.payload;
-      const node = state.components.entities[targetNodeId];
+      const node = nodes[targetNodeId];
       if (!node) return;
 
       const target = getPropsPathTarget(node, propPath, false);

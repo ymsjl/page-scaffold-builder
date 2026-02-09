@@ -17,7 +17,7 @@ const mockUseDroppable = vi.mocked(useDroppable);
 const buildStoreWithPage = () => {
   const store = configureStore({ reducer: rootReducer });
   store.dispatch(componentTreeActions.addNode({ parentId: null, type: "Page" }));
-  const rootId = store.getState().componentTree.rootIds[0];
+  const rootId = store.getState().componentTree.normalizedTree.result[0];
   if (!rootId) {
     throw new Error("Expected root Page node to exist");
   }
@@ -60,12 +60,12 @@ describe("DropZone add component", () => {
     await user.click(screen.getByText("表格组件"));
 
     const state = store.getState().componentTree;
-    const createdNode = Object.values(state.components.entities).find(
+    const createdNode = Object.values(state.normalizedTree.entities.nodes).find(
       (node) => node && node.type === "Table" && node.parentId === rootId,
     );
 
     expect(createdNode).toBeTruthy();
-    expect(state.components.entities[rootId]?.props?.children).toEqual([
+    expect(state.normalizedTree.entities.nodes[rootId]?.props?.children).toEqual([
       { type: "nodeRef", nodeId: createdNode?.id },
     ]);
   });
