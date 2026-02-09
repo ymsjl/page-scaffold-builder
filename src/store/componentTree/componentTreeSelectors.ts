@@ -17,10 +17,8 @@
 import { createSelector } from "reselect";
 import type { RootState } from "../rootReducer";
 import {
-  componentTreeAdapter,
   type ComponentTreeState,
 } from "./componentTreeSlice";
-import { entityModelAdapter } from "./componentTreeSlice";
 
 import { getComponentPrototype } from "@/componentMetas";
 import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
@@ -29,6 +27,11 @@ import type { EntityModel } from "@/validation";
 import { mapProCommonColumnToProps } from "./mapProCommonColumnToProps";
 import type { ComponentNodeWithColumns } from "@/types/Component";
 import { WritableDraft } from "immer";
+import { createEntityAdapter } from "@reduxjs/toolkit";
+
+export const entityModelAdapter = createEntityAdapter<EntityModel>();
+
+export const componentTreeAdapter = createEntityAdapter<ComponentNode>();
 
 /**
  * 通用类型：支持普通状态和 Immer Draft 状态
@@ -101,6 +104,7 @@ export const selectEntityModel = createSelector(
   selectComponentTreeState,
   getEntityModel,
 );
+
 export const entityModelSelectors =
   entityModelAdapter.getSelectors(selectEntityModel);
 

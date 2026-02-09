@@ -2,7 +2,8 @@ import { PayloadAction } from "@reduxjs/toolkit";
 import { WritableDraft } from "immer";
 import type { EntityModel } from "@/types";
 import type { ComponentTreeState } from "../componentTreeSlice";
-import { entityModelAdapter, makeEntityModelId } from "../componentTreeSlice";
+import { makeEntityModelId } from "../componentTreeSlice";
+import { entityModelAdapter } from "../componentTreeSelectors";
 
 /**
  * 实体模型相关的 Reducers

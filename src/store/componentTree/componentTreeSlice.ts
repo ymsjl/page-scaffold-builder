@@ -1,9 +1,8 @@
 import {
   createSlice,
-  createEntityAdapter,
 } from "@reduxjs/toolkit";
-import type { ComponentNode, NormalizedComponentTree } from "@/types/Component";
-import type { EntityModel, ProCommonColumn } from "@/types";
+import type { NormalizedComponentTree } from "@/types/Component";
+import type { ProCommonColumn } from "@/types";
 import { makeIdCreator } from "@/utils/makeIdCreator";
 import {
   createNodeReducers,
@@ -14,12 +13,7 @@ import {
   createNodeRefReducers,
 } from "./reducers";
 import { createEmptyNormalizedTree } from "./componentTreeNormalization";
-
-const adapter = createEntityAdapter<ComponentNode>();
-
-export { adapter };
-
-export const entityModelAdapter = createEntityAdapter<EntityModel>();
+import { entityModelAdapter } from "./componentTreeSelectors";
 
 export const makeColumnId = makeIdCreator("column");
 export const makeNodeId = makeIdCreator("node");
@@ -65,4 +59,4 @@ const slice = createSlice({
 
 export const componentTreeActions = slice.actions;
 export default slice.reducer;
-export const componentTreeAdapter = adapter;
+
