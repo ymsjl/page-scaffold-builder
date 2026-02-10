@@ -284,12 +284,6 @@ const PropertyPanel: React.FC = () => {
         };
       } else if (itemName === "entityModelId") {
         result.valueEnum = entityModelValueEnum;
-      } else if (item.type === "actionFlow") {
-        // 动作流类型使用自定义渲染器
-        result.renderFormItem = renderActionFlowSelector;
-      } else if (item.type === "reactNode" || item.type === "reactNodeArray") {
-        result.renderFormItem = () => renderComponentPropList(item);
-        result.valueType = "text";
       } else if (itemName === "rowActions") {
         result.renderFormItem = renderRowActions;
         result.formItemProps = {
@@ -311,13 +305,24 @@ const PropertyPanel: React.FC = () => {
                 title="新增列定义"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleStartAddingColumn();
+                  dispatch(componentTreeActions.upsertColumnOfSelectedNode({
+                    title: "操作",
+                    valueType: "option",
+                    width: 280,
+                    dataIndex: "rowActions",
+                  }));
                 }}
                 icon={<PlusOutlined />}
               />
             </Flex>
           ),
         };
+      } else if (item.type === "actionFlow") {
+        // 动作流类型使用自定义渲染器
+        result.renderFormItem = renderActionFlowSelector;
+      } else if (item.type === "reactNode" || item.type === "reactNodeArray") {
+        result.renderFormItem = () => renderComponentPropList(item);
+        result.valueType = "text";
       }
 
       return result;
@@ -407,6 +412,13 @@ const PropertyPanel: React.FC = () => {
         style={{ borderRadius: "8px" }}
         bodyStyle={{ padding: "16px" }}
       >
+        <Button
+          onClick={() => {
+
+          }}
+        >
+          生成模拟数据
+        </Button>
         {/* 这里可以放一些通用的快捷操作按钮，比如复制、删除、添加子组件等 */}
       </ProCard>
       {Object.entries(groupedPropAttr).map(([groupName, items], index) => (

@@ -10,14 +10,14 @@ import { entityModelAdapter, getSelectedNodeWithColumns } from "../componentTree
 
 const upsertColumnOnNode = (
   props: WritableDraft<ComponentNodeWithColumns['props']>,
-  changes: ProCommonColumn,
+  changes: Omit<ProCommonColumn, 'key'> & { key?: string },
 ) => {
   props.columns = props?.columns ?? [];
   const idx = props.columns.findIndex((c) => c.key === changes.key);
   if (idx >= 0) {
     Object.assign(props.columns[idx], changes);
   } else {
-    const validatedChanges = ProCommonColumnSchema.parse(changes);
+    const validatedChanges = ProCommonColumnSchema.parse({ ...changes, key: changes.key ?? makeColumnId() });
     props.columns.push(validatedChanges);
   }
 };
@@ -94,7 +94,7 @@ export const createColumnReducers = () => {
      */
     upsertColumnOfSelectedNode: (
       state: State,
-      action: PayloadAction<ProCommonColumn>,
+      action: PayloadAction<Omit<ProCommonColumn, 'key'> & { key?: string }>,
     ) => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
