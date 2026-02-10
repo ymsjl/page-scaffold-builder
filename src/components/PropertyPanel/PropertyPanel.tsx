@@ -17,7 +17,7 @@ import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
 import { ComponentNode, isNodeRef, PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
-import { AppstoreOutlined, ClusterOutlined, LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
+import { AppstoreOutlined, LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
 import { ActionFlowSelector } from "./ActionFlowSelector";
 import RowActions from "./RowActions";
 import { getValueByPath } from "../ComponentPreview/slotPath";

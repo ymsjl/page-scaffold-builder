@@ -20,7 +20,6 @@ import {
   type ComponentTreeState,
 } from "./componentTreeSlice";
 
-import { getComponentPrototype } from "@/componentMetas";
 import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import type { ComponentNode, ProCommonColumn, ComponentType } from "@/types";
 import type { EntityModel } from "@/validation";
@@ -151,21 +150,6 @@ export const componentNodesSelectors = componentTreeAdapter.getSelectors(
 );
 
 /**
- * @description 获取预览根节点ID（查找 Page 类型）
- */
-export const getPreviewRootNodeId = (
-  state: MaybeWritable<ComponentTreeState>,
-) => {
-  const entities = getComponentNodesEntities(state);
-  const rootId = getRootIds(state).find((id) => entities[id]?.type === "Page");
-  return rootId ?? null;
-};
-export const selectPreviewRootNodeId = createSelector(
-  selectComponentTreeState,
-  getPreviewRootNodeId,
-);
-
-/**
  * @description 获取当前选中的节点
  */
 export const getSelectedNode = (state: MaybeWritable<ComponentTreeState>) => {
@@ -269,32 +253,6 @@ export const selectTypeOfSelectedNode = createSelector(
 );
 
 /**
- * @description 获取用于预览的节点
- */
-export const getNodeForPreviewResult = (
-  node: ComponentNode | null | undefined,
-): ComponentNode | null => {
-  if (!node) return null;
-
-  const props = { ...(node.props ?? {}) };
-  const componentPrototype = getComponentPrototype(node.type);
-  if (!componentPrototype) return { ...node, props };
-
-  if (
-    "columns" in (componentPrototype.propsTypes || {}) &&
-    Array.isArray(props.columns)
-  ) {
-    props.columns = props.columns.map(mapProCommonColumnToProps);
-  }
-
-  return { ...node, props };
-};
-export const selectNodeForPreview = createSelector(
-  selectSelectedNode,
-  getNodeForPreviewResult,
-);
-
-/**
  * @description 获取选中节点的第一个父级 Page 节点
  * @returns ComponentNode | null
  */
@@ -321,21 +279,6 @@ export const getFirstParentPageNodeResult = (
 export const selectFirstParentPageNode = createSelector(
   [selectSelectedNode, selectComponentNodesState],
   getFirstParentPageNodeResult,
-);
-
-/**
- * @description 获取用于预览的根节点
- * @return ComponentNode | null | undefined
- */
-export const getPreviewRootNodeResult = (
-  rootNodeId: string | null,
-  components: ReturnType<typeof componentTreeAdapter.getInitialState>,
-): ComponentNode | null | undefined => {
-  return rootNodeId ? (components.entities[rootNodeId] ?? null) : null;
-};
-export const selectPreviewRootNode = createSelector(
-  [selectPreviewRootNodeId, selectComponentNodesState],
-  getPreviewRootNodeResult,
 );
 
 /**
