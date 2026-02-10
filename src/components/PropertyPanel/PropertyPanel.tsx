@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   componentNodesSelectors,
   entityModelSelectors,
+  selectColumnsOfSelectedNode,
   selectNodeInPropertyPanel,
   selectShowBackInPropertyPanel,
 } from "@/store/componentTree/componentTreeSelectors";
@@ -19,7 +20,6 @@ import { ComponentNode, isNodeRef, PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
 import { AppstoreOutlined, LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
 import { ActionFlowSelector } from "./ActionFlowSelector";
-import RowActions from "./RowActions";
 import { getValueByPath } from "../ComponentPreview/slotPath";
 
 import "./styles.css";
@@ -112,7 +112,9 @@ const PropertyPanel: React.FC = () => {
   const selectedComponentType = selectedNode?.type;
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
   const nodesById = useAppSelector(componentNodesSelectors.selectEntities);
+  const columns = useAppSelector(selectColumnsOfSelectedNode);
   const [form] = Form.useForm();
+
   useEffect(() => {
     form.resetFields();
   }, [selectedNodeId, form]);
@@ -178,8 +180,6 @@ const PropertyPanel: React.FC = () => {
     () => <ActionFlowSelector />,
     [],
   );
-
-  const renderRowActions = useCallback(() => <RowActions />, []);
 
   const renderComponentPropList = useCallback(
     (item: FlattenedPropAttribute) => {
@@ -285,7 +285,7 @@ const PropertyPanel: React.FC = () => {
       } else if (itemName === "entityModelId") {
         result.valueEnum = entityModelValueEnum;
       } else if (itemName === "rowActions") {
-        result.renderFormItem = renderRowActions;
+        result.renderFormItem = () => renderComponentPropList(item);
         result.formItemProps = {
           className: "schema-list-form-item",
           label: (
@@ -302,14 +302,21 @@ const PropertyPanel: React.FC = () => {
               <Button
                 size="small"
                 type="text"
-                title="新增列定义"
+                title="新增行操作按钮"
                 onClick={(e) => {
                   e.stopPropagation();
-                  dispatch(componentTreeActions.upsertColumnOfSelectedNode({
-                    title: "操作",
-                    valueType: "option",
-                    width: 280,
-                    dataIndex: "rowActions",
+                  console.log('columns', columns)
+                  if (columns?.some(col => col.valueType === 'option')) {
+                    dispatch(componentTreeActions.upsertColumnOfSelectedNode({
+                      title: '操作',
+                      valueType: 'option',
+                      dataIndex: ''
+                    }))
+                  }
+                  dispatch(componentTreeActions.addNodeToSlot({
+                    targetNodeId: selectedNodeId!,
+                    propPath: 'rowActions',
+                    type: "Button",
                   }));
                 }}
                 icon={<PlusOutlined />}
@@ -332,7 +339,6 @@ const PropertyPanel: React.FC = () => {
       handleStartAddingColumn,
       renderSchemaList,
       renderActionFlowSelector,
-      renderRowActions,
       renderComponentPropList,
     ],
   );

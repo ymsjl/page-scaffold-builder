@@ -1,5 +1,5 @@
 import type { ComponentPrototype, ComponentType } from "@/types";
-import { ProTable } from "@ant-design/pro-components";
+import ProTableForPreview from "@/components/ComponentPreview/ProTableForPreview";
 import { Button, Col, Flex, Row } from "antd";
 import { COMPONENT_TYPES } from "./types/Component";
 
@@ -72,7 +72,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
     label: "表格组件",
     description: "基于 ProTable 的表格组件",
     isContainer: false,
-    component: ProTable,
+    component: ProTableForPreview,
     defaultProps: {
       headerTitle: "示例表格",
       ignoreRules: false,

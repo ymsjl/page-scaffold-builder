@@ -45,51 +45,11 @@ export const useResolvedProps = (
     [allRefs, renderedNodes],
   );
 
-  const mergedProps = useMemo(() => {
-    if (node.type === "Table") {
-      // 根据组件的 columns 属性，自动生成自动生成 dataSource 属性
-      const columns = nodeProps.columns;
-      if (Array.isArray(columns)) {
-        const mapValueTypeToValue = (col: ProCommonColumn) => {
-          switch (col.valueType) {
-            case "text":
-              return "示例文本";
-            case "digit":
-              return 123;
-            case "date":
-              return "2024-01-01";
-            case "dateTime":
-              return "2024-01-01 12:00:00";
-            case "time":
-              return "12:00:00";
-            case "money":
-              return "¥100.00";
-            case "select":
-              return Object.keys(col.valueEnum || {}).length > 0
-                ? Object.keys(col.valueEnum || {})[0]
-                : "选项1";
-            default:
-              return "示例值";
-          }
-        };
-        const dataSource = [
-          columns.reduce((acc, col) => {
-            acc[col.dataIndex as string] = mapValueTypeToValue(col);
-            return acc;
-          }, {} as Record<string, unknown>)
-        ];
-        return {
-          ...nodeProps,
-          dataSource,
-        };
-      }
-    }
-    const result = ({
-      ...(componentPrototype.defaultProps || {}),
-      ...nodeProps,
-    });
-    return result;
-  }, [node, nodeProps, componentPrototype]);
+  const mergedProps = useMemo<Record<string, unknown>>(() => ({
+    __previewNodeId: node.id,
+    ...(componentPrototype.defaultProps || {}),
+    ...nodeProps
+  }), [node, nodeProps, componentPrototype]);
 
   if (node.isContainer) {
     mergedProps.children = buildChildrenRefs(node.childrenIds || []);
