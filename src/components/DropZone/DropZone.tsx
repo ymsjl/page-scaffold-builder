@@ -89,9 +89,8 @@ export const DropZone: React.FC<DropZoneProps> = ({
           key={item.type}
           style={{
             cursor: "pointer",
-            padding: "4px 8px",
-            borderTop: index === 0 ? "none" : "1px solid #f0f0f0",
-            fontSize: '12px',
+            padding: "4px 12px",
+            fontSize: '14px',
           }}
           onClick={() => handleSelectComponent(item.type)}
         >
@@ -109,6 +108,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
       content={popoverContent}
       trigger="hover"
       placement="right"
+      arrow={false}
       overlayInnerStyle={{
         padding: '4px 0'
       }}

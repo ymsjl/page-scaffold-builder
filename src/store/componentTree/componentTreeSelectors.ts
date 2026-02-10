@@ -27,6 +27,7 @@ import { mapProCommonColumnToProps } from "./mapProCommonColumnToProps";
 import type { ComponentNodeWithColumns } from "@/types/Component";
 import { WritableDraft } from "immer";
 import { createEntityAdapter } from "@reduxjs/toolkit";
+import { ProSchema } from "@ant-design/pro-components";
 
 export const entityModelAdapter = createEntityAdapter<EntityModel>();
 
@@ -302,8 +303,8 @@ export const selectEntityModelInUse = createSelector(
  */
 export const getEditingColumnPropsResult = (
   editingColumn: Partial<ProCommonColumn> | null,
-): Omit<ProCommonColumn, "ruleNodes"> => {
-  if (!editingColumn) return {} as Omit<ProCommonColumn, "ruleNodes">;
+): ProSchema<Record<string, any>>=> {
+  if (!editingColumn) return {} ;
   return mapProCommonColumnToProps(editingColumn);
 };
 export const selectEditingColumnProps = createSelector(

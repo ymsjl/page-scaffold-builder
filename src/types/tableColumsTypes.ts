@@ -1,5 +1,4 @@
 import { RuleNodeSchema } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { ProSchema, ProTableProps } from "@ant-design/pro-components";
 import { z } from "zod";
 
 export const ProValueEnumSchema = z.object({
@@ -30,7 +29,6 @@ export const ProCommonColumnSchema = z.object({
   formItemProps: FormItemPropsSchema.optional(),
   fieldProps: z.any().optional(),
 });
-export type ProCommonColumn = z.infer<typeof ProCommonColumnSchema> &
-  Pick<ProSchema<Record<string, any>, string>, "render">;
+export type ProCommonColumn = z.infer<typeof ProCommonColumnSchema>;
 
 export type ColumnSchema = ProCommonColumn;
