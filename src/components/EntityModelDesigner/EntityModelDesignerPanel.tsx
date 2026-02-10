@@ -41,7 +41,7 @@ export default function EntityModelDesignerPanel() {
   const isOpenPrevRef = React.useRef(isOpen);
 
   useEffect(() => {
-    if (isOpen && !isOpenPrevRef.current && editingEntityModel) {
+    if (isOpen && !isOpenPrevRef.current) {
       form.setFieldsValue({ ...editingEntityModel });
     }
   }, [isOpen, editingEntityModel, form]);

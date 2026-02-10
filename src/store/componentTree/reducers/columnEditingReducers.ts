@@ -13,25 +13,25 @@ export const createColumnEditingReducers = () => {
   return {
     /**
      * @description 设置正在编辑的列属性
-     * @param action.payload 正在编辑的列属性，或null，或空对象
+     * @param payload 正在编辑的列属性，或null，或空对象
      */
     setEditingColumn: (
       state: State,
-      action: PayloadAction<ProCommonColumn | null | {}>,
+      { payload }: PayloadAction<ProCommonColumn | null | {}>,
     ) => {
-      state.editingColumn = action.payload;
+      state.editingColumn = payload ? { ...payload } : payload;
     },
 
     /**
      * @description 更新正在编辑的列属性部分内容
-     * @param action.payload 列属性更新内容
+     * @param payload 列属性更新内容
      */
     updateEditingColumn: (
       state: State,
-      action: PayloadAction<Partial<ProCommonColumn>>,
+      { payload }: PayloadAction<Partial<ProCommonColumn>>,
     ) => {
       if (!state.editingColumn) return;
-      Object.assign(state.editingColumn, action.payload);
+      Object.assign(state.editingColumn, payload);
     },
 
     /**
@@ -44,25 +44,25 @@ export const createColumnEditingReducers = () => {
 
     /**
      * @description 开始编辑已有列
-     * @param action.payload 要编辑的列配置
+     * @param payload 要编辑的列配置
      */
     startEditingColumn: (
       state: State,
-      action: PayloadAction<ProCommonColumn>,
+      { payload }: PayloadAction<ProCommonColumn>,
     ) => {
       state.isSchemaBuilderModalOpen = true;
-      state.editingColumn = { ...action.payload };
+      state.editingColumn = { ...payload };
     },
 
     /**
      * @description 设置 Schema Builder 弹窗开关状态
-     * @param action.payload 是否打开
+     * @param payload 是否打开
      */
     setIsSchemaBuilderModalOpen: (
       state: State,
-      action: PayloadAction<boolean>,
+      { payload }: PayloadAction<boolean>,
     ) => {
-      state.isSchemaBuilderModalOpen = action.payload;
+      state.isSchemaBuilderModalOpen = payload;
     },
   };
 };

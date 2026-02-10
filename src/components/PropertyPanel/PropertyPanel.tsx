@@ -4,31 +4,25 @@ import {
   BetaSchemaForm,
   ProFormColumnsType,
 } from "@ant-design/pro-components";
-import { Button, Flex, Form, List, Typography } from "antd";
+import { Button, Flex, Form, List, Space, Typography } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   componentNodesSelectors,
   entityModelSelectors,
-  selectSelectedNode,
+  selectNodeInPropertyPanel,
+  selectShowBackInPropertyPanel,
 } from "@/store/componentTree/componentTreeSelectors";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
 import { ComponentNode, isNodeRef, PropAttribute } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
-import { PlusOutlined } from "@ant-design/icons";
-import { merge } from "lodash-es";
+import { AppstoreOutlined, ClusterOutlined, LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
 import { ActionFlowSelector } from "./ActionFlowSelector";
 import RowActions from "./RowActions";
 import { getValueByPath } from "../ComponentPreview/slotPath";
 
 import "./styles.css";
-
-// 深合并工具函数
-function deepMerge(target: any, source: any): any {
-  // 使用 lodash.merge 实现深合并，并保持返回新对象的语义
-  return merge({}, target, source);
-}
 
 interface FlattenedPropAttribute extends Omit<PropAttribute, "name"> {
   name: string | string[];
@@ -112,29 +106,23 @@ const getNodeRefIdsFromProp = (
 
 const PropertyPanel: React.FC = () => {
   const dispatch = useAppDispatch();
-  const selectedNode = useAppSelector(selectSelectedNode);
+  const selectedNode = useAppSelector(selectNodeInPropertyPanel);
+  const showBackInPropertyPanel = useAppSelector(selectShowBackInPropertyPanel);
+  const selectedNodeId = selectedNode?.id;
   const selectedComponentType = selectedNode?.type;
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
   const nodesById = useAppSelector(componentNodesSelectors.selectEntities);
   const [form] = Form.useForm();
-
   useEffect(() => {
     form.resetFields();
-  }, [selectedNode?.id, form]);
+  }, [selectedNodeId, form]);
 
   const handleValuesChange = useCallback(
     (changedValues: Record<string, any>) => {
-      if (!selectedNode?.id) return;
-      // 使用深合并避免覆盖嵌套对象的其他属性
-      const mergedProps = deepMerge(selectedNode.props, changedValues);
-      dispatch(
-        componentTreeActions.updateNode({
-          id: selectedNode.id,
-          updates: { props: mergedProps },
-        }),
-      );
+      if (!selectedNodeId) return;
+      dispatch(componentTreeActions.updateNodeProps({ id: selectedNodeId, props: changedValues }));
     },
-    [dispatch, selectedNode],
+    [dispatch, selectedNodeId],
   );
 
   const entityModelOptions = useMemo(
@@ -223,14 +211,18 @@ const PropertyPanel: React.FC = () => {
               style={{ padding: "4px 0" }}
             >
               <Button
-                type="link"
-                size="small"
-                onClick={() =>
-                  dispatch(componentTreeActions.selectNode(node.id))
-                }
-                style={{ padding: 0 }}
+                type="text"
+                size="middle"
+                icon={<AppstoreOutlined />}
+                onClick={() => dispatch(componentTreeActions.pushNodeToPropertyPanel(node.id))}
+                block
+                style={{ justifyContent: "flex-start" }}
               >
-                {node.name}
+                <Typography.Text ellipsis>
+                  {node.name}
+                </Typography.Text>
+                <div style={{ flex: 1 }}></div>
+                <RightOutlined />
               </Button>
             </List.Item>
           )}
@@ -344,12 +336,19 @@ const PropertyPanel: React.FC = () => {
     return <ProCard style={EMPTY_STATE_STYLE}>请选择一个组件实例</ProCard>;
   }
 
+  const cardTitleElem = (
+    <Space>
+      {showBackInPropertyPanel && <Button icon={<LeftOutlined />} size="small" onClick={() => dispatch(componentTreeActions.popNodeFromPropertyPanel())} />}
+      <Typography.Text>{`属性面板：${selectedNode.name}`}</Typography.Text>
+    </Space>
+  );
+
   if (propAttrs.length === 0) {
     return (
       <ProCard
         bordered
         style={{ borderRadius: "8px" }}
-        title={`属性面板：${selectedNode.name}`}
+        title={cardTitleElem}
         size="small"
       >
         <div style={NO_CONFIG_STYLE}>
@@ -364,7 +363,7 @@ const PropertyPanel: React.FC = () => {
   if (!hasGroups) {
     return (
       <ProCard
-        title={`属性面板：${selectedNode.name}`}
+        title={cardTitleElem}
         headerBordered
         bordered
         size="small"
@@ -410,14 +409,14 @@ const PropertyPanel: React.FC = () => {
       >
         {/* 这里可以放一些通用的快捷操作按钮，比如复制、删除、添加子组件等 */}
       </ProCard>
-      {Object.entries(groupedPropAttr).map(([groupName, items]) => (
+      {Object.entries(groupedPropAttr).map(([groupName, items], index) => (
         <ProCard
           key={groupName}
           size="small"
           title={groupName}
           headerBordered
           collapsible
-          defaultCollapsed={false}
+          defaultCollapsed={index > 2}
           bordered
           style={{ borderRadius: "8px", marginTop: "12px" }}
           bodyStyle={{ padding: "16px" }}
@@ -428,7 +427,6 @@ const PropertyPanel: React.FC = () => {
             form={form}
             submitter={false}
             columns={items.map((item) => createColumn(item))}
-            defaultCollapsed={groupName !== "基础配置"}
           />
         </ProCard>
       ))}

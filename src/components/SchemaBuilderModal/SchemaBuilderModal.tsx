@@ -59,7 +59,7 @@ export const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = React.memo(
 
   const entityFields = useAppSelector(selectEntityModelInUse)?.fields || [];
 
-  useAutoFillByDataIndex(form, entityFields);
+  useAutoFillByDataIndex(form, entityFields, editingColumn?.dataIndex);
 
   const handleSaveField = async () => {
     try {

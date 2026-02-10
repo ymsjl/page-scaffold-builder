@@ -83,18 +83,22 @@ export const DropZone: React.FC<DropZoneProps> = ({
   };
 
   const popoverContent = filteredComponents.length > 0 ? (
-    <List
-      size="small"
-      dataSource={filteredComponents}
-      renderItem={(item) => (
-        <List.Item
-          style={{ cursor: "pointer" }}
+    <ul style={{ listStyle: "none", margin: 0, padding: 0, overflowY: "auto" }}>
+      {filteredComponents.map((item, index) => (
+        <li
+          key={item.type}
+          style={{
+            cursor: "pointer",
+            padding: "4px 8px",
+            borderTop: index === 0 ? "none" : "1px solid #f0f0f0",
+            fontSize: '12px',
+          }}
           onClick={() => handleSelectComponent(item.type)}
         >
           {item.label}
-        </List.Item>
-      )}
-    />
+        </li>
+      ))}
+    </ul>
   ) : (
     <Typography.Text type="secondary">暂无可添加组件</Typography.Text>
   );
@@ -104,6 +108,10 @@ export const DropZone: React.FC<DropZoneProps> = ({
     <Popover
       content={popoverContent}
       trigger="hover"
+      placement="right"
+      overlayInnerStyle={{
+        padding: '4px 0'
+      }}
       open={isPopoverOpen && !isDragging}
       onOpenChange={(open) => setIsPopoverOpen(open)}
     >

@@ -1,11 +1,26 @@
 import { PayloadAction } from "@reduxjs/toolkit";
-import { WritableDraft } from "immer";
+import { current, WritableDraft } from "immer";
 import type { ProCommonColumn } from "@/types";
+import type { ComponentNodeWithColumns } from "@/types/Component";
 import type { ComponentTreeState } from "../componentTreeSlice";
-import * as getters from "../componentTreeGetters";
 import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
 import { makeColumnId } from "../componentTreeSlice";
 import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/useAutoFillByDataIndex";
+import { entityModelAdapter, getSelectedNodeWithColumns } from "../componentTreeSelectors";
+
+const upsertColumnOnNode = (
+  props: WritableDraft<ComponentNodeWithColumns['props']>,
+  changes: ProCommonColumn,
+) => {
+  props.columns = props?.columns ?? [];
+  const idx = props.columns.findIndex((c) => c.key === changes.key);
+  if (idx >= 0) {
+    Object.assign(props.columns[idx], changes);
+  } else {
+    const validatedChanges = ProCommonColumnSchema.parse(changes);
+    props.columns.push(validatedChanges);
+  }
+};
 
 /**
  * 列管理相关的 Reducers
@@ -17,31 +32,39 @@ export const createColumnReducers = () => {
   return {
     /**
      * @description 从当前节点相关的实体模型字段中生成列配置
+     * 找到当前选择的节点，找到节点的 props.columns 数组，
+     * 根据节点的 entityModelId 属性，从实体模型中获取字段列表，
+     * 为每个字段生成对应的列配置并添加到节点的列配置中，避免重复添加相同 key 的列
      */
     addColumnsFromEntityModelToSelectedNode: (
       state: State,
     ) => {
-      getters.withSelectedNodeColumns(state, (node) => {
-        const entityModelId = node.props?.entityModelId;
-        if (!entityModelId) return;
-        const entityModel = state.entityModel.entities[entityModelId];
-        if (!entityModel || !Array.isArray(entityModel.fields)) return;
+      const node = getSelectedNodeWithColumns(state);
+      if (!node) return;
 
-        const currentColumns = node.props.columns;
-        const existingKeys = new Set(currentColumns?.map((c) => c.key) ?? []);
-        const newColumns = entityModel.fields
-          .filter((field) => !existingKeys.has(field.key))
-          .map((field) => ({
-            key: makeColumnId(),
-            ...createProCommonColumnFromSchemeField(field),
-          }));
-        node.props.columns = [...(currentColumns || []), ...newColumns];
-      });
+      const props = node.props;
+      const entityModelId = props?.entityModelId;
+      if (!entityModelId) return;
+
+      props.columns = props?.columns ?? [];
+      const existingKeys = new Set(props.columns?.map((c) => c.key) ?? []);
+      const newColumns = entityModelAdapter
+        .getSelectors()
+        .selectById(state.entityModel, entityModelId)
+        ?.fields
+        ?.filter((field) => !existingKeys.has(field.key))
+        ?.map((field) => ({
+          key: makeColumnId(),
+          ...createProCommonColumnFromSchemeField(field),
+        })) ?? [];
+      props.columns.push(...newColumns);
     },
 
     /**
      * @description 将编辑中的列属性应用到选中节点的列配置中
      * @param action.payload 列属性更新内容
+     * 找到当前选择的节点，找到节点的 props.columns 数组，
+     * 如果存在相同 key 的列配置则找到正在编辑的列属性，将传入的更新内容合并进去，否则插入新列配置
      */
     applyChangesToColumnOfSelectedNode: (
       state: State,
@@ -49,105 +72,83 @@ export const createColumnReducers = () => {
     ) => {
       const editingColumn = state.editingColumn;
       if (!editingColumn) return;
+      const { key = makeColumnId() } = editingColumn;
+      const nextColumn = ProCommonColumnSchema.parse({
+        ...editingColumn,
+        ...action.payload,
+        key,
+      });
 
-      try {
-        const { key = makeColumnId() } = editingColumn;
-        const nextColumn = ProCommonColumnSchema.parse({
-          ...action.payload,
-          ...editingColumn,
-          key,
-        });
+      const node = getSelectedNodeWithColumns(state);
+      if (!node) return;
 
-        // Inline upsert logic
-        getters.withSelectedNodeColumns(state, (node) => {
-          const columns = node.props?.columns;
-          if (!columns) {
-            const validatedChanges = ProCommonColumnSchema.parse(nextColumn);
-            node.props.columns = [validatedChanges];
-          } else if (Array.isArray(columns)) {
-            const idx = columns.findIndex((c) => c.key === nextColumn.key);
-            if (idx >= 0) {
-              Object.assign(columns[idx], nextColumn);
-            } else {
-              const validatedChanges = ProCommonColumnSchema.parse(nextColumn);
-              columns.push(validatedChanges);
-            }
-          }
-        });
-      } catch (error) {
-        console.error("Column validation failed:", error);
-      }
+      upsertColumnOnNode(node.props, nextColumn);
+      console.log(current(node.props))
     },
 
     /**
      * @description 直接插入或更新选中节点的列配置
+     * 找到当前选择的节点，找到节点的 props.columns 数组，
+     * 如果存在相同 key 的列配置则更新，否则插入新列配置
      * @param action.payload 列属性完整内容
      */
     upsertColumnOfSelectedNode: (
       state: State,
       action: PayloadAction<ProCommonColumn>,
     ) => {
-      getters.withSelectedNodeColumns(state, (node) => {
-        const columns = node.props?.columns;
-        const changes = action.payload;
+      const node = getSelectedNodeWithColumns(state);
+      if (!node) return;
 
-        if (!columns) {
-          const validatedChanges = ProCommonColumnSchema.parse(changes);
-          node.props.columns = [validatedChanges];
-        } else if (Array.isArray(columns)) {
-          const idx = columns.findIndex((c) => c.key === changes.key);
-          if (idx >= 0) {
-            Object.assign(columns[idx], changes);
-          } else {
-            const validatedChanges = ProCommonColumnSchema.parse(changes);
-            columns.push(validatedChanges);
-          }
-        }
-      });
+      upsertColumnOnNode(node.props, action.payload);
     },
 
     /**
      * @description 删除选中节点的指定列配置
      * @param action.payload 列配置的键值
+     * 找到当前选择的节点，找到节点的 props.columns 数组，
+     * 删除与传入键值匹配的列配置
      */
     deleteColumnForSelectedNode: (
       state: State,
       action: PayloadAction<string>,
     ) => {
-      getters.withSelectedNodeColumns(state, (node) => {
-        const targetColumnIdx = (node.props?.columns ?? []).findIndex(
-          (c) => c.key === action.payload,
-        );
-        if (targetColumnIdx >= 0) {
-          node.props.columns.splice(targetColumnIdx, 1);
-        }
-      });
+      const node = getSelectedNodeWithColumns(state);
+      if (!node) return;
+
+      const props = node.props;
+      const idx = props.columns.findIndex((c) => c.key === action.payload);
+      if (idx >= 0) {
+        props.columns.splice(idx, 1);
+      }
     },
 
     /**
      * @description 移动选中节点的列配置顺序
      * @param action.payload.from 源索引
      * @param action.payload.to 目标索引
+     * 找到当前选择的节点，找到节点的 props.columns 数组，
+     * 将源索引的列配置移动到目标索引位置
      */
     moveColumnForSelectedNode: (
       state: State,
       action: PayloadAction<{ from: number; to: number }>,
     ) => {
       const { from, to } = action.payload;
-      getters.withSelectedNodeColumns(state, (node) => {
-        const columns = node.props?.columns;
-        if (!columns || !Array.isArray(columns)) return;
-        if (
-          from < 0 ||
-          from >= columns.length ||
-          to < 0 ||
-          to >= columns.length
-        )
-          return;
+      const node = getSelectedNodeWithColumns(state);
+      if (!node) return;
 
-        const [movedItem] = columns.splice(from, 1);
-        columns.splice(to, 0, movedItem);
-      });
+      const props = node.props;
+      const columns = props.columns;
+      if (
+        from < 0 ||
+        from >= columns.length ||
+        to < 0 ||
+        to >= columns.length
+      )
+        return;
+
+      const [movedItem] = columns.splice(from, 1);
+      columns.splice(to, 0, movedItem);
     },
   };
 };

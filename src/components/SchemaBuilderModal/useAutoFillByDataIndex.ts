@@ -51,10 +51,10 @@ export const useAutoFillByDataIndex = (
     >
   >,
   entityFields: SchemaField[],
+  initialDataIndex?: string,
 ) => {
   const prevDataIndexRef = useRef<string>();
   const dataIndexValue = Form.useWatch("dataIndex", form);
-
   const entityFieldMap = useMemo(() => {
     const arr = (entityFields || []).map(
       (f) => [f.key, f] as [string, SchemaField],
@@ -64,7 +64,13 @@ export const useAutoFillByDataIndex = (
 
   useEffect(() => {
     if (dataIndexValue !== prevDataIndexRef.current) {
+      const prevDataIndex = prevDataIndexRef.current;
       prevDataIndexRef.current = dataIndexValue;
+
+      // 表单的值被初始化时，不自动填充,避免覆盖已有值
+      if ((prevDataIndex === undefined) && (initialDataIndex === dataIndexValue)) return;
+
+      // 根据 dataIndex 在实体字段中查找匹配项
       const matchedField = entityFieldMap.get(dataIndexValue);
       if (dataIndexValue !== "" && !matchedField) return;
       const formItemProps = form.getFieldValue("formItemProps") || {};
@@ -77,5 +83,5 @@ export const useAutoFillByDataIndex = (
         },
       });
     }
-  }, [dataIndexValue, entityFieldMap, form]);
+  }, [dataIndexValue, entityFieldMap, form, initialDataIndex]);
 };

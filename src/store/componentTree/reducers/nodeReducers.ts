@@ -5,6 +5,7 @@ import type { ComponentTreeState } from "../componentTreeSlice";
 import { getComponentPrototype } from "@/componentMetas";
 import { makeNodeId } from "../componentTreeSlice";
 import { normalizeComponentTree } from "../componentTreeNormalization";
+import { merge } from "lodash-es";
 
 /**
  * 节点管理相关的 Reducers
@@ -21,11 +22,10 @@ export const createNodeReducers = () => {
      */
     addNode: (
       state: State,
-      action: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
+      { payload: { parentId, type } }: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
     ) => {
       const nodes = state.normalizedTree.entities.nodes;
       const rootIds = state.normalizedTree.result;
-      const { parentId, type } = action.payload;
       const prototype = getComponentPrototype(type);
       const node: ComponentNode = {
         id: makeNodeId(),
@@ -55,11 +55,10 @@ export const createNodeReducers = () => {
      */
     removeNode: (
       state: State,
-      action: PayloadAction<string>,
+      { payload: id }: PayloadAction<string>,
     ) => {
       const nodes = state.normalizedTree.entities.nodes;
       const rootIds = state.normalizedTree.result;
-      const id = action.payload;
       const node = nodes[id];
       if (!node) return;
 
@@ -93,13 +92,22 @@ export const createNodeReducers = () => {
      */
     updateNode: (
       state: State,
-      action: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
+      { payload: { id, updates } }: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
     ) => {
       const nodes = state.normalizedTree.entities.nodes;
-      const { id, updates } = action.payload;
       const node = nodes[id];
       if (!node) return;
       nodes[id] = { ...node, ...updates };
+    },
+
+    updateNodeProps: (
+      state: State,
+      { payload: { id, props } }: PayloadAction<{ id: string; props: Record<string, any> }>,
+    ) => {
+      const nodes = state.normalizedTree.entities.nodes;
+      const node = nodes[id];
+      if (!node) return;
+      nodes[id].props = merge({}, nodes[id].props, props);
     },
 
     /**
@@ -108,9 +116,9 @@ export const createNodeReducers = () => {
      */
     selectNode: (
       state: State,
-      action: PayloadAction<string | null>,
+      { payload }: PayloadAction<string | null>,
     ) => {
-      state.selectedNodeId = action.payload;
+      state.selectedNodeId = payload;
     },
 
     /**
@@ -119,9 +127,30 @@ export const createNodeReducers = () => {
      */
     setExpandedKeys: (
       state: State,
-      action: PayloadAction<string[]>,
+      { payload }: PayloadAction<string[]>,
     ) => {
-      state.expandedKeys = action.payload;
+      state.expandedKeys = payload;
+    },
+
+    pushNodeToPropertyPanel: (
+      state: State,
+      { payload }: PayloadAction<string>,
+    ) => {
+      if (!state.propertyPanelNodeIds) {
+        state.propertyPanelNodeIds = [];
+      }
+      if (!state.propertyPanelNodeIds.includes(payload)) {
+        state.propertyPanelNodeIds.push(payload);
+      }
+    },
+
+    popNodeFromPropertyPanel: (
+      state: State,
+    ) => {
+      if (!state.propertyPanelNodeIds) {
+        return;
+      }
+      state.propertyPanelNodeIds.pop();
     },
 
     /**
@@ -130,9 +159,9 @@ export const createNodeReducers = () => {
      */
     expandNode: (
       state: State,
-      action: PayloadAction<string>,
+      { payload }: PayloadAction<string>,
     ) => {
-      const nodeId = action.payload;
+      const nodeId = payload;
       if (!state.expandedKeys.includes(nodeId)) {
         state.expandedKeys.push(nodeId);
       }
@@ -144,9 +173,9 @@ export const createNodeReducers = () => {
      */
     setComponentTreeFromRaw: (
       state: State,
-      action: PayloadAction<ComponentInstance | ComponentInstance[]>,
+      { payload }: PayloadAction<ComponentInstance | ComponentInstance[]>,
     ) => {
-      state.normalizedTree = normalizeComponentTree(action.payload);
+      state.normalizedTree = normalizeComponentTree(payload);
     },
   };
 };

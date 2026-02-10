@@ -34,11 +34,8 @@ export const createRuleNodeReducers = () => {
       newRuleNode.message = ruleNodeContext
         .getStrategyForNodeOrThrow({ ...newRuleNode })
         .buildDefaultMessage({ ...newRuleNode });
-      if (!state.editingColumn?.ruleNodes) {
-        state.editingColumn.ruleNodes = [newRuleNode];
-      } else if (Array.isArray(state.editingColumn.ruleNodes)) {
-        state.editingColumn?.ruleNodes?.push(newRuleNode);
-      }
+      state.editingColumn.ruleNodes = state.editingColumn.ruleNodes || [];
+      state.editingColumn.ruleNodes.push(newRuleNode);
     },
 
     /**

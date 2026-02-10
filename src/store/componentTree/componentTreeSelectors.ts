@@ -64,7 +64,10 @@ export const getNormalizedTree = (state: MaybeWritable<ComponentTreeState>) =>
 export const getComponentNodesEntities = (
   state: MaybeWritable<ComponentTreeState>,
 ) => getNormalizedTree(state).entities.nodes;
-
+export const selectComponentNodesEntities = createSelector(
+  selectComponentTreeState,
+  getComponentNodesEntities,
+);
 /**
  * @description 获取根节点ID列表
  */
@@ -172,6 +175,37 @@ export const getSelectedNode = (state: MaybeWritable<ComponentTreeState>) => {
 export const selectSelectedNode = createSelector(
   selectComponentTreeState,
   getSelectedNode,
+);
+
+export const getNodeIdsInPropertyPanel = (state: MaybeWritable<ComponentTreeState>) => {
+  return state.propertyPanelNodeIds || [];
+}
+export const selectNodeIdsInPropertyPanel = createSelector(
+  selectComponentTreeState,
+  getNodeIdsInPropertyPanel,
+)
+
+export const selectShowBackInPropertyPanel = createSelector(
+  selectNodeIdsInPropertyPanel,
+  (nodeIds) => !!nodeIds && nodeIds.length > 0,
+)
+
+export const getNodeInPropertyPanelResult = (
+  components: Record<string, ComponentNode>,
+  selectedNode: ComponentNode | null | undefined,
+  nodeIds: string[]
+) => {
+  if (!nodeIds || nodeIds.length === 0) {
+    return selectedNode
+  } else {
+    return components[nodeIds[nodeIds.length - 1]] || null
+  }
+}
+export const selectNodeInPropertyPanel = createSelector(
+  selectComponentNodesEntities,
+  selectSelectedNode,
+  selectNodeIdsInPropertyPanel,
+  getNodeInPropertyPanelResult
 );
 
 export const getSelectedNodeProps = (

@@ -29,6 +29,7 @@ export interface ComponentTreeState {
   entityModel: ReturnType<typeof entityModelAdapter.getInitialState>;
   isEntityModelModalOpen: boolean;
   editingEntityModelId: string | null;
+  propertyPanelNodeIds?: string[];
 }
 
 const initialState: ComponentTreeState = {
@@ -40,6 +41,7 @@ const initialState: ComponentTreeState = {
   entityModel: entityModelAdapter.getInitialState({}),
   isEntityModelModalOpen: false,
   editingEntityModelId: null,
+  propertyPanelNodeIds: [],
 };
 
 export const componentTreePersistWhitelist = ["entityModel"] as const;
