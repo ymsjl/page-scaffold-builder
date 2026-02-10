@@ -1,17 +1,18 @@
-import { RuleNodeSchema } from '@/components/RuleBuilder/RuleParamsDateSchema';
-import { z } from 'zod';
+import { RuleNodeSchema } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import { ProSchema, ProTableProps } from "@ant-design/pro-components";
+import { z } from "zod";
 
 export const ProValueEnumSchema = z.object({
   text: z.string(),
   status: z.string().optional(),
-  color: z.string().optional()
+  color: z.string().optional(),
 });
 export type ProValueEnum = z.infer<typeof ProValueEnumSchema>;
 
 export const FormItemPropsSchema = z.object({
   name: z.string().optional(),
   label: z.string().optional(),
-  rules: z.any().optional()
+  rules: z.any().optional(),
 });
 export type FormItemPropsZ = z.infer<typeof FormItemPropsSchema>;
 
@@ -29,5 +30,7 @@ export const ProCommonColumnSchema = z.object({
   formItemProps: FormItemPropsSchema.optional(),
   fieldProps: z.any().optional(),
 });
-export type ProCommonColumn = z.infer<typeof ProCommonColumnSchema>;
+export type ProCommonColumn = z.infer<typeof ProCommonColumnSchema> &
+  Pick<ProSchema<Record<string, any>, string>, "render">;
+
 export type ColumnSchema = ProCommonColumn;

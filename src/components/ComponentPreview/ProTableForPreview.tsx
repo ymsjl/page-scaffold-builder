@@ -58,12 +58,7 @@ const ColumnCellSlot: React.FC<{
 };
 
 const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
-  const {
-    __previewNodeId,
-    columns = [],
-    rowActions,
-    ...restProps
-  } = props;
+  const { __previewNodeId, columns = [], rowActions, ...restProps } = props;
   // 根据组件的 columns 属性，自动生成自动生成 dataSource 属性
   const mapValueTypeToValue = (col: ProCommonColumn) => {
     switch (col.valueType) {
@@ -86,40 +81,40 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
       default:
         return "示例值";
     }
-  }
+  };
   const dataSource = [
-    columns.reduce((acc, col) => {
-      acc[col.dataIndex as string] = mapValueTypeToValue(col);
-      return acc;
-    }, {} as Record<string, unknown>)
+    columns.reduce(
+      (acc, col) => {
+        acc[col.dataIndex as string] = mapValueTypeToValue(col);
+        return acc;
+      },
+      {} as Record<string, unknown>,
+    ),
   ];
 
-  const mergedColumns = React.useMemo(
-    () => {
-      if (!Array.isArray(columns)) return columns;
-      return columns.map((column) => {
-        const normalizedColumn = mapProCommonColumnToProps(column);
-        if (!__previewNodeId || normalizedColumn.valueType !== "option") {
-          return normalizedColumn;
-        }
+  const mergedColumns = React.useMemo(() => {
+    if (!Array.isArray(columns)) return columns;
+    return columns.map((column) => {
+      const normalizedColumn = mapProCommonColumnToProps(column);
 
-        return {
-          ...normalizedColumn,
-          render: () => (
-            <ColumnCellSlot
-              targetNodeId={__previewNodeId}
-              acceptTypes={['Button']}
-              nodeRefs={rowActions || []}
-              propPath="rowActions"
-            />
-          ),
-        };
-      });
-    },
-    [columns, __previewNodeId, rowActions],
+      if (__previewNodeId && normalizedColumn.valueType === "option") {
+        normalizedColumn.render = () => (
+          <ColumnCellSlot
+            targetNodeId={__previewNodeId}
+            acceptTypes={["Button"]}
+            nodeRefs={rowActions || []}
+            propPath="rowActions"
+          />
+        );
+      }
+
+      return normalizedColumn;
+    });
+  }, [columns, __previewNodeId, rowActions]);
+
+  return (
+    <ProTable {...restProps} columns={mergedColumns} dataSource={dataSource} />
   );
-
-  return <ProTable {...restProps} columns={mergedColumns} dataSource={dataSource} />;
 };
 
 export default ProTableForPreview;

@@ -306,11 +306,12 @@ const PropertyPanel: React.FC = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('columns', columns)
-                  if (columns?.some(col => col.valueType === 'option')) {
+                  if (!columns?.some(col => col.valueType === 'option')) {
                     dispatch(componentTreeActions.upsertColumnOfSelectedNode({
                       title: '操作',
                       valueType: 'option',
-                      dataIndex: ''
+                      dataIndex: '',
+                      width: 240
                     }))
                   }
                   dispatch(componentTreeActions.addNodeToSlot({
