@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import { Dropdown } from "antd";
+import { Dropdown, Input } from "antd";
 import type { MenuProps } from "antd";
 import type { ProCommonColumn, SchemaField } from "@/types";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
@@ -25,7 +25,53 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
 }) => {
   const dispatch = useAppDispatch();
   const [isHovered, setIsHovered] = React.useState(false);
+  const [isRenaming, setIsRenaming] = React.useState(false);
+  const [draftTitle, setDraftTitle] = React.useState("");
   const canOperate = !!tableNodeId;
+
+  const getTitleText = React.useCallback(() => {
+    if (typeof column.title === "string") return column.title;
+    if (typeof children === "string" || typeof children === "number") {
+      return String(children);
+    }
+    return "";
+  }, [column.title, children]);
+
+  const cancelRename = React.useCallback(() => {
+    setIsRenaming(false);
+    setDraftTitle(getTitleText());
+  }, [getTitleText]);
+
+  const applyRename = React.useCallback(() => {
+    const nextTitle = draftTitle.trim();
+    if (!nextTitle) {
+      cancelRename();
+      return;
+    }
+
+    if (!tableNodeId || !column.key) {
+      setIsRenaming(false);
+      return;
+    }
+
+    const currentTitle = getTitleText();
+    if (nextTitle !== currentTitle) {
+      dispatch(componentTreeActions.selectNode(tableNodeId));
+      dispatch(componentTreeActions.upsertColumnOfSelectedNode({ key: column.key, title: nextTitle }));
+    }
+
+    setIsRenaming(false);
+  }, [cancelRename, column.key, dispatch, draftTitle, getTitleText, tableNodeId]);
+
+  const handleDoubleClick = React.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!canOperate) return;
+      event.stopPropagation();
+      setDraftTitle(getTitleText());
+      setIsRenaming(true);
+    },
+    [canOperate, getTitleText],
+  );
 
   const insertItems = React.useMemo<MenuProps["items"]>(() => {
     return [
@@ -120,13 +166,13 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
 
   return (
     <Dropdown
-      trigger={["hover"]}
+      trigger={isRenaming ? [] : ["hover"]}
       menu={{ items: menuItems, onClick: handleMenuClick }}
       overlayStyle={{ minWidth: "160px" }}
     >
       <div
         style={{
-          cursor: canOperate ? "context-menu" : "default",
+          cursor: isRenaming ? "text" : canOperate ? "context-menu" : "default",
           display: "flex",
           alignItems: "center",
           width: "100%",
@@ -140,8 +186,29 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={(event) => event.stopPropagation()}
+        onDoubleClick={handleDoubleClick}
       >
-        {children}
+        {isRenaming ? (
+          <Input
+            size="small"
+            value={draftTitle}
+            autoFocus
+            style={{ width: 'auto' }}
+            onChange={(event) => setDraftTitle(event.target.value)}
+            onBlur={applyRename}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.currentTarget.blur();
+              }
+              if (event.key === "Escape") {
+                cancelRename();
+              }
+            }}
+            onClick={(event) => event.stopPropagation()}
+          />
+        ) : (
+          children
+        )}
       </div>
     </Dropdown>
   );
