@@ -5,6 +5,12 @@ import type { ComponentTreeState } from "../componentTreeSlice";
 import { makeEntityModelId } from "../componentTreeSlice";
 import { entityModelAdapter } from "../componentTreeSelectors";
 
+type UpdateFieldExtraPayload = {
+  entityModelId: string;
+  fieldId: string;
+  extra: Record<string, any> | undefined;
+};
+
 /**
  * 实体模型相关的 Reducers
  * 负责实体模型的增删改查操作
@@ -65,6 +71,36 @@ export const createEntityModelReducers = () => {
       action: PayloadAction<string>,
     ) => {
       entityModelAdapter.removeOne(state.entityModel, action.payload);
+    },
+
+    /**
+     * @description 更新实体模型字段的 extra 配置
+     * @param action.payload.entityModelId 实体模型ID
+     * @param action.payload.fieldId 字段ID
+     * @param action.payload.extra 字段扩展配置
+     */
+    updateEntityFieldExtra: (
+      state: State,
+      action: PayloadAction<UpdateFieldExtraPayload>,
+    ) => {
+      const { entityModelId, fieldId, extra } = action.payload;
+      const entity = state.entityModel.entities[entityModelId];
+      if (!entity || !entity.fields) {
+        return;
+      }
+      entityModelAdapter.updateOne(state.entityModel, {
+        id: entityModelId,
+        changes: {
+          fields: entity.fields.map((field) =>
+            field.id === fieldId
+              ? {
+                  ...field,
+                  extra,
+                }
+              : field,
+          ),
+        },
+      });
     },
   };
 };

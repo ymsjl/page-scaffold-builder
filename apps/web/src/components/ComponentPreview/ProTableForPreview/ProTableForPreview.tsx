@@ -9,7 +9,11 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from "@dnd-kit/core";
+import type {
+  DragEndEvent,
+  DragOverEvent,
+  UniqueIdentifier,
+} from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import {
   SortableContext,
@@ -20,7 +24,10 @@ import { HolderOutlined } from "@ant-design/icons";
 import type { NodeRef, ProCommonColumn } from "@/types";
 import { mapProCommonColumnToProps } from "@/store/componentTree/mapProCommonColumnToProps";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import { componentNodesSelectors, entityModelSelectors } from "@/store/componentTree/componentTreeSelectors";
+import {
+  componentNodesSelectors,
+  entityModelSelectors,
+} from "@/store/componentTree/componentTreeSelectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { ColumnTitleMenu } from "./ColumnTitleMenu";
 import { ColumnCellSlot } from "./ColumnCellSlot";
@@ -47,22 +54,35 @@ type DragIndexState = {
   direction?: "left" | "right";
 };
 
+type PlaceholderState = {
+  id: string | null;
+  index: number | null;
+};
+
 const DragIndexContext = React.createContext<DragIndexState>({
   active: null,
   over: null,
 });
+
+const PLACEHOLDER_PREFIX = "__drag_placeholder__";
+
+const makePlaceholderId = (activeId: UniqueIdentifier) =>
+  `${PLACEHOLDER_PREFIX}${String(activeId)}`;
+
+const isPlaceholderId = (id: UniqueIdentifier | null) =>
+  typeof id === "string" && id.startsWith(PLACEHOLDER_PREFIX);
 
 const dragActiveStyle = (dragState: DragIndexState, id: string) => {
   const { active, over } = dragState;
   let style: React.CSSProperties = {};
   if (active && active === id) {
     style = {
-      backgroundColor: "#f0f5ff",
-      // boxShadow: "inset 0 0 0 1px rgba(22, 119, 255, 0.35)",
+      opacity: 0.5,
     };
-  } else if (over && id === over && active !== over) {
+  } else if (over && isPlaceholderId(id)) {
     style = {
-      borderInlineStart: "2px dashed rgba(22, 119, 255, 0.7)",
+      opacity: 0.4,
+      borderInline: "1px solid #1677ff",
       backgroundColor: "rgba(22, 119, 255, 0.06)",
     };
   }
@@ -85,20 +105,17 @@ const TableBodyCell: React.FC<BodyCellProps> = (props) => {
 
 const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
   const dragState = React.useContext(DragIndexContext);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    isDragging,
-  } = useSortable({
-    id: props.id,
-    disabled,
-  });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } =
+    useSortable({
+      id: props.id,
+      disabled,
+    });
   const style: React.CSSProperties = {
     ...props.style,
     cursor: disabled ? "default" : "grab",
-    ...(isDragging ? { position: "relative", zIndex: 9999, userSelect: "none" } : {}),
+    ...(isDragging
+      ? { position: "relative", zIndex: 9999, userSelect: "none" }
+      : {}),
     ...dragActiveStyle(dragState, props.id),
     transition: "background-color 0.15s ease, border-color 0.15s ease",
   };
@@ -124,12 +141,7 @@ const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
   const headerChildren =
     typeof props.children === "function" ? null : props.children;
   return (
-    <th
-      {...props}
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-    >
+    <th {...props} ref={setNodeRef} style={style} {...attributes}>
       <span style={contentStyle}>
         <span
           ref={setActivatorNodeRef}
@@ -164,8 +176,8 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
   const tableNode = useAppSelector((state) =>
     __previewNodeId
       ? (componentNodesSelectors.selectById(state, __previewNodeId) as
-        | { props?: { entityModelId?: string } }
-        | undefined)
+          | { props?: { entityModelId?: string } }
+          | undefined)
       : undefined,
   );
   const entityModel = useAppSelector((state) => {
@@ -176,11 +188,16 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
   });
   const entityFields = entityModel?.fields ?? [];
   const dataSource = [generateDataSource(columns)];
-  const canDrag = Boolean(__previewNodeId) && Array.isArray(columns) && columns.length > 1;
+  const canDrag =
+    Boolean(__previewNodeId) && Array.isArray(columns) && columns.length > 1;
 
   const [dragState, setDragState] = React.useState<DragIndexState>({
     active: null,
     over: null,
+  });
+  const [placeholder, setPlaceholder] = React.useState<PlaceholderState>({
+    id: null,
+    index: null,
   });
 
   const sensors = useSensors(
@@ -194,13 +211,51 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
     return columns.map((column, index) => getColumnDragId(column, index));
   }, [columns]);
 
-  const mergedColumns = React.useMemo(() => {
+  const visualColumns = React.useMemo(() => {
     if (!Array.isArray(columns)) return columns;
-    return columns.map((column, index) => {
+    if (!placeholder.id || placeholder.index === null) return columns;
+
+    const activeIndex = columnDragIds.findIndex(
+      (id) => id === dragState.active,
+    );
+    if (activeIndex === -1) return columns;
+
+    const sourceColumn = columns[activeIndex];
+    if (!sourceColumn) return columns;
+
+    const placeholderColumn = {
+      ...sourceColumn,
+      key: placeholder.id,
+      hideInSearch: true,
+    } as ProCommonColumn;
+
+    const next = [...columns];
+    const insertIndex = Math.min(Math.max(placeholder.index, 0), next.length);
+    next.splice(insertIndex, 0, placeholderColumn);
+    return next;
+  }, [
+    columns,
+    columnDragIds,
+    dragState.active,
+    placeholder.id,
+    placeholder.index,
+  ]);
+
+  const visualColumnIds = React.useMemo(() => {
+    if (!Array.isArray(visualColumns)) return [] as string[];
+    return visualColumns.map((column, index) => getColumnDragId(column, index));
+  }, [visualColumns]);
+
+  const mergedColumns = React.useMemo(() => {
+    if (!Array.isArray(visualColumns)) return visualColumns;
+    return visualColumns.map((column, index) => {
       const normalizedColumn = mapProCommonColumnToProps(column) as ProColumns<
         Record<string, any>
       >;
       const dragId = getColumnDragId(column, index);
+      const isPlaceholder = placeholder.id === dragId;
+      const realIndex = columnDragIds.findIndex((id) => id === dragId);
+      const columnIndex = realIndex >= 0 ? realIndex : index;
 
       const existingHeaderCell = normalizedColumn.onHeaderCell;
       normalizedColumn.onHeaderCell = (col: Record<string, any>) => ({
@@ -208,7 +263,7 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
           ? existingHeaderCell(col)
           : null),
         id: dragId,
-        disabled: !canDrag,
+        disabled: !canDrag || isPlaceholder,
       });
 
       const existingOnCell = normalizedColumn.onCell;
@@ -222,11 +277,11 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
         id: dragId,
       });
 
-      if (typeof normalizedColumn.title !== "function") {
+      if (!isPlaceholder && typeof normalizedColumn.title !== "function") {
         normalizedColumn.title = (
           <ColumnTitleMenu
             column={column}
-            columnIndex={index}
+            columnIndex={columnIndex}
             columnsLength={columns.length}
             tableNodeId={__previewNodeId}
             entityFields={entityFields}
@@ -236,23 +291,31 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
         );
       }
 
-      if (typeof normalizedColumn.formItemProps !== "function") {
+      if (
+        !isPlaceholder &&
+        typeof normalizedColumn.formItemProps !== "function"
+      ) {
         normalizedColumn.formItemProps = {
           ...normalizedColumn.formItemProps,
-          label:
+          label: (
             <ColumnTitleMenu
               column={column}
-              columnIndex={index}
+              columnIndex={columnIndex}
               columnsLength={columns.length}
               tableNodeId={__previewNodeId}
               entityFields={entityFields}
             >
               {normalizedColumn?.formItemProps?.label ?? column.title}
             </ColumnTitleMenu>
+          ),
         };
       }
 
-      if (__previewNodeId && normalizedColumn.valueType === "option") {
+      if (
+        !isPlaceholder &&
+        __previewNodeId &&
+        normalizedColumn.valueType === "option"
+      ) {
         normalizedColumn.render = () => (
           <ColumnCellSlot
             targetNodeId={__previewNodeId}
@@ -265,7 +328,16 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
 
       return normalizedColumn;
     });
-  }, [canDrag, columns, __previewNodeId, entityFields, rowActions]);
+  }, [
+    canDrag,
+    columnDragIds,
+    columns,
+    __previewNodeId,
+    entityFields,
+    placeholder.id,
+    rowActions,
+    visualColumns,
+  ]);
 
   const mergedComponents = React.useMemo(() => {
     const base = restProps.components ?? {};
@@ -279,8 +351,25 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
   const handleDragOver = React.useCallback(
     ({ active, over }: DragOverEvent) => {
       if (!over || !canDrag) return;
+      if (isPlaceholderId(over.id)) return;
       const activeIndex = columnDragIds.findIndex((id) => id === active.id);
       const overIndex = columnDragIds.findIndex((id) => id === over.id);
+
+      if (
+        activeIndex === -1 ||
+        overIndex === -1 ||
+        activeIndex === overIndex ||
+        overIndex === activeIndex + 1
+      ) {
+        setPlaceholder({ id: null, index: null });
+        setDragState({ active: active.id, over: over.id });
+        return;
+      }
+
+      setPlaceholder({
+        id: makePlaceholderId(active.id),
+        index: overIndex,
+      });
       setDragState({
         active: active.id,
         over: over.id,
@@ -292,25 +381,54 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
 
   const handleDragEnd = React.useCallback(
     ({ active, over }: DragEndEvent) => {
-      if (!over || !canDrag || active.id === over.id) {
+      if (!over || !canDrag) {
         setDragState({ active: null, over: null });
+        setPlaceholder({ id: null, index: null });
         return;
       }
 
       const from = columnDragIds.findIndex((id) => id === active.id);
-      const to = columnDragIds.findIndex((id) => id === over.id);
+      const hasPlaceholder = placeholder.id && placeholder.index !== null;
+      const rawTarget = hasPlaceholder
+        ? placeholder.index
+        : columnDragIds.findIndex((id) => id === over.id);
+      let to = typeof rawTarget === "number" ? rawTarget : -1;
 
-      if (from === -1 || to === -1 || from === to || !__previewNodeId) {
+      if (from === -1 || to === -1 || !__previewNodeId) {
         setDragState({ active: null, over: null });
+        setPlaceholder({ id: null, index: null });
+        return;
+      }
+
+      if (from < to) {
+        to -= 1;
+      }
+
+      if (from === to) {
+        setDragState({ active: null, over: null });
+        setPlaceholder({ id: null, index: null });
         return;
       }
 
       dispatch(componentTreeActions.selectNode(__previewNodeId));
       dispatch(componentTreeActions.moveColumnForSelectedNode({ from, to }));
       setDragState({ active: null, over: null });
+      setPlaceholder({ id: null, index: null });
     },
-    [canDrag, columnDragIds, dispatch, __previewNodeId],
+    [
+      canDrag,
+      columnDragIds,
+      dispatch,
+      placeholder.id,
+      placeholder.index,
+      __previewNodeId,
+    ],
   );
+
+  const handleDragCancel = React.useCallback(() => {
+    setDragState({ active: null, over: null });
+    setPlaceholder({ id: null, index: null });
+  }, []);
 
   const dragOverlayTitle = React.useMemo(() => {
     if (!dragState.active || !Array.isArray(columns)) return null;
@@ -327,9 +445,13 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
       modifiers={[restrictToHorizontalAxis]}
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
+      onDragCancel={handleDragCancel}
       collisionDetection={closestCenter}
     >
-      <SortableContext items={columnDragIds} strategy={horizontalListSortingStrategy}>
+      <SortableContext
+        items={visualColumnIds}
+        strategy={horizontalListSortingStrategy}
+      >
         <DragIndexContext.Provider value={dragState}>
           <ProTable
             {...restProps}
@@ -344,12 +466,15 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
           <div
             style={{
               backgroundColor: "#f0f5ff",
+              opacity: 0.8,
               padding: 12,
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
               border: "1px solid rgba(22, 119, 255, 0.35)",
             }}
           >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
               <HolderOutlined style={{ fontSize: 14, color: "#1677ff" }} />
               <span>{dragOverlayTitle}</span>
             </span>
@@ -361,4 +486,3 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
 };
 
 export default ProTableForPreview;
-

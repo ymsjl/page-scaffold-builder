@@ -59,6 +59,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         label: "实体模型",
         description: "描述项对应的数据实体模型",
         defaultValue: "",
+        group: "列配置",
       },
       columns: {
         name: "columns",
@@ -66,6 +67,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         label: "描述项配置",
         description: "定义描述项的配置",
         defaultValue: [],
+        group: "列配置",
       },
       layout: {
         name: "layout",
@@ -137,6 +139,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         label: "实体模型",
         description: "表格对应的数据实体模型",
         defaultValue: "",
+        group: "列配置",
       },
       columns: {
         name: "columns",
@@ -277,6 +280,7 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         label: "实体模型",
         description: "表单对应的数据实体模型",
         defaultValue: "",
+        group: "列配置",
       },
       columns: {
         name: "columns",

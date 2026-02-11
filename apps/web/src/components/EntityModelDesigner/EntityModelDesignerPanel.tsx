@@ -28,6 +28,12 @@ import {
 
 import "./styles.css";
 
+type EnumOption = {
+  id: string;
+  label: string;
+  value: string;
+};
+
 export default function EntityModelDesignerPanel() {
   const isOpen = useAppSelector(selectIsEntityModelModalOpen);
   const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
@@ -35,6 +41,10 @@ export default function EntityModelDesignerPanel() {
   const [isParsingSql, setIsParsingSql] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fieldEditableKeys, setFieldEditableKeys] = useState<React.Key[]>([]);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [advancedFieldId, setAdvancedFieldId] = useState<string | null>(null);
+  const [enumOptions, setEnumOptions] = useState<EnumOption[]>([]);
+  const [enumEditableKeys, setEnumEditableKeys] = useState<React.Key[]>([]);
   const dispatch = useAppDispatch();
   const editingEntityModel = useAppSelector(selectEditingEntityModel);
   const [form] = ProForm.useForm<EntityModel>();
@@ -71,7 +81,13 @@ export default function EntityModelDesignerPanel() {
   );
 
   const onClose = useCallback(() => {
+    // Close main modal
     dispatch(componentTreeActions.closeEntityModelModal());
+    // Also reset advanced enum modal state to avoid stale or dangling UI
+    setIsAdvancedOpen(false);
+    setAdvancedFieldId(null);
+    setEnumOptions([]);
+    setEnumEditableKeys([]);
   }, [dispatch]);
 
   const handleSaveEntity = useCallback(() => {
@@ -121,6 +137,43 @@ export default function EntityModelDesignerPanel() {
       setIsParsingSql(false);
     }
   }, [dispatch, sqlInput]);
+
+  const closeAdvancedModal = useCallback(() => {
+    setIsAdvancedOpen(false);
+    setAdvancedFieldId(null);
+    setEnumOptions([]);
+    setEnumEditableKeys([]);
+    setEditingId(null);
+  }, []);
+
+  const handleSaveAdvanced = useCallback(() => {
+    if (!advancedFieldId) return;
+    const fields = (form.getFieldValue("fields") as SchemaField[]) || [];
+    const nextExtra = { enum: enumOptions.map(({ label, value }) => ({ label, value })) };
+    const nextFields = fields.map((field) =>
+      field.id === advancedFieldId
+        ? {
+            ...field,
+            extra: nextExtra,
+          }
+        : field,
+    );
+
+    form.setFieldValue("fields", nextFields);
+
+    if (editingEntityModel?.id) {
+      dispatch(
+        componentTreeActions.updateEntityFieldExtra({
+          entityModelId: editingEntityModel.id,
+          fieldId: advancedFieldId,
+          extra: nextExtra,
+        }),
+      );
+    }
+
+    message.success("已更新枚举配置");
+    closeAdvancedModal();
+  }, [advancedFieldId, closeAdvancedModal, dispatch, editingEntityModel?.id, enumOptions, form]);
 
   const fieldTableColumns = useMemo<ProColumns<SchemaField>[]>(() => {
     return [
@@ -222,6 +275,27 @@ export default function EntityModelDesignerPanel() {
     setFieldEditableKeys,
   ]);
 
+  const enumTableColumns = useMemo<ProColumns<EnumOption>[]>(() => {
+    return [
+      {
+        title: "名称",
+        dataIndex: "label",
+        width: 220,
+        formItemProps: {
+          rules: [{ required: true, whitespace: true, message: "请输入名称" }],
+        },
+      },
+      {
+        title: "值",
+        dataIndex: "value",
+        width: 220,
+        formItemProps: {
+          rules: [{ required: true, whitespace: true, message: "请输入值" }],
+        },
+      },
+    ];
+  }, []);
+
   return (
     <>
       <Modal
@@ -275,9 +349,6 @@ export default function EntityModelDesignerPanel() {
                     valueType: "option",
                     width: 280,
                     render: (_, item, _index, action) => {
-                      const isComplex = ["object", "array"].includes(
-                        String(item.valueType || ""),
-                      );
                       const itemId = String(item.id);
                       const disableEditBtn =
                         isTableEditing &&
@@ -304,7 +375,25 @@ export default function EntityModelDesignerPanel() {
                           icon={<SettingOutlined />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            // TODO 打开高级编辑弹窗
+                            if (String(item.valueType) !== "enum") {
+                              message.info("当前仅支持 enum 类型的高级设置");
+                              return;
+                            }
+                            const fieldExtra = item.extra?.enum;
+                            const initialOptions = Array.isArray(fieldExtra)
+                              ? fieldExtra
+                                  .filter((opt) => opt && typeof opt === "object")
+                                  .map((opt, index) => ({
+                                    id: `enum_${item.id}_${index}`,
+                                    label: String((opt as any).label ?? ""),
+                                    value: String((opt as any).value ?? ""),
+                                  }))
+                              : [];
+                            setEnumOptions(initialOptions);
+                            setEnumEditableKeys([]);
+                            setAdvancedFieldId(String(item.id));
+                            setEditingId(String(item.id));
+                            setIsAdvancedOpen(true);
                           }}
                         >
                           高级
@@ -446,6 +535,40 @@ export default function EntityModelDesignerPanel() {
           placeholder="请输入 MySQL CREATE TABLE 语句"
           value={sqlInput}
           onChange={(event) => setSqlInput(event.target.value)}
+        />
+      </Modal>
+      <Modal
+        title="枚举高级设置"
+        open={isAdvancedOpen}
+        onCancel={closeAdvancedModal}
+        onOk={handleSaveAdvanced}
+        okText="完成"
+        destroyOnClose
+      >
+        <EditableProTable<EnumOption>
+          rowKey="id"
+          size="small"
+          columns={enumTableColumns}
+          value={enumOptions}
+          onChange={(next) => setEnumOptions(next || [])}
+          recordCreatorProps={{
+            position: "bottom",
+            newRecordType: "dataSource",
+            creatorButtonText: "新增枚举项",
+            record: () => ({
+              id: `enum_${Math.random().toString(36).slice(2, 9)}`,
+              label: "",
+              value: "",
+            }),
+          }}
+          editable={{
+            type: "single",
+            editableKeys: enumEditableKeys,
+            onChange: (keys) => setEnumEditableKeys((keys || []).slice(0, 1)),
+          }}
+          pagination={false}
+          search={false}
+          options={false}
         />
       </Modal>
     </>
