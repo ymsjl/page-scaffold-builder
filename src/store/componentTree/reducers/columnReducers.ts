@@ -10,7 +10,8 @@ import { entityModelAdapter, getSelectedNodeWithColumns } from "../componentTree
 
 const upsertColumnOnNode = (
   props: WritableDraft<ComponentNodeWithColumns['props']>,
-  changes: Omit<ProCommonColumn, 'key'> & { key?: string },
+  changes: Partial<ProCommonColumn>,
+  insertPos?: number,
 ) => {
   props.columns = props?.columns ?? [];
   const idx = props.columns.findIndex((c) => c.key === changes.key);
@@ -18,7 +19,11 @@ const upsertColumnOnNode = (
     Object.assign(props.columns[idx], changes);
   } else {
     const validatedChanges = ProCommonColumnSchema.parse({ ...changes, key: changes.key ?? makeColumnId() });
-    props.columns.push(validatedChanges);
+    if (typeof insertPos === "number" && insertPos >= 0 && insertPos <= props.columns.length) {
+      props.columns.splice(insertPos, 0, validatedChanges);
+    } else {
+      props.columns.push(validatedChanges);
+    }
   }
 };
 
@@ -83,7 +88,6 @@ export const createColumnReducers = () => {
       if (!node) return;
 
       upsertColumnOnNode(node.props, nextColumn);
-      console.log(current(node.props))
     },
 
     /**
@@ -94,19 +98,22 @@ export const createColumnReducers = () => {
      */
     upsertColumnOfSelectedNode: (
       state: State,
-      action: PayloadAction<Omit<ProCommonColumn, 'key'> & { key?: string }>,
+      { payload }: PayloadAction<Partial<ProCommonColumn> | {
+        insertPos?: number;
+        changes: Partial<ProCommonColumn>;
+      }>,
     ) => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
 
-      upsertColumnOnNode(node.props, action.payload);
+      const changes = "changes" in payload ? payload.changes : payload;
+      const insertPos = "insertPos" in payload ? payload.insertPos : undefined;
+      upsertColumnOnNode(node.props, changes, insertPos);
     },
 
     /**
-     * @description 删除选中节点的指定列配置
-     * @param action.payload 列配置的键值
-     * 找到当前选择的节点，找到节点的 props.columns 数组，
-     * 删除与传入键值匹配的列配置
+     * @description 删除选中节点的列配置
+     * @param payload 列的 key;
      */
     deleteColumnForSelectedNode: (
       state: State,

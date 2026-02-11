@@ -7,7 +7,7 @@ import { VALUE_TYPE_ENUM_MAP } from "./constants";
 
 export const createProCommonColumnFromSchemeField = (
   field?: SchemaField,
-): Omit<ProCommonColumn, "key"> => {
+): Omit<ProCommonColumn, "key"> & { key?: string } => {
   const valueType = field?.valueType || "text";
   const result: Omit<ProCommonColumn, "key"> & { dataIndex?: string } = {
     title: field?.title ?? "",

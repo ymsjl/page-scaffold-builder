@@ -1,5 +1,5 @@
 import type { ComponentPrototype, ComponentType } from "@/types";
-import ProTableForPreview from "@/components/ComponentPreview/ProTableForPreview";
+import ProTableForPreview from "@/components/ComponentPreview/ProTableForPreview/ProTableForPreview";
 import { Button, Col, Flex, Row } from "antd";
 import { COMPONENT_TYPES } from "./types/Component";
 
