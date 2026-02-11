@@ -1,7 +1,8 @@
 import type { ComponentPrototype, ComponentType } from "@/types";
 import ProTableForPreview from "@/components/ComponentPreview/ProTableForPreview/ProTableForPreview";
-import { Button, Col, Flex, Row } from "antd";
+import { Button } from "antd";
 import { COMPONENT_TYPES } from "./types/Component";
+import { ProDescriptions } from "@ant-design/pro-components";
 
 export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
 {
@@ -40,6 +41,45 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         placeholder: "拖入页面内容",
       },
     ],
+  },
+  Description: {
+    name: "Description",
+    label: "描述组件",
+    description: "用于显示文本描述的组件",
+    isContainer: false,
+    component: ProDescriptions,
+    defaultProps: {
+      columns: [],
+      layout: "vertical",
+    },
+    propsTypes: {
+      entityModelId: {
+        name: "entityModelId",
+        type: "enum",
+        label: "实体模型",
+        description: "描述项对应的数据实体模型",
+        defaultValue: "",
+      },
+      columns: {
+        name: "columns",
+        type: "array",
+        label: "描述项配置",
+        description: "定义描述项的配置",
+        defaultValue: [],
+      },
+      layout: {
+        name: "layout",
+        type: "enum",
+        label: "布局方式",
+        group: "布局配置",
+        description: "描述组件的布局方式",
+        options: [
+          { label: "垂直", value: "vertical" },
+          { label: "水平", value: "horizontal" },
+        ],
+        defaultValue: "vertical",
+      }
+    },
   },
   Text: {
     name: "Text",
@@ -373,200 +413,6 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         eventName: "onClick",
         label: "点击事件",
         description: "用户点击按钮时触发",
-      },
-    ],
-  },
-  Row: {
-    name: "Row",
-    label: "行布局",
-    description: "Ant Design 栅格 Row",
-    isContainer: true,
-    component: Row,
-    defaultProps: {
-      gutter: 16,
-      align: "top",
-      justify: "start",
-      wrap: true,
-    },
-    propsTypes: {
-      gutter: {
-        name: "gutter",
-        type: "number",
-        label: "间距",
-        description: "栅格列之间的间距",
-        defaultValue: 16,
-      },
-      align: {
-        name: "align",
-        type: "enum",
-        label: "垂直对齐",
-        description: "子元素的垂直对齐方式",
-        options: [
-          { label: "顶部", value: "top" },
-          { label: "居中", value: "middle" },
-          { label: "底部", value: "bottom" },
-          { label: "拉伸", value: "stretch" },
-        ],
-        defaultValue: "top",
-      },
-      justify: {
-        name: "justify",
-        type: "enum",
-        label: "水平对齐",
-        description: "子元素的水平对齐方式",
-        options: [
-          { label: "左对齐", value: "start" },
-          { label: "右对齐", value: "end" },
-          { label: "居中", value: "center" },
-          { label: "两端对齐", value: "space-between" },
-          { label: "等距", value: "space-around" },
-          { label: "平均分布", value: "space-evenly" },
-        ],
-        defaultValue: "start",
-      },
-      wrap: {
-        name: "wrap",
-        type: "boolean",
-        label: "自动换行",
-        description: "子元素是否自动换行",
-        defaultValue: true,
-      },
-    },
-    slots: [
-      {
-        id: "row.children",
-        path: "children",
-        label: "行内容",
-        kind: "reactNodeArray",
-        renderMode: "inline",
-        wrap: true,
-        placeholder: "拖入行内容",
-      },
-    ],
-  },
-  Col: {
-    name: "Col",
-    label: "列布局",
-    description: "Ant Design 栅格 Col",
-    isContainer: true,
-    component: Col,
-    defaultProps: {
-      span: 24,
-    },
-    propsTypes: {
-      span: {
-        name: "span",
-        type: "number",
-        label: "栅格占位",
-        description: "当前列所占的栅格数量",
-        defaultValue: 24,
-      },
-      offset: {
-        name: "offset",
-        type: "number",
-        label: "左侧间隔",
-        description: "栅格左侧的间隔格数",
-        defaultValue: 0,
-      },
-      order: {
-        name: "order",
-        type: "number",
-        label: "排序",
-        description: "栅格顺序",
-        defaultValue: 0,
-      },
-    },
-    slots: [
-      {
-        id: "col.children",
-        path: "children",
-        label: "列内容",
-        kind: "reactNodeArray",
-        renderMode: "inline",
-        wrap: true,
-        placeholder: "拖入列内容",
-      },
-    ],
-  },
-  Flex: {
-    name: "Flex",
-    label: "Flex 布局",
-    description: "Ant Design Flex 容器",
-    isContainer: true,
-    component: Flex,
-    defaultProps: {
-      gap: 8,
-      align: "center",
-      justify: "start",
-      wrap: "wrap",
-      vertical: false,
-    },
-    propsTypes: {
-      gap: {
-        name: "gap",
-        type: "number",
-        label: "间距",
-        description: "子元素之间的间距",
-        defaultValue: 8,
-      },
-      align: {
-        name: "align",
-        type: "enum",
-        label: "垂直对齐",
-        description: "交叉轴对齐方式",
-        options: [
-          { label: "起点", value: "flex-start" },
-          { label: "居中", value: "center" },
-          { label: "终点", value: "flex-end" },
-          { label: "拉伸", value: "stretch" },
-          { label: "基线", value: "baseline" },
-        ],
-        defaultValue: "center",
-      },
-      justify: {
-        name: "justify",
-        type: "enum",
-        label: "水平对齐",
-        description: "主轴对齐方式",
-        options: [
-          { label: "起点", value: "flex-start" },
-          { label: "终点", value: "flex-end" },
-          { label: "居中", value: "center" },
-          { label: "两端对齐", value: "space-between" },
-          { label: "等距", value: "space-around" },
-          { label: "平均分布", value: "space-evenly" },
-        ],
-        defaultValue: "flex-start",
-      },
-      wrap: {
-        name: "wrap",
-        type: "enum",
-        label: "换行",
-        description: "子元素的换行方式",
-        options: [
-          { label: "不换行", value: "nowrap" },
-          { label: "换行", value: "wrap" },
-          { label: "反向换行", value: "wrap-reverse" },
-        ],
-        defaultValue: "wrap",
-      },
-      vertical: {
-        name: "vertical",
-        type: "boolean",
-        label: "垂直排列",
-        description: "是否按列方向排列",
-        defaultValue: false,
-      },
-    },
-    slots: [
-      {
-        id: "flex.children",
-        path: "children",
-        label: "Flex 内容",
-        kind: "reactNodeArray",
-        renderMode: "inline",
-        wrap: true,
-        placeholder: "拖入 Flex 内容",
       },
     ],
   },

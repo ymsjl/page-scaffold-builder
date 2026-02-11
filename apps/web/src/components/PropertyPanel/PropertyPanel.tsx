@@ -23,6 +23,7 @@ import { ActionFlowSelector } from "./ActionFlowSelector";
 import { getValueByPath } from "../ComponentPreview/slotPath";
 
 import "./styles.css";
+import { generateDataSource } from "../ComponentPreview/ProTableForPreview/mapValueTypeToValue";
 
 interface FlattenedPropAttribute extends Omit<PropAttribute, "name"> {
   name: string | string[];
@@ -421,7 +422,12 @@ const PropertyPanel: React.FC = () => {
       >
         <Button
           onClick={() => {
-
+            dispatch(componentTreeActions.updateNodeProps({
+              id: selectedNodeId!,
+              props: {
+                dataSource: generateDataSource(columns)
+              }
+            }))
           }}
         >
           生成模拟数据

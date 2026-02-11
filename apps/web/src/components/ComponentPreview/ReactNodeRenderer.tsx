@@ -121,7 +121,6 @@ const RenderSingleNode: React.FC<{
       children as React.ReactNode,
     );
   }
-
   return (
     <Component {...resolvedProps} key={node.id}>
       {resolvedProps.children as React.ReactNode}

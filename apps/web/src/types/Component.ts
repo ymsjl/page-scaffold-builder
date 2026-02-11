@@ -1,7 +1,7 @@
 import type React from "react";
 import { ProCommonColumn, PropAttribute } from "@/types";
 
-export const COMPONENT_TYPES = ["Page", "Table", "Form", "Button", "Row", "Col", "Flex", "Text"] as const;
+export const COMPONENT_TYPES = ["Page", "Table", "Form", "Description", "Button", "Text"] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 export type SlotRenderMode = "inline" | "panel";

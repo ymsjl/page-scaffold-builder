@@ -6,6 +6,7 @@ import { componentNodesSelectors, entityModelSelectors } from "@/store/component
 import { useAppSelector } from "@/store/hooks";
 import { ColumnTitleMenu } from "./ColumnTitleMenu";
 import { ColumnCellSlot } from "./ColumnCellSlot";
+import { generateDataSource, mapValueTypeToValue } from "./mapValueTypeToValue";
 
 type ProTableProps = React.ComponentProps<typeof ProTable>;
 
@@ -36,15 +37,7 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
   });
   const entityFields = entityModel?.fields ?? [];
   // 根据组件的 columns 属性，自动生成自动生成 dataSource 属性
-  const dataSource = [
-    columns.reduce(
-      (acc, col) => {
-        acc[col.dataIndex as string] = mapValueTypeToValue(col);
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    ),
-  ];
+  const dataSource = [generateDataSource(columns)];
 
   const mergedColumns = React.useMemo(() => {
     if (!Array.isArray(columns)) return columns;
@@ -101,27 +94,4 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
 };
 
 export default ProTableForPreview;
-
-const mapValueTypeToValue = (col: ProCommonColumn) => {
-  switch (col.valueType) {
-    case "text":
-      return "示例文本";
-    case "digit":
-      return 123;
-    case "date":
-      return "2024-01-01";
-    case "dateTime":
-      return "2024-01-01 12:00:00";
-    case "time":
-      return "12:00:00";
-    case "money":
-      return "¥100.00";
-    case "select":
-      return Object.keys(col.valueEnum || {}).length > 0
-        ? Object.keys(col.valueEnum || {})[0]
-        : "选项1";
-    default:
-      return "示例值";
-  }
-};
 

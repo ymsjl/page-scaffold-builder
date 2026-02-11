@@ -1,5 +1,7 @@
 import { Parser } from "node-sql-parser";
 
+type AnyRecord = Record<string, unknown>;
+
 export type ParsedSqlField = {
   name: string;
   type: string;
@@ -13,31 +15,38 @@ export type ParsedSqlModel = {
   fields: ParsedSqlField[];
 };
 
-const asRecord = (value: unknown): Record<string, unknown> | null => {
+const asRecord = (value: unknown): AnyRecord | null => {
   if (!value || typeof value !== "object") return null;
-  return value as Record<string, unknown>;
+  return value as AnyRecord;
+};
+
+const firstString = (...values: unknown[]): string | undefined => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return undefined;
 };
 
 const normalizeIdentifier = (value: unknown): string => {
   if (Array.isArray(value)) {
     const first = value[0];
     const record = asRecord(first);
-    const tableName = record?.table || record?.name || record?.value;
-    if (typeof tableName === "string") return tableName;
+    const tableName = firstString(record?.table, record?.name, record?.value);
+    if (tableName) return tableName;
   }
   if (typeof value === "string") return value;
   const record = asRecord(value);
-  const name = record?.value || record?.name || record?.column || record?.table;
-  if (typeof name === "string") return name;
-  return "";
+  return (
+    firstString(record?.value, record?.name, record?.column, record?.table) ||
+    ""
+  );
 };
 
 const normalizeDataType = (value: unknown): string => {
   if (typeof value === "string") return value;
   const record = asRecord(value);
-  const name = record?.dataType || record?.data_type || record?.type;
-  if (typeof name === "string") return name;
-  return "unknown";
+  const name = firstString(record?.dataType, record?.data_type, record?.type);
+  return name || "unknown";
 };
 
 const extractLiteralValue = (value: unknown): string | undefined => {
@@ -63,18 +72,23 @@ const extractDefaultValue = (value: unknown): string | undefined => {
   return extractLiteralValue(defaultValue);
 };
 
-const isNullable = (definition: Record<string, unknown>): boolean => {
+const isNullable = (definition: AnyRecord): boolean => {
   const nullable = definition.nullable;
   if (typeof nullable === "boolean") return nullable;
   const constraints = definition.constraints;
-  if (Array.isArray(constraints)) {
-    return !constraints.some((item) =>
-      String((item as Record<string, unknown>)?.type).toLowerCase() ===
-      "not null",
-    );
-  }
-  return true;
+  if (!Array.isArray(constraints)) return true;
+  return !constraints.some((item) =>
+    String((item as AnyRecord)?.type).toLowerCase() === "not null",
+  );
 };
+
+const getTableName = (statement: AnyRecord): string =>
+  normalizeIdentifier(statement.table || statement.name || "");
+
+const getCreateDefinitions = (statement: AnyRecord): unknown[] =>
+  Array.isArray(statement.create_definitions)
+    ? statement.create_definitions
+    : [];
 
 const extractFields = (definitions: unknown[]): ParsedSqlField[] => {
   const fields: ParsedSqlField[] = [];
@@ -93,11 +107,10 @@ const extractFields = (definitions: unknown[]): ParsedSqlField[] => {
       definitionRecord.dataType ||
       definitionRecord.data_type ||
       definitionRecord.type;
-    const normalizedType = normalizeDataType(dataType);
 
     fields.push({
       name: columnName,
-      type: normalizedType,
+      type: normalizeDataType(dataType),
       nullable: isNullable(definitionRecord),
       defaultValue: extractDefaultValue(definitionRecord),
       comment:
@@ -109,6 +122,13 @@ const extractFields = (definitions: unknown[]): ParsedSqlField[] => {
   return fields;
 };
 
+const collectCreateStatements = (statements: unknown[]): AnyRecord[] =>
+  statements.reduce<AnyRecord[]>((acc, statement) => {
+    const record = asRecord(statement);
+    if (record?.type === "create") acc.push(record);
+    return acc;
+  }, []);
+
 export const parseSqlToEntityModel = async (sql: string): Promise<{
   model: ParsedSqlModel;
   warnings: string[];
@@ -118,16 +138,7 @@ export const parseSqlToEntityModel = async (sql: string): Promise<{
   const statements = Array.isArray(ast) ? ast : [ast];
 
   const warnings: string[] = [];
-  const createStatements = statements.reduce<Record<string, unknown>[]>(
-    (acc, statement) => {
-      const record = asRecord(statement);
-      if (record?.type === "create") {
-        acc.push(record);
-      }
-      return acc;
-    },
-    [],
-  );
+  const createStatements = collectCreateStatements(statements);
 
   if (createStatements.length === 0) {
     throw new Error("No CREATE TABLE statement found");
@@ -138,16 +149,12 @@ export const parseSqlToEntityModel = async (sql: string): Promise<{
   }
 
   const first = createStatements[0];
-
-  const tableName = normalizeIdentifier(first.table || first.name || "");
+  const tableName = getTableName(first);
   if (!tableName) {
     throw new Error("Unable to determine table name");
   }
-  const definitions = Array.isArray(first.create_definitions)
-    ? first.create_definitions
-    : [];
-  const fields = extractFields(definitions);
 
+  const fields = extractFields(getCreateDefinitions(first));
   if (fields.length === 0) {
     warnings.push("No columns were detected from the SQL input.");
   }

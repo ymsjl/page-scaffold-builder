@@ -12,7 +12,6 @@ type ComponentPreviewInnerProps = {
 const ComponentPreviewInner = React.memo(
   ({ node, componentPrototype }: ComponentPreviewInnerProps) => {
     const resolvedProps = useResolvedProps(node, componentPrototype);
-
     const componentElem = useMemo(() => {
       const Component = componentPrototype.component;
       if (typeof Component === "string") {
