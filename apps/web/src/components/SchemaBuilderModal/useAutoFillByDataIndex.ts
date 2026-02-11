@@ -13,7 +13,7 @@ export const createProCommonColumnFromSchemeField = (
     title: field?.title ?? "",
     dataIndex: field?.key ?? "",
     valueType: VALUE_TYPE_ENUM_MAP[valueType] || valueType,
-    // width: getRecommendedWidth(valueType),
+    width: getRecommendedWidth(valueType) ?? 120,
     hideInSearch: field ? !field?.isFilterable : false,
     formItemProps: {
       name: field?.key ?? "",
