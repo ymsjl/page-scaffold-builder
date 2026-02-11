@@ -1,14 +1,21 @@
 # Page Scaffold Builder
 
-Standalone copy of the PageScaffoldBuilder extracted from the admin-nigeria-overseas repository.
+Standalone copy of the PageScaffoldBuilder with a lightweight Fastify backend.
+
+Workspace layout:
+
+- apps/web: Vite React frontend
+- apps/api: Fastify API
+- packages/shared: shared types
 
 Quick start:
 
 ```bash
-pnpm install --no-workspace
+pnpm install
 pnpm dev
 ```
 
-Notes:
-- This project is intentionally standalone to improve editor performance and language server responsiveness.
-- If you want to publish or push to a remote, initialize git and add a remote.
+Useful commands:
+
+- pnpm dev:web
+- pnpm dev:api

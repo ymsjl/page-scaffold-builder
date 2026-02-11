@@ -1,0 +1,19 @@
+{
+  "name": "page-scaffold-builder-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.5.0",
+    "fastify": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "tsx": "^4.19.2",
+    "typescript": "^5.0.0"
+  }
+}

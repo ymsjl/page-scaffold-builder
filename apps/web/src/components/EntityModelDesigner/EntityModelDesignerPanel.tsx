@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Flex, message, Modal, Tag } from "antd";
+import { Button, Flex, Input, message, Modal, Tag } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import {
   EditableProTable,
@@ -19,6 +19,8 @@ import type { EntityModel, SchemaField } from "@/types";
 import { SchemaFieldSchema } from "@/validation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
+import { mapParsedSqlToEntityModel } from "@/store/api/sqlMapping";
+import { parseSqlToEntityModel } from "@/utils/sqlParser";
 import {
   selectEditingEntityModel,
   selectIsEntityModelModalOpen,
@@ -28,6 +30,9 @@ import "./styles.css";
 
 export default function EntityModelDesignerPanel() {
   const isOpen = useAppSelector(selectIsEntityModelModalOpen);
+  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
+  const [sqlInput, setSqlInput] = useState("");
+  const [isParsingSql, setIsParsingSql] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fieldEditableKeys, setFieldEditableKeys] = useState<React.Key[]>([]);
   const dispatch = useAppDispatch();
@@ -86,6 +91,36 @@ export default function EntityModelDesignerPanel() {
     message.success("已保存");
     onClose();
   }, [editingId, onClose, isTableEditing, form]);
+
+  const handleOpenSqlModal = useCallback(() => {
+    setSqlInput("");
+    setIsSqlModalOpen(true);
+  }, []);
+
+  const handleImportSql = useCallback(async () => {
+    const trimmed = sqlInput.trim();
+    if (!trimmed) {
+      message.warning("请输入 SQL 建表语句");
+      return;
+    }
+
+    try {
+      setIsParsingSql(true);
+      const response = await parseSqlToEntityModel(trimmed);
+      const entity = mapParsedSqlToEntityModel(response.model);
+      dispatch(componentTreeActions.applyEntityModelChange(entity));
+      if (response.warnings?.length) {
+        message.warning(response.warnings.join("\n"));
+      } else {
+        message.success("SQL 解析完成，已生成实体模型");
+      }
+      setIsSqlModalOpen(false);
+    } catch (error) {
+      message.error((error as Error)?.message || "SQL 解析失败");
+    } finally {
+      setIsParsingSql(false);
+    }
+  }, [dispatch, sqlInput]);
 
   const fieldTableColumns = useMemo<ProColumns<SchemaField>[]>(() => {
     return [
@@ -199,6 +234,9 @@ export default function EntityModelDesignerPanel() {
         onOk={handleSaveEntity}
         okText="保存"
       >
+        <Flex justify="flex-end" style={{ marginBottom: 12 }}>
+          <Button onClick={handleOpenSqlModal}>从 SQL 导入</Button>
+        </Flex>
         <ProForm<EntityModel>
           grid
           labelAlign="left"
@@ -394,6 +432,21 @@ export default function EntityModelDesignerPanel() {
             )}
           </ProFormItemRender>
         </ProForm>
+      </Modal>
+      <Modal
+        title="从 SQL 导入"
+        open={isSqlModalOpen}
+        onCancel={() => setIsSqlModalOpen(false)}
+        onOk={handleImportSql}
+        okText="解析并导入"
+        confirmLoading={isParsingSql}
+      >
+        <Input.TextArea
+          rows={6}
+          placeholder="请输入 MySQL CREATE TABLE 语句"
+          value={sqlInput}
+          onChange={(event) => setSqlInput(event.target.value)}
+        />
       </Modal>
     </>
   );

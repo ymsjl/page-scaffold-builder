@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { rootReducer } from './rootReducer';
+import { sqlApi } from './api/sqlApi';
 
 import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
@@ -7,7 +8,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 const persistConfig = {
   key: 'root',
   storage,
-  blacklist: ['componentTree'], // componentTree uses its own nested persist
+  blacklist: ['componentTree', sqlApi.reducerPath], // componentTree uses its own nested persist
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -20,7 +21,7 @@ export const store = configureStore({
         // 忽略 redux-persist 的 action types，参考 RTK 文档/最佳实践
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }),
+    }).concat(sqlApi.middleware),
 });
 
 export const persistor = persistStore(store);
