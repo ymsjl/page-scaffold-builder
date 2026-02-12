@@ -1,11 +1,11 @@
 import React, { PropsWithChildren } from "react";
-import { Dropdown, Input } from "antd";
+import { Button, Dropdown, Input } from "antd";
 import type { MenuProps } from "antd";
 import type { ProCommonColumn, SchemaField } from "@/types";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { useAppDispatch } from "@/store/hooks";
 import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/useAutoFillByDataIndex";
-import { DeleteOutlined, EditOutlined, EyeInvisibleOutlined, EyeOutlined, NumberOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, EllipsisOutlined, EyeInvisibleOutlined, EyeOutlined, MoreOutlined, NumberOutlined, PlusOutlined } from "@ant-design/icons";
 
 type ColumnTitleMenuProps = {
   column: ProCommonColumn;
@@ -24,7 +24,6 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
   children,
 }) => {
   const dispatch = useAppDispatch();
-  const [isHovered, setIsHovered] = React.useState(false);
   const [isRenaming, setIsRenaming] = React.useState(false);
   const [draftTitle, setDraftTitle] = React.useState("");
   const canOperate = !!tableNodeId;
@@ -166,7 +165,7 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
 
   return (
     <Dropdown
-      trigger={isRenaming ? [] : ["hover"]}
+      trigger={isRenaming ? [] : ["contextMenu"]}
       menu={{ items: menuItems, onClick: handleMenuClick }}
       overlayStyle={{ minWidth: "160px" }}
     >
@@ -179,12 +178,8 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
           height: "100%",
           padding: "4px 6px",
           borderRadius: 4,
-          border: `1px dashed ${isHovered ? "#1677ff" : "transparent"}`,
-          background: isHovered ? "rgba(22, 119, 255, 0.08)" : "transparent",
           transition: "border-color 0.15s ease, background-color 0.15s ease",
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         onClick={(event) => event.stopPropagation()}
         onDoubleClick={handleDoubleClick}
       >

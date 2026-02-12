@@ -51,7 +51,6 @@ type BodyCellProps = React.HTMLAttributes<HTMLTableCellElement> & {
 type DragIndexState = {
   active: UniqueIdentifier | null;
   over: UniqueIdentifier | null;
-  direction?: "left" | "right";
 };
 
 type PlaceholderState = {
@@ -71,6 +70,70 @@ const makePlaceholderId = (activeId: UniqueIdentifier) =>
 
 const isPlaceholderId = (id: UniqueIdentifier | null) =>
   typeof id === "string" && id.startsWith(PLACEHOLDER_PREFIX);
+
+const getColumnIndexById = (
+  columnDragIds: string[],
+  id: UniqueIdentifier | null,
+) => {
+  if (!id) return -1;
+  return columnDragIds.findIndex((columnId) => columnId === id);
+};
+
+const getColumnTitleText = (columns: ProCommonColumn[], index: number) => {
+  if (index < 0 || index >= columns.length) return null;
+  const title = columns[index]?.title;
+  if (typeof title === "function") return null;
+  if (typeof title === "string" || typeof title === "number") {
+    return String(title);
+  }
+  return null;
+};
+
+const getDropTargetIndex = (from: number, rawTarget: number) => {
+  let to = rawTarget;
+  if (from < to) {
+    to -= 1;
+  }
+  return to;
+};
+
+const getRawTargetIndex = (from: number, overIndex: number) =>
+  overIndex + (overIndex > from ? 1 : 0);
+
+const getDragOverlayHint = (params: {
+  columns: ProCommonColumn[];
+  columnDragIds: string[];
+  dragState: DragIndexState;
+  placeholder: PlaceholderState;
+  dragTitleText: string | null;
+}) => {
+  const { columns, columnDragIds, dragState, placeholder, dragTitleText } =
+    params;
+  if (!dragTitleText || !dragState.active) return null;
+
+  const from = getColumnIndexById(columnDragIds, dragState.active);
+  if (from === -1) return `把 ${dragTitleText} 移到这里`;
+
+  const overIndex = getColumnIndexById(columnDragIds, dragState.over);
+  if (overIndex === -1) return `把 ${dragTitleText} 移到这里`;
+
+  const rawTarget =
+    placeholder.id && placeholder.index !== null
+      ? placeholder.index
+      : getRawTargetIndex(from, overIndex);
+  const to = getDropTargetIndex(from, rawTarget);
+
+  if (to === from) {
+    return `把 ${dragTitleText} 放回原位`;
+  }
+
+  const isMovingRight = to > from;
+  const baseTitleText = getColumnTitleText(columns, overIndex);
+  if (!baseTitleText) return `把 ${dragTitleText} 移到这里`;
+
+  const direction = isMovingRight ? "后面" : "前面";
+  return `把 ${dragTitleText} 移到 ${baseTitleText} 的${direction}`;
+};
 
 const dragActiveStyle = (dragState: DragIndexState, id: string) => {
   const { active, over } = dragState;
@@ -176,8 +239,8 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
   const tableNode = useAppSelector((state) =>
     __previewNodeId
       ? (componentNodesSelectors.selectById(state, __previewNodeId) as
-          | { props?: { entityModelId?: string } }
-          | undefined)
+        | { props?: { entityModelId?: string } }
+        | undefined)
       : undefined,
   );
   const entityModel = useAppSelector((state) => {
@@ -352,29 +415,25 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
     ({ active, over }: DragOverEvent) => {
       if (!over || !canDrag) return;
       if (isPlaceholderId(over.id)) return;
-      const activeIndex = columnDragIds.findIndex((id) => id === active.id);
-      const overIndex = columnDragIds.findIndex((id) => id === over.id);
+      const activeIndex = getColumnIndexById(columnDragIds, active.id);
+      const overIndex = getColumnIndexById(columnDragIds, over.id);
 
-      if (
-        activeIndex === -1 ||
-        overIndex === -1 ||
-        activeIndex === overIndex ||
-        overIndex === activeIndex + 1
-      ) {
+      if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
         setPlaceholder({ id: null, index: null });
         setDragState({ active: active.id, over: over.id });
         return;
       }
 
-      setPlaceholder({
-        id: makePlaceholderId(active.id),
-        index: overIndex,
-      });
-      setDragState({
-        active: active.id,
-        over: over.id,
-        direction: overIndex > activeIndex ? "right" : "left",
-      });
+      const rawTarget = getRawTargetIndex(activeIndex, overIndex);
+      const to = getDropTargetIndex(activeIndex, rawTarget);
+      if (to === activeIndex) {
+        setPlaceholder({ id: null, index: null });
+        setDragState({ active: active.id, over: over.id });
+        return;
+      }
+
+      setPlaceholder({ id: makePlaceholderId(active.id), index: rawTarget });
+      setDragState({ active: active.id, over: over.id });
     },
     [canDrag, columnDragIds],
   );
@@ -387,11 +446,11 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
         return;
       }
 
-      const from = columnDragIds.findIndex((id) => id === active.id);
+      const from = getColumnIndexById(columnDragIds, active.id);
       const hasPlaceholder = placeholder.id && placeholder.index !== null;
       const rawTarget = hasPlaceholder
         ? placeholder.index
-        : columnDragIds.findIndex((id) => id === over.id);
+        : getRawTargetIndex(from, getColumnIndexById(columnDragIds, over.id));
       let to = typeof rawTarget === "number" ? rawTarget : -1;
 
       if (from === -1 || to === -1 || !__previewNodeId) {
@@ -432,12 +491,37 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
 
   const dragOverlayTitle = React.useMemo(() => {
     if (!dragState.active || !Array.isArray(columns)) return null;
-    const index = columnDragIds.findIndex((id) => id === dragState.active);
+    const index = getColumnIndexById(columnDragIds, dragState.active);
     if (index === -1) return null;
     const title = columns[index]?.title;
     if (typeof title === "function") return null;
     return title ?? null;
   }, [columnDragIds, columns, dragState.active]);
+
+  const dragOverlayTitleText = React.useMemo(() => {
+    if (!dragState.active || !Array.isArray(columns)) return null;
+    const index = getColumnIndexById(columnDragIds, dragState.active);
+    return getColumnTitleText(columns, index);
+  }, [columnDragIds, columns, dragState.active]);
+
+  const dragOverlayHint = React.useMemo(() => {
+    if (!Array.isArray(columns)) return null;
+    return getDragOverlayHint({
+      columns,
+      columnDragIds,
+      dragState,
+      placeholder,
+      dragTitleText: dragOverlayTitleText,
+    });
+  }, [
+    columnDragIds,
+    columns,
+    dragOverlayTitleText,
+    dragState.active,
+    dragState.over,
+    placeholder.id,
+    placeholder.index,
+  ]);
 
   return (
     <DndContext
@@ -461,17 +545,22 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
           />
         </DragIndexContext.Provider>
       </SortableContext>
-      <DragOverlay style={{ zIndex: 9999 }}>
+      <DragOverlay style={{ zIndex: 9999 }} dropAnimation={{ duration: 150 }}>
         {dragOverlayTitle ? (
           <div
             style={{
               backgroundColor: "#f0f5ff",
-              opacity: 0.8,
+              opacity: 0.85,
               padding: 12,
+              fontWeight: 'bold',
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
               border: "1px solid rgba(22, 119, 255, 0.35)",
+              cursor: "grabbing",
             }}
           >
+            <div style={{ position: "absolute", top: 0, left: "50%", transform: "translate3d(-50%, -100%, 0)", fontSize: 12, color: "rgba(0, 0, 0, 0.55)", borderRadius: "10px", backgroundColor: "rgba(255, 255, 255, 0.95)", padding: "4px 8px", whiteSpace: "nowrap", border: "1px solid rgba(22, 119, 255, 0.15)", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)" }}>
+              {dragOverlayHint ?? ""}
+            </div>
             <span
               style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
             >
