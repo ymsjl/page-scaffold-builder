@@ -16,6 +16,7 @@ import {
 } from "./previewLogic";
 import { DropZone } from "@/components/DropZone/DropZone";
 import SlotItemWrapper from "@/components/SlotItemWrapper/SlotItemWrapper";
+import { usePreviewMode } from "./previewMode";
 
 interface ReactNodeRendererProps {
   /** 节点引用数组 */
@@ -29,6 +30,7 @@ export const useResolvedProps = (
   node: ComponentNode,
   componentPrototype: ComponentPrototype,
 ) => {
+  const previewMode = usePreviewMode();
   const nodeProps = node.props || {};
   const slots = componentPrototype.slots || [];
   const slotRefsMap = useMemo(
@@ -45,11 +47,16 @@ export const useResolvedProps = (
     [allRefs, renderedNodes],
   );
 
-  const mergedProps = useMemo<Record<string, unknown>>(() => ({
-    __previewNodeId: node.id,
-    ...(componentPrototype.defaultProps || {}),
-    ...nodeProps
-  }), [node, nodeProps, componentPrototype]);
+  const mergedProps = useMemo<Record<string, unknown>>(
+    () => ({
+      ...(previewMode === "edit" && node.type === "Table"
+        ? { __previewNodeId: node.id }
+        : {}),
+      ...(componentPrototype.defaultProps || {}),
+      ...nodeProps,
+    }),
+    [node.id, node.type, nodeProps, componentPrototype.defaultProps, previewMode],
+  );
 
   if (node.isContainer) {
     mergedProps.children = buildChildrenRefs(node.childrenIds || []);
@@ -62,28 +69,34 @@ export const useResolvedProps = (
         slots,
         slotRefsMap,
         nodeIdToElement,
-        createDropZone: (slot) => (
-          <DropZone
-            key={`${slot.id}:drop`}
-            id={`${node.id}:${slot.path}`}
-            targetNodeId={node.id}
-            propPath={slot.path}
-            acceptTypes={slot.acceptTypes}
-            label={slot.label}
-          />
-        ),
-        wrapElement: (slot, ref, element) => (
-          <SlotItemWrapper
-            key={`${slot.id}:${ref.nodeId}`}
-            nodeId={ref.nodeId}
-            targetNodeId={node.id}
-            propPath={slot.path}
-          >
-            {element}
-          </SlotItemWrapper>
-        ),
+        createDropZone: (slot) =>
+          previewMode === "edit" ? (
+            <DropZone
+              key={`${slot.id}:drop`}
+              id={`${node.id}:${slot.path}`}
+              targetNodeId={node.id}
+              propPath={slot.path}
+              acceptTypes={slot.acceptTypes}
+              label={slot.label}
+            />
+          ) : (
+            null
+          ),
+        wrapElement: (slot, ref, element) =>
+          previewMode === "edit" ? (
+            <SlotItemWrapper
+              key={`${slot.id}:${ref.nodeId}`}
+              nodeId={ref.nodeId}
+              targetNodeId={node.id}
+              propPath={slot.path}
+            >
+              {element}
+            </SlotItemWrapper>
+          ) : (
+            element
+          ),
       }),
-    [mergedProps, slots, slotRefsMap, nodeIdToElement, node.id],
+    [mergedProps, slots, slotRefsMap, nodeIdToElement, node.id, previewMode],
   );
 };
 
@@ -91,6 +104,7 @@ export const useResolvedProps = (
  * 渲染单个引用的组件节点
  */
 const RenderSingleNodeOrNull: React.FC<{ nodeId: string }> = ({ nodeId }) => {
+  const previewMode = usePreviewMode();
   const node = useAppSelector(
     (state) => componentNodesSelectors.selectById(state, nodeId),
   ) as ComponentNode | undefined;
@@ -99,7 +113,7 @@ const RenderSingleNodeOrNull: React.FC<{ nodeId: string }> = ({ nodeId }) => {
     return null;
   }
 
-  const prototype = getComponentPrototype(node.type);
+  const prototype = getComponentPrototype(node.type, { previewMode });
   if (!prototype) {
     return null;
   }

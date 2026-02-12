@@ -32,3 +32,9 @@ export const CONTAINER_STYLE: CSSProperties = {
   border: "4px solid #e8e8e8",
   borderRadius: "16px",
 };
+
+export const FINAL_CONTAINER_STYLE: CSSProperties = {
+  height: "100%",
+  overflow: "auto",
+  backgroundColor: "#fff",
+};

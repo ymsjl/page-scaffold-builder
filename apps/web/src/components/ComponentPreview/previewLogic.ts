@@ -80,7 +80,11 @@ export const buildResolvedProps = <T>({
 
     if (slot.renderMode === "inline") {
       if (slot.kind === "reactNodeArray") {
-        newProps = setValueByPath(newProps, slot.path, [...wrappedElements, dropZone]);
+        newProps = setValueByPath(
+          newProps,
+          slot.path,
+          dropZone ? [...wrappedElements, dropZone] : wrappedElements,
+        );
       } else {
         newProps = setValueByPath(
           newProps,

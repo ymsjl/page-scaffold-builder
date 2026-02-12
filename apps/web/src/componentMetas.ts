@@ -1,8 +1,10 @@
 import type { ComponentPrototype, ComponentType } from "@/types";
 import ProTableForPreview from "@/components/ComponentPreview/ProTableForPreview/ProTableForPreview";
+import ProTableForPurePreview from "@/components/ComponentPreview/ProTableForPreview/ProTableForPurePreview";
 import { Button } from "antd";
 import { COMPONENT_TYPES } from "./types/Component";
 import { ProDescriptions } from "@ant-design/pro-components";
+import type { PreviewMode } from "@/components/ComponentPreview/previewMode";
 
 export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
 {
@@ -424,8 +426,20 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
 
 export const getComponentPrototype = (
   type: ComponentType,
+  options?: { previewMode?: PreviewMode },
 ): ComponentPrototype | undefined => {
-  return componentPrototypeMap[type];
+  const base = componentPrototypeMap[type];
+  if (!base) return undefined;
+
+  const previewMode = options?.previewMode ?? "edit";
+  if (type === "Table" && previewMode === "pure") {
+    return {
+      ...base,
+      component: ProTableForPurePreview,
+    };
+  }
+
+  return base;
 };
 
 export const availableComponents = COMPONENT_TYPES

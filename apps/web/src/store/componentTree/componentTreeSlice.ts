@@ -1,6 +1,7 @@
 import {
   createSlice,
 } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 import type { NormalizedComponentTree } from "@/types/Component";
 import type { ProCommonColumn } from "@/types";
 import { makeIdCreator } from "@/utils/makeIdCreator";
@@ -46,6 +47,11 @@ const initialState: ComponentTreeState = {
 
 export const componentTreePersistWhitelist = ["entityModel"] as const;
 
+export type ComponentTreeSnapshot = Pick<
+  ComponentTreeState,
+  "selectedNodeId" | "expandedKeys" | "normalizedTree" | "entityModel"
+>;
+
 const slice = createSlice({
   name: "componentTree",
   initialState,
@@ -56,6 +62,31 @@ const slice = createSlice({
     ...createColumnEditingReducers(),
     ...createRuleNodeReducers(),
     ...createEntityModelReducers(),
+    hydrateFromSnapshot: (
+      state,
+      action: PayloadAction<Partial<ComponentTreeSnapshot>>,
+    ) => {
+      const next = action.payload;
+
+      if (typeof next.selectedNodeId !== "undefined") {
+        state.selectedNodeId = next.selectedNodeId;
+      }
+      if (Array.isArray(next.expandedKeys)) {
+        state.expandedKeys = next.expandedKeys;
+      }
+      if (next.normalizedTree) {
+        state.normalizedTree = next.normalizedTree;
+      }
+      if (next.entityModel) {
+        state.entityModel = next.entityModel;
+      }
+
+      state.editingColumn = null;
+      state.isSchemaBuilderModalOpen = false;
+      state.isEntityModelModalOpen = false;
+      state.editingEntityModelId = null;
+      state.propertyPanelNodeIds = [];
+    },
   },
 });
 
