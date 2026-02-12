@@ -24,7 +24,7 @@ const ComponentPreviewInner = React.memo(
         );
       }
       return (
-        <Component {...resolvedProps} key={node.id}>
+        <Component {...resolvedProps} key={node.id} >
           {resolvedProps.children as React.ReactNode}
         </Component>
       );
@@ -33,7 +33,7 @@ const ComponentPreviewInner = React.memo(
     const containerStyle =
       containerVariant === "final" ? FINAL_CONTAINER_STYLE : CONTAINER_STYLE;
 
-    return <div style={containerStyle}>{componentElem}</div>;
+    return <div id="modal-preview-root" style={{ ...containerStyle, position: 'relative' }} > {componentElem}</ div>;
   },
 );
 

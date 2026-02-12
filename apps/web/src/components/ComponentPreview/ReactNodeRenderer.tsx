@@ -6,7 +6,6 @@ import {
   type ComponentNode,
   type ComponentPrototype,
   type NodeRef,
-  ProCommonColumn,
   isNodeRef,
 } from "@/types";
 import {

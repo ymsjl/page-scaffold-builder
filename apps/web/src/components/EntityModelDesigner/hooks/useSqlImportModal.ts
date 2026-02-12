@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { message } from "antd";
 
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import { mapParsedSqlToEntityModel } from "@/store/api/sqlMapping";
+import { mapParsedSqlToEntityModel } from "@/components/EntityModelDesigner/sqlMapping";
 import { parseSqlToEntityModel } from "@/utils/sqlParser";
 
 export function useSqlImportModal(params: {

@@ -1,10 +1,11 @@
 import type { ComponentPrototype, ComponentType } from "@/types";
 import ProTableForPreview from "@/components/ComponentPreview/ProTableForPreview/ProTableForPreview";
 import ProTableForPurePreview from "@/components/ComponentPreview/ProTableForPreview/ProTableForPurePreview";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import { COMPONENT_TYPES } from "./types/Component";
 import { ProDescriptions } from "@ant-design/pro-components";
 import type { PreviewMode } from "@/components/ComponentPreview/previewMode";
+import ModalForPreview from "./components/ComponentPreview/ModalForPreview/ModalForPreview";
 
 export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
 {
@@ -313,6 +314,51 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         defaultValue: null,
       }
     },
+  },
+  Modal: {
+    name: "Modal",
+    label: "模态框组件",
+    description: "基于 Ant Design Modal 的模态框组件",
+    isContainer: true,
+    component: ModalForPreview,
+    defaultProps: {
+      open: false,
+    },
+    propsTypes: {
+      title: {
+        name: "title",
+        type: "string",
+        label: "模态框标题",
+        description: "模态框的标题文字",
+        defaultValue: "模态框标题",
+      },
+      width: {
+        name: "width",
+        type: "number",
+        label: "模态框宽度",
+        description: "模态框的宽度，单位像素",
+        defaultValue: 520,
+      },
+      open: {
+        name: "open",
+        type: "boolean",
+        label: "是否打开",
+        description: "控制模态框的显示与隐藏",
+        defaultValue: false,
+      },
+    },
+    slots: [
+      {
+        id: "modal.children",
+        path: "children",
+        label: "模态框内容",
+        kind: "reactNodeArray",
+        acceptTypes: ["Form", "Button", "Description", "Table", "Text"],
+        renderMode: "inline",
+        wrap: true,
+        placeholder: "拖入 模态框内容",
+      },
+    ],
   },
   Button: {
     name: "Button",

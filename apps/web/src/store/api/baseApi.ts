@@ -25,8 +25,8 @@ export type SqlParseResponse = {
 const baseUrl =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
-export const sqlApi = createApi({
-  reducerPath: "sqlApi",
+export const baseApi = createApi({
+  reducerPath: "baseApi",
   baseQuery: fetchBaseQuery({ baseUrl }),
   endpoints: (builder) => ({
     parseSql: builder.mutation<SqlParseResponse, SqlParseRequest>({
@@ -39,4 +39,4 @@ export const sqlApi = createApi({
   }),
 });
 
-export const { useParseSqlMutation } = sqlApi;
+export const { useParseSqlMutation } = baseApi;
