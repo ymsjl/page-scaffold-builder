@@ -550,7 +550,6 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
           <div
             style={{
               backgroundColor: "#f0f5ff",
-              opacity: 0.85,
               padding: 12,
               fontWeight: 'bold',
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
@@ -558,12 +557,10 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
               cursor: "grabbing",
             }}
           >
-            <div style={{ position: "absolute", top: 0, left: "50%", transform: "translate3d(-50%, -100%, 0)", fontSize: 12, color: "rgba(0, 0, 0, 0.55)", borderRadius: "10px", backgroundColor: "rgba(255, 255, 255, 0.95)", padding: "4px 8px", whiteSpace: "nowrap", border: "1px solid rgba(22, 119, 255, 0.15)", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)" }}>
+            <div style={{ position: "absolute", top: '-12px', left: "50%", transform: "translate3d(-50%, -100%, 0)", fontSize: 12, borderRadius: "10px", backgroundColor: "rgba(255, 255, 255, 0.95)", padding: "4px 8px", whiteSpace: "nowrap", border: "1px solid rgba(22, 119, 255, 0.15)", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)" }}>
               {dragOverlayHint ?? ""}
             </div>
-            <span
-              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-            >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, opacity: 0.85 }}>
               <HolderOutlined style={{ fontSize: 14, color: "#1677ff" }} />
               <span>{dragOverlayTitle}</span>
             </span>
