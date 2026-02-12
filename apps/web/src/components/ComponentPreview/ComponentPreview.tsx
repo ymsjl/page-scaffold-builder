@@ -64,6 +64,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
           selectedNodeId: componentTreeState.selectedNodeId,
           normalizedTree: componentTreeState.normalizedTree,
           entityModel: componentTreeState.entityModel,
+          variables: componentTreeState.variables,
+          variableValues: componentTreeState.variableValues,
         },
       };
 

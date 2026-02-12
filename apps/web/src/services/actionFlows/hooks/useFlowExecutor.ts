@@ -1,15 +1,11 @@
 import { useCallback, useRef, useState } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { flowAdapter } from "@/store/actionFlows/actionFlowsSlice";
 import type { FlowExecutionContext, NodeExecutionResult } from "@/types/actions";
 import { FlowExecutor } from "../core/FlowExecutor";
 import { nodeStrategyRegistry } from "../strategies/NodeStrategyRegistry";
 import { message } from "antd";
-
-// 创建 flowSelectors
-const flowSelectors = flowAdapter.getSelectors(
-  (state: any) => state.actionFlows?.flows
-);
+import store from "@/store/store";
+import { selectVariableValues } from "@/store/componentTree/componentTreeSelectors";
 
 /**
  * 使用 FlowExecutor 的 Hook
@@ -21,6 +17,8 @@ export function useFlowExecutor() {
   const executorRef = useRef(new FlowExecutor(nodeStrategyRegistry));
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResults, setExecutionResults] = useState<NodeExecutionResult[]>([]);
+  const flowEntities = useAppSelector((state) => state.actionFlows.flows.entities);
+  const globalVariableValues = useAppSelector(selectVariableValues);
 
   /**
    * 执行指定的 Flow
@@ -34,10 +32,7 @@ export function useFlowExecutor() {
 
     try {
       // 从 Redux 获取 Flow
-      const flow = flowSelectors.selectById(
-        { actionFlows: { flows: flowSelectors.selectAll } } as any,
-        flowId
-      );
+      const flow = flowEntities[flowId];
 
       if (!flow) {
         throw new Error(`Flow not found: ${flowId}`);
@@ -46,9 +41,17 @@ export function useFlowExecutor() {
       // 构建执行上下文
       const executionContext: FlowExecutionContext = {
         flowId,
-        variables: flow.variables || {},
-        nodeOutputs: {},
         ...context,
+        variables: {
+          ...globalVariableValues,
+          ...(flow.variables || {}),
+          ...(context?.variables || {}),
+        },
+        nodeOutputs: {},
+        services: {
+          ...(context?.services || {}),
+          store,
+        },
       };
 
       // 执行 Flow
@@ -70,7 +73,7 @@ export function useFlowExecutor() {
     } finally {
       setIsExecuting(false);
     }
-  }, []);
+  }, [flowEntities, globalVariableValues]);
 
   /**
    * 清空执行结果

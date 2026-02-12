@@ -1,21 +1,27 @@
 import React, { useMemo } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { componentNodesSelectors } from "@/store/componentTree/componentTreeSelectors";
+import {
+  componentNodesSelectors,
+  selectVariableValues,
+} from "@/store/componentTree/componentTreeSelectors";
 import { getComponentPrototype } from "@/componentMetas";
 import {
   type ComponentNode,
   type ComponentPrototype,
   type NodeRef,
   isNodeRef,
+  isVariableRef,
 } from "@/types";
 import {
   buildResolvedProps,
   collectSlotRefs,
   mapNodeRefsToItems,
 } from "./previewLogic";
+import { getValueByPath, setValueByPath } from "./slotPath";
 import { DropZone } from "@/components/DropZone/DropZone";
 import SlotItemWrapper from "@/components/SlotItemWrapper/SlotItemWrapper";
 import { usePreviewMode } from "./previewMode";
+import { useActionFlowHandler } from "@/services/actionFlows";
 
 interface ReactNodeRendererProps {
   /** 节点引用数组 */
@@ -25,13 +31,47 @@ interface ReactNodeRendererProps {
 const buildChildrenRefs = (childrenIds: string[]): NodeRef[] =>
   childrenIds.map((nodeId) => ({ type: "nodeRef", nodeId }));
 
+const resolveVariableRefsInValue = (
+  value: unknown,
+  variableValues: Record<string, unknown>,
+): unknown => {
+  if (isVariableRef(value)) {
+    return variableValues[value.variableName];
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveVariableRefsInValue(item, variableValues));
+  }
+
+  if (isNodeRef(value) || value === null || typeof value !== "object") {
+    return value;
+  }
+
+  return Object.entries(value as Record<string, unknown>).reduce(
+    (acc, [key, childValue]) => {
+      acc[key] = resolveVariableRefsInValue(childValue, variableValues);
+      return acc;
+    },
+    {} as Record<string, unknown>,
+  );
+};
+
 export const useResolvedProps = (
   node: ComponentNode,
   componentPrototype: ComponentPrototype,
 ) => {
   const previewMode = usePreviewMode();
+  const variableValues = useAppSelector(selectVariableValues);
+  const { createFlowHandler } = useActionFlowHandler();
   const nodeProps = node.props || {};
   const slots = componentPrototype.slots || [];
+  const actionFlowPropPaths = useMemo(
+    () =>
+      Object.values(componentPrototype.propsTypes || {})
+        .filter((prop) => prop.type === "actionFlow")
+        .map((prop) => prop.name),
+    [componentPrototype.propsTypes],
+  );
   const slotRefsMap = useMemo(
     () => collectSlotRefs(nodeProps, slots),
     [nodeProps, slots],
@@ -61,10 +101,34 @@ export const useResolvedProps = (
     mergedProps.children = buildChildrenRefs(node.childrenIds || []);
   }
 
+  const resolvedVariableProps = useMemo(
+    () => resolveVariableRefsInValue(mergedProps, variableValues) as Record<string, unknown>,
+    [mergedProps, variableValues],
+  );
+
+  const executableFlowProps = useMemo(() => {
+    return actionFlowPropPaths.reduce((acc, propPath) => {
+      const flowId = getValueByPath(acc, propPath);
+      if (typeof flowId !== "string" || !flowId) {
+        return acc;
+      }
+
+      return setValueByPath(
+        acc,
+        propPath,
+        createFlowHandler(flowId, {
+          componentId: node.id,
+          componentProps: nodeProps,
+          eventName: propPath,
+        }),
+      );
+    }, resolvedVariableProps);
+  }, [actionFlowPropPaths, createFlowHandler, node.id, nodeProps, resolvedVariableProps]);
+
   return useMemo(
     () =>
       buildResolvedProps({
-        mergedProps,
+        mergedProps: executableFlowProps,
         slots,
         slotRefsMap,
         nodeIdToElement,
@@ -95,7 +159,7 @@ export const useResolvedProps = (
             element
           ),
       }),
-    [mergedProps, slots, slotRefsMap, nodeIdToElement, node.id, previewMode],
+    [executableFlowProps, slots, slotRefsMap, nodeIdToElement, node.id, previewMode],
   );
 };
 

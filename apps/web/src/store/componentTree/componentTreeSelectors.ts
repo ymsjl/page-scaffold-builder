@@ -21,17 +21,23 @@ import {
 } from "./componentTreeSlice";
 
 import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import type { ComponentNode, ProCommonColumn, ComponentType } from "@/types";
+import type {
+  ComponentNode,
+  ProCommonColumn,
+  ComponentType,
+  PrimitiveVariableValue,
+  VariableDefinition,
+} from "@/types";
 import type { EntityModel } from "@/validation";
 import { mapProCommonColumnToProps } from "./mapProCommonColumnToProps";
 import type { ComponentNodeWithColumns } from "@/types/Component";
 import { WritableDraft } from "immer";
-import { createEntityAdapter } from "@reduxjs/toolkit";
 import { ProSchema } from "@ant-design/pro-components";
-
-export const entityModelAdapter = createEntityAdapter<EntityModel>();
-
-export const componentTreeAdapter = createEntityAdapter<ComponentNode>();
+import {
+  componentTreeAdapter,
+  entityModelAdapter,
+  variableAdapter,
+} from "./componentTreeAdapters";
 
 /**
  * 通用类型：支持普通状态和 Immer Draft 状态
@@ -303,8 +309,8 @@ export const selectEntityModelInUse = createSelector(
  */
 export const getEditingColumnPropsResult = (
   editingColumn: Partial<ProCommonColumn> | null,
-): ProSchema<Record<string, any>>=> {
-  if (!editingColumn) return {} ;
+): ProSchema<Record<string, any>> => {
+  if (!editingColumn) return {};
   return mapProCommonColumnToProps(editingColumn);
 };
 export const selectEditingColumnProps = createSelector(
@@ -339,3 +345,50 @@ export const selectEditingEntityModel = createSelector(
   [selectEditingEntityModelId, selectEntityModel],
   getEditingEntityModelResult,
 );
+
+export const getVariables = (state: MaybeWritable<ComponentTreeState>) =>
+  state.variables;
+export const selectVariables = createSelector(
+  selectComponentTreeState,
+  getVariables,
+);
+
+export const variableSelectors = variableAdapter.getSelectors(selectVariables);
+
+export const getIsVariableModalOpen = (state: MaybeWritable<ComponentTreeState>) =>
+  state.isVariableModalOpen;
+export const selectIsVariableModalOpen = createSelector(
+  selectComponentTreeState,
+  getIsVariableModalOpen,
+);
+
+export const getEditingVariableId = (state: MaybeWritable<ComponentTreeState>) =>
+  state.editingVariableId;
+export const selectEditingVariableId = createSelector(
+  selectComponentTreeState,
+  getEditingVariableId,
+);
+
+export const getEditingVariableResult = (
+  editingVariableId: string | null,
+  variablesState: ReturnType<typeof variableAdapter.getInitialState>,
+): VariableDefinition | null => {
+  if (!editingVariableId) return null;
+  return variablesState.entities[editingVariableId] || null;
+};
+export const selectEditingVariable = createSelector(
+  [selectEditingVariableId, selectVariables],
+  getEditingVariableResult,
+);
+
+export const getVariableValues = (state: MaybeWritable<ComponentTreeState>) =>
+  state.variableValues;
+export const selectVariableValues = createSelector(
+  selectComponentTreeState,
+  getVariableValues,
+);
+
+export const selectVariableValueByName = (name: string) =>
+  createSelector(selectVariableValues, (values): PrimitiveVariableValue | undefined => {
+    return values[name];
+  });

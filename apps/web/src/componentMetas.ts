@@ -346,6 +346,13 @@ export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> =
         description: "控制模态框的显示与隐藏",
         defaultValue: false,
       },
+      onCancel: {
+        name: "onCancel",
+        type: "actionFlow",
+        label: "取消事件动作流",
+        description: "模态框取消事件触发的动作流",
+        defaultValue: null,
+      }
     },
     slots: [
       {

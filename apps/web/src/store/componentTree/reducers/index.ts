@@ -12,3 +12,4 @@ export { createColumnEditingReducers } from "./columnEditingReducers";
 export { createRuleNodeReducers } from "./ruleNodeReducers";
 export { createEntityModelReducers } from "./entityModelReducers";
 export { createNodeRefReducers } from "./nodeRefReducers";
+export { createVariablesReducers } from "./variablesReducers";

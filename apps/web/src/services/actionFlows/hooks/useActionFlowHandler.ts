@@ -1,0 +1,36 @@
+import { useCallback } from "react";
+import type { FlowExecutionContext } from "@/types/actions";
+import { useFlowExecutor } from "./useFlowExecutor";
+
+type CreateFlowHandlerOptions = {
+  componentId?: string;
+  componentProps?: Record<string, unknown>;
+  eventName?: string;
+};
+
+export function useActionFlowHandler() {
+  const { executeFlow } = useFlowExecutor();
+
+  const createFlowHandler = useCallback(
+    (flowId: string, options?: CreateFlowHandlerOptions) => {
+      return async (eventData?: unknown, ...args: unknown[]) => {
+        const context: Partial<FlowExecutionContext> = {
+          componentId: options?.componentId,
+          componentProps: options?.componentProps,
+          eventData: {
+            eventName: options?.eventName,
+            payload: eventData,
+            args,
+          },
+        };
+
+        await executeFlow(flowId, context);
+      };
+    },
+    [executeFlow],
+  );
+
+  return {
+    createFlowHandler,
+  };
+}

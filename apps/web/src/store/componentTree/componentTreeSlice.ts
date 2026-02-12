@@ -4,6 +4,7 @@ import {
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { NormalizedComponentTree } from "@/types/Component";
 import type { ProCommonColumn } from "@/types";
+import type { PrimitiveVariableValue } from "@/types";
 import { makeIdCreator } from "@/utils/makeIdCreator";
 import {
   createNodeReducers,
@@ -12,14 +13,16 @@ import {
   createRuleNodeReducers,
   createEntityModelReducers,
   createNodeRefReducers,
+  createVariablesReducers,
 } from "./reducers";
 import { createEmptyNormalizedTree } from "./componentTreeNormalization";
-import { entityModelAdapter } from "./componentTreeSelectors";
+import { entityModelAdapter, variableAdapter } from "./componentTreeAdapters";
 
 export const makeColumnId = makeIdCreator("column");
 export const makeNodeId = makeIdCreator("node");
 export const makeRuleId = makeIdCreator("rule");
 export const makeEntityModelId = makeIdCreator("et");
+export const makeVariableId = makeIdCreator("var");
 
 export interface ComponentTreeState {
   selectedNodeId: string | null;
@@ -30,6 +33,10 @@ export interface ComponentTreeState {
   entityModel: ReturnType<typeof entityModelAdapter.getInitialState>;
   isEntityModelModalOpen: boolean;
   editingEntityModelId: string | null;
+  variables: ReturnType<typeof variableAdapter.getInitialState>;
+  variableValues: Record<string, PrimitiveVariableValue>;
+  isVariableModalOpen: boolean;
+  editingVariableId: string | null;
   propertyPanelNodeIds?: string[];
 }
 
@@ -42,14 +49,21 @@ const initialState: ComponentTreeState = {
   entityModel: entityModelAdapter.getInitialState({}),
   isEntityModelModalOpen: false,
   editingEntityModelId: null,
+  variables: variableAdapter.getInitialState({}),
+  variableValues: {},
+  isVariableModalOpen: false,
+  editingVariableId: null,
   propertyPanelNodeIds: [],
 };
 
-export const componentTreePersistWhitelist = ["entityModel"] as const;
-
 export type ComponentTreeSnapshot = Pick<
   ComponentTreeState,
-  "selectedNodeId" | "expandedKeys" | "normalizedTree" | "entityModel"
+  | "selectedNodeId"
+  | "expandedKeys"
+  | "normalizedTree"
+  | "entityModel"
+  | "variables"
+  | "variableValues"
 >;
 
 const slice = createSlice({
@@ -62,6 +76,7 @@ const slice = createSlice({
     ...createColumnEditingReducers(),
     ...createRuleNodeReducers(),
     ...createEntityModelReducers(),
+    ...createVariablesReducers(),
     hydrateFromSnapshot: (
       state,
       action: PayloadAction<Partial<ComponentTreeSnapshot>>,
@@ -80,11 +95,19 @@ const slice = createSlice({
       if (next.entityModel) {
         state.entityModel = next.entityModel;
       }
+      if (next.variables) {
+        state.variables = next.variables;
+      }
+      if (next.variableValues) {
+        state.variableValues = next.variableValues;
+      }
 
       state.editingColumn = null;
       state.isSchemaBuilderModalOpen = false;
       state.isEntityModelModalOpen = false;
       state.editingEntityModelId = null;
+      state.isVariableModalOpen = false;
+      state.editingVariableId = null;
       state.propertyPanelNodeIds = [];
     },
   },

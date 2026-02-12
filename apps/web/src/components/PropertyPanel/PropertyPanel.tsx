@@ -4,7 +4,7 @@ import {
   BetaSchemaForm,
   ProFormColumnsType,
 } from "@ant-design/pro-components";
-import { Button, Flex, Form, List, Space, Typography } from "antd";
+import { Button, Flex, Form, Input, InputNumber, List, Select, Space, Typography } from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   componentNodesSelectors,
@@ -12,11 +12,18 @@ import {
   selectColumnsOfSelectedNode,
   selectNodeInPropertyPanel,
   selectShowBackInPropertyPanel,
+  variableSelectors,
 } from "@/store/componentTree/componentTreeSelectors";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { SchemaList } from "../SchemaBuilderModal/SchemaList";
 import { getComponentPrototype } from "@/componentMetas";
-import { ComponentNode, isNodeRef, PropAttribute } from "@/types";
+import {
+  ComponentNode,
+  isNodeRef,
+  isVariableRef,
+  PropAttribute,
+  PrimitiveVariableValue,
+} from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
 import { AppstoreOutlined, LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
 import { ActionFlowSelector } from "./ActionFlowSelector";
@@ -83,6 +90,100 @@ const FORM_STYLES: React.CSSProperties = {
 const normalizePropPath = (name: string | string[]) =>
   Array.isArray(name) ? name.join(".") : name;
 
+const buildNestedPropValue = (name: string | string[], value: unknown) => {
+  if (!Array.isArray(name)) {
+    return { [name]: value };
+  }
+  return name
+    .slice()
+    .reverse()
+    .reduce((acc, current) => ({ [current]: acc }), value as any);
+};
+
+const isPrimitivePropType = (type: FlattenedPropAttribute["type"]) =>
+  type === "string" || type === "number" || type === "boolean";
+
+const getDefaultPrimitiveValue = (type: FlattenedPropAttribute["type"]): PrimitiveVariableValue => {
+  if (type === "boolean") return false;
+  if (type === "number") return 0;
+  return "";
+};
+
+interface VariableBindingEditorProps {
+  item: FlattenedPropAttribute;
+  form: ReturnType<typeof Form.useForm>[0];
+  variableNames: string[];
+  onSetValue: (name: string | string[], value: unknown) => void;
+}
+
+const VariableBindingEditor: React.FC<VariableBindingEditorProps> = ({
+  item,
+  form,
+  variableNames,
+  onSetValue,
+}) => {
+  const currentValue = Form.useWatch(item.name as any, form);
+  const isVariable = isVariableRef(currentValue);
+
+  return (
+    <Flex vertical gap={8}>
+      <Select
+        value={isVariable ? "variable" : "constant"}
+        options={[
+          { label: "常量", value: "constant" },
+          { label: "变量", value: "variable" },
+        ]}
+        onChange={(source) => {
+          if (source === "variable") {
+            const fallbackVariableName = variableNames[0];
+            if (!fallbackVariableName) return;
+            onSetValue(item.name, {
+              type: "variableRef",
+              variableName: fallbackVariableName,
+            });
+            return;
+          }
+          onSetValue(item.name, getDefaultPrimitiveValue(item.type));
+        }}
+      />
+
+      {isVariable ? (
+        <Select
+          value={currentValue?.variableName}
+          options={variableNames.map((name) => ({ label: name, value: name }))}
+          onChange={(variableName) => {
+            onSetValue(item.name, { type: "variableRef", variableName });
+          }}
+        />
+      ) : item.type === "boolean" ? (
+        <Select
+          value={Boolean(currentValue)}
+          options={[
+            { label: "true", value: true },
+            { label: "false", value: false },
+          ]}
+          onChange={(nextValue) => onSetValue(item.name, nextValue)}
+        />
+      ) : item.type === "number" ? (
+        <InputNumber
+          value={typeof currentValue === "number" ? currentValue : undefined}
+          style={{ width: "100%" }}
+          onChange={(nextValue) => {
+            if (typeof nextValue === "number") {
+              onSetValue(item.name, nextValue);
+            }
+          }}
+        />
+      ) : (
+        <Input
+          value={typeof currentValue === "string" ? currentValue : ""}
+          onChange={(event) => onSetValue(item.name, event.target.value)}
+        />
+      )}
+    </Flex>
+  );
+};
+
 const getNodeRefIdsFromProp = (
   props: Record<string, any> | undefined,
   propPath: string,
@@ -112,6 +213,7 @@ const PropertyPanel: React.FC = () => {
   const selectedNodeId = selectedNode?.id;
   const selectedComponentType = selectedNode?.type;
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
+  const variables = useAppSelector(variableSelectors.selectAll);
   const nodesById = useAppSelector(componentNodesSelectors.selectEntities);
   const columns = useAppSelector(selectColumnsOfSelectedNode);
   const [form] = Form.useForm();
@@ -148,6 +250,25 @@ const PropertyPanel: React.FC = () => {
         {} as Record<string, { text: string }>,
       ),
     [entityModels],
+  );
+
+  const variableNames = useMemo(
+    () => variables.map((item) => item.name),
+    [variables],
+  );
+
+  const setPropValue = useCallback(
+    (name: string | string[], value: unknown) => {
+      if (!selectedNodeId) return;
+      form.setFieldValue(name as any, value);
+      dispatch(
+        componentTreeActions.updateNodeProps({
+          id: selectedNodeId,
+          props: buildNestedPropValue(name, value),
+        }),
+      );
+    },
+    [dispatch, form, selectedNodeId],
   );
 
   const componentPrototype = useMemo(
@@ -332,6 +453,15 @@ const PropertyPanel: React.FC = () => {
       } else if (item.type === "reactNode" || item.type === "reactNodeArray") {
         result.renderFormItem = () => renderComponentPropList(item);
         result.valueType = "text";
+      } else if (isPrimitivePropType(item.type) && variableNames.length > 0) {
+        result.renderFormItem = () => (
+          <VariableBindingEditor
+            item={item}
+            form={form}
+            variableNames={variableNames}
+            onSetValue={setPropValue}
+          />
+        );
       }
 
       return result;
@@ -342,6 +472,9 @@ const PropertyPanel: React.FC = () => {
       renderSchemaList,
       renderActionFlowSelector,
       renderComponentPropList,
+      variableNames,
+      form,
+      setPropValue,
     ],
   );
 

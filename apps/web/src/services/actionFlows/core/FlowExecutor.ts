@@ -96,6 +96,26 @@ export class FlowExecutor {
   /**
    * 执行单个节点
    */
+  private resolveStrategyType(nodeType: string): string {
+    if (this.strategyRegistry.hasStrategy(nodeType)) {
+      return nodeType;
+    }
+
+    const aliasMap: Record<string, string> = {
+      "action.httpRequest": "httpRequest",
+      "action.navigate": "navigate",
+      "action.showMessage": "showMessage",
+      "control.delay": "delay",
+    };
+
+    const mappedType = aliasMap[nodeType];
+    if (mappedType && this.strategyRegistry.hasStrategy(mappedType)) {
+      return mappedType;
+    }
+
+    return nodeType;
+  }
+
   private async executeNode(
     node: ActionNodeBase,
     flow: ActionFlow,
@@ -113,11 +133,12 @@ export class FlowExecutor {
 
     try {
       // 获取节点策略
-      if (!this.strategyRegistry.hasStrategy(node.type)) {
+      const strategyType = this.resolveStrategyType(node.type);
+      if (!this.strategyRegistry.hasStrategy(strategyType)) {
         throw new Error(`Unknown node type: ${node.type}`);
       }
 
-      const strategy = this.strategyRegistry.getStrategy(node.type);
+      const strategy = this.strategyRegistry.getStrategy(strategyType);
 
       // 准备输入数据（从上游节点的输出中提取）
       const inputs = this.resolveNodeInputs(node, flow, context);
@@ -158,7 +179,13 @@ export class FlowExecutor {
     incomingEdges.forEach(edge => {
       // 从上游节点的输出中获取数据
       const sourceOutputs = context.nodeOutputs[edge.source] as Record<string, any> | undefined;
-      if (sourceOutputs && typeof sourceOutputs === 'object' && edge.sourcePort in sourceOutputs) {
+      if (
+        sourceOutputs &&
+        typeof sourceOutputs === 'object' &&
+        typeof edge.sourcePort === 'string' &&
+        typeof edge.targetPort === 'string' &&
+        edge.sourcePort in sourceOutputs
+      ) {
         inputs[edge.targetPort] = sourceOutputs[edge.sourcePort];
       }
     });

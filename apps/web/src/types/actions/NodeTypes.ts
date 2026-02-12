@@ -139,17 +139,18 @@ export const NODE_TYPE_SCHEMAS = {
   start: StartNodeParamsSchema,
   condition: ConditionNodeParamsSchema,
   loop: LoopNodeParamsSchema,
-  
+
   // 数据处理
   transform: TransformNodeParamsSchema,
   setVariable: SetVariableNodeParamsSchema,
-  
+  "action.setVariable": SetVariableNodeParamsSchema,
+
   // 内置 Actions
   httpRequest: HttpRequestNodeParamsSchema,
   navigate: NavigateNodeParamsSchema,
   showMessage: ShowMessageNodeParamsSchema,
   delay: DelayNodeParamsSchema,
-  
+
   // 组件 Actions
   "table.refresh": TableRefreshNodeParamsSchema,
   "table.setSelectedRows": TableSetSelectedRowsNodeParamsSchema,
@@ -175,6 +176,7 @@ export type ActionNodeType =
   | 'data.merge'
   | 'data.filter'
   | 'action.httpRequest'
+  | 'action.setVariable'
   | 'action.navigate'
   | 'action.showMessage'
   | 'action.confirm'
@@ -186,7 +188,7 @@ export type ActionNodeType =
   | 'component.modal.close';
 
 /** 所有节点参数类型的联合类型 */
-export type NodeParams = 
+export type NodeParams =
   | StartNodeParams
   | ConditionNodeParams
   | LoopNodeParams

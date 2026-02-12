@@ -3,6 +3,7 @@ import { HttpRequestNodeStrategy } from "./HttpRequestNodeStrategy";
 import { NavigateNodeStrategy } from "./NavigateNodeStrategy";
 import { ShowMessageNodeStrategy } from "./ShowMessageNodeStrategy";
 import { DelayNodeStrategy } from "./DelayNodeStrategy";
+import { SetVariableNodeStrategy } from "./SetVariableNodeStrategy";
 
 /**
  * 节点策略注册表
@@ -22,10 +23,11 @@ export class NodeStrategyRegistry {
   private registerDefaultStrategies(): void {
     // 内置 Actions
     this.register(new HttpRequestNodeStrategy());
+    this.register(new SetVariableNodeStrategy());
     this.register(new NavigateNodeStrategy());
     this.register(new ShowMessageNodeStrategy());
     this.register(new DelayNodeStrategy());
-    
+
     // 后续可以添加更多策略
     // this.register(new TableRefreshNodeStrategy());
     // this.register(new FormSubmitNodeStrategy());

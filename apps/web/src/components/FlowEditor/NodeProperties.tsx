@@ -3,6 +3,8 @@ import { Form, Input, Select, InputNumber, Button, Space, Divider } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { ActionNode } from '@/types/actions';
 import { useActionFlow } from '@/services/actionFlows/hooks/useActionFlow';
+import { useAppSelector } from '@/store/hooks';
+import { variableSelectors } from '@/store/componentTree/componentTreeSelectors';
 import './NodeProperties.css';
 
 const { TextArea } = Input;
@@ -23,6 +25,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
   onClose,
 }) => {
   const { updateNode, deleteNodes } = useActionFlow();
+  const variables = useAppSelector(variableSelectors.selectAll);
   const [form] = Form.useForm();
   const [localParams, setLocalParams] = useState<Record<string, any>>({});
 
@@ -106,6 +109,32 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
                 <Option value={false}>否</Option>
                 <Option value={true}>是</Option>
               </Select>
+            </Form.Item>
+          </>
+        );
+
+      case 'action.setVariable':
+        return (
+          <>
+            <Form.Item
+              label="变量"
+              name="variableName"
+              rules={[{ required: true, message: "请选择变量" }]}
+            >
+              <Select
+                placeholder="选择变量"
+                options={variables.map((item) => ({
+                  label: item.name,
+                  value: item.name,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item
+              label="设置值"
+              name="value"
+              rules={[{ required: true, message: "请输入设置值" }]}
+            >
+              <Input placeholder="支持 boolean/string/number，例如 false" />
             </Form.Item>
           </>
         );

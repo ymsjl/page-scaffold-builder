@@ -7,6 +7,7 @@
 // Hooks
 export { useFlowExecutor } from "./hooks/useFlowExecutor";
 export { useActionFlow } from "./hooks/useActionFlow";
+export { useActionFlowHandler } from "./hooks/useActionFlowHandler";
 
 // 执行引擎
 export { FlowExecutor } from "./core/FlowExecutor";

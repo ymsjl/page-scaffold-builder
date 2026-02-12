@@ -97,6 +97,13 @@ const NODE_LIBRARY: NodeTypeDefinition[] = [
     category: '动作',
   },
   {
+    type: 'action.setVariable',
+    name: '设置变量',
+    description: '设置全局变量的值',
+    icon: '🧮',
+    category: '动作',
+  },
+  {
     type: 'action.navigate',
     name: '页面导航',
     description: '跳转到指定页面',

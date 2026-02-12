@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "./store/hooks";
 import {
   entityModelSelectors,
   componentNodesSelectors,
+  variableSelectors,
 } from "./store/componentTree/componentTreeSelectors";
 import { componentTreeActions } from "./store/componentTree/componentTreeSlice";
 import EntityModelDesignerPanel from "./components/EntityModelDesigner/EntityModelDesignerPanel";
@@ -15,6 +16,7 @@ import ComponentPreview from "./components/ComponentPreview/ComponentPreview";
 import PropertyPanel from "./components/PropertyPanel/PropertyPanel";
 import { ProCard } from "@ant-design/pro-components";
 import { DragDropProvider } from "./contexts/DragDropContext";
+import VariableDesignerPanel from "./components/VariablesDesigner/VariableDesignerPanel";
 
 const styles: { [key: string]: React.CSSProperties } = {
   builder: {
@@ -54,7 +56,12 @@ const DragOverlayContent: React.FC<{ nodeId: string | null }> = ({ nodeId }) => 
 export function PageScaffoldBuilderLayout() {
   const dispatch = useAppDispatch();
   const entityModels = useAppSelector(entityModelSelectors.selectAll);
+  const variables = useAppSelector(variableSelectors.selectAll);
   const [activeNodeId, setActiveNodeId] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    dispatch(componentTreeActions.resetVariableValues());
+  }, [dispatch]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -194,6 +201,48 @@ export function PageScaffoldBuilderLayout() {
                   ))}
                 </Space>
               </ProCard>
+              <ProCard
+                bordered
+                headerBordered
+                style={{ marginTop: 16, borderRadius: 8 }}
+                size="small"
+                collapsible={true}
+                title="变量管理"
+                extra={
+                  <Button
+                    icon={<PlusOutlined />}
+                    size='small'
+                    onClick={() => dispatch(componentTreeActions.startCreateVariable())}
+                    type="text"
+                  />
+                }
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  {variables?.map((variable) => (
+                    <div
+                      key={variable.id}
+                      onClick={() => dispatch(componentTreeActions.startEditVariable(variable.id))}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Typography.Text>{variable.name}</Typography.Text>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        danger
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dispatch(componentTreeActions.deleteVariable(variable.id));
+                        }}
+                      />
+                    </div>
+                  ))}
+                </Space>
+              </ProCard>
             </Layout.Sider>
 
             <Layout.Content style={{ height: "100%", overflow: "hidden", padding: "16px 12px" }}>
@@ -210,6 +259,7 @@ export function PageScaffoldBuilderLayout() {
             </Layout.Sider>
           </Layout>
           <EntityModelDesignerPanel />
+          <VariableDesignerPanel />
         </Layout>
         <DragOverlay>
           <DragOverlayContent nodeId={activeNodeId} />

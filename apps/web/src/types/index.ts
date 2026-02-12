@@ -2,3 +2,9 @@ export type { SchemaField, EntityModel, PropAttribute } from '../validation';
 export type { ComponentInstance, ComponentPrototype, ComponentNode, NormalizedComponentTree, ComponentType, ComponentId, NodeRef, ToolbarActionButtonProps, SlotDefinition } from './Component';
 export { isNodeRef } from './Component';
 export type { ProCommonColumn, ProValueEnum, ColumnSchema } from './tableColumsTypes'
+export type {
+  PrimitiveVariableValue,
+  VariableDefinition,
+  VariableRef,
+} from "./Variable";
+export { isVariableRef } from "./Variable";

@@ -3,7 +3,7 @@ import { WritableDraft } from "immer";
 import type { EntityModel } from "@/types";
 import type { ComponentTreeState } from "../componentTreeSlice";
 import { makeEntityModelId } from "../componentTreeSlice";
-import { entityModelAdapter } from "../componentTreeSelectors";
+import { entityModelAdapter } from "../componentTreeAdapters";
 
 type UpdateFieldExtraPayload = {
   entityModelId: string;
@@ -94,9 +94,9 @@ export const createEntityModelReducers = () => {
           fields: entity.fields.map((field) =>
             field.id === fieldId
               ? {
-                  ...field,
-                  extra,
-                }
+                ...field,
+                extra,
+              }
               : field,
           ),
         },
