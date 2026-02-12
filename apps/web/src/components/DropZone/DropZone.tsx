@@ -123,11 +123,6 @@ export const DropZone: React.FC<DropZoneProps> = ({
         <div className="drop-zone__icon" aria-hidden>
           +
         </div>
-        {label && (
-          <Typography.Text type="secondary" className="drop-zone__label">
-            {label}
-          </Typography.Text>
-        )}
       </div>
     </Popover>
   );

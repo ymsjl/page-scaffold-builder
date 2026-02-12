@@ -1,26 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Flex, Input, message, Modal, Tag } from "antd";
+import React, { useCallback, useMemo, useState } from "react";
+import { Button, Flex, message, Modal } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import {
-  EditableProTable,
   ProForm,
   ProFormItemRender,
   ProFormText,
 } from "@ant-design/pro-components";
-import {
-  EditOutlined,
-  SaveOutlined,
-  SettingOutlined,
-  DeleteOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
 
-import type { EntityModel, SchemaField } from "@/types";
-import { SchemaFieldSchema } from "@/validation";
+import type { EntityModel } from "@/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import { mapParsedSqlToEntityModel } from "@/store/api/sqlMapping";
-import { parseSqlToEntityModel } from "@/utils/sqlParser";
 import {
   selectEditingEntityModel,
   selectIsEntityModelModalOpen,
@@ -28,44 +17,38 @@ import {
 
 import "./styles.css";
 
-type EnumOption = {
-  id: string;
-  label: string;
-  value: string;
-};
+import type { EnumOption } from "./entityModelDesignerTypes";
+import { EntityModelDesignerSubModals } from "./EntityModelDesignerSubModals";
+import { EntityModelFieldsTable } from "./EntityModelFieldsTable";
+import { useEnumAdvancedModal } from "./hooks/useEnumAdvancedModal";
+import { useSqlImportModal } from "./hooks/useSqlImportModal";
+import { useSyncFormOnModalOpen } from "./hooks/useSyncFormOnModalOpen";
 
 export default function EntityModelDesignerPanel() {
   const isOpen = useAppSelector(selectIsEntityModelModalOpen);
-  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
-  const [sqlInput, setSqlInput] = useState("");
-  const [isParsingSql, setIsParsingSql] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [fieldEditableKeys, setFieldEditableKeys] = useState<React.Key[]>([]);
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [advancedFieldId, setAdvancedFieldId] = useState<string | null>(null);
-  const [enumOptions, setEnumOptions] = useState<EnumOption[]>([]);
-  const [enumEditableKeys, setEnumEditableKeys] = useState<React.Key[]>([]);
   const dispatch = useAppDispatch();
   const editingEntityModel = useAppSelector(selectEditingEntityModel);
   const [form] = ProForm.useForm<EntityModel>();
+
+  useSyncFormOnModalOpen({ isOpen, editingEntityModel, form });
+
+  const sqlImportModal = useSqlImportModal({ dispatch });
+  const enumAdvancedModal = useEnumAdvancedModal({
+    form,
+    entityModelId: editingEntityModel?.id,
+    dispatch,
+  });
+
+  const closeEnumAdvancedModal = enumAdvancedModal.close;
+  const closeSqlImportModal = sqlImportModal.close;
 
   const currentTableEditingKey = fieldEditableKeys?.length
     ? String(fieldEditableKeys[0])
     : null;
   const isTableEditing = Boolean(currentTableEditingKey);
-  const isOpenPrevRef = React.useRef(isOpen);
-
-  useEffect(() => {
-    if (isOpen && !isOpenPrevRef.current) {
-      form.setFieldsValue({ ...editingEntityModel });
-    }
-  }, [isOpen, editingEntityModel, form]);
 
   const primaryKey = ProForm.useWatch("primaryKey", form);
-
-  useEffect(() => {
-    isOpenPrevRef.current = isOpen;
-  }, [isOpen]);
 
   const setAsPrimaryKey = useCallback(
     (key: string) => {
@@ -83,12 +66,10 @@ export default function EntityModelDesignerPanel() {
   const onClose = useCallback(() => {
     // Close main modal
     dispatch(componentTreeActions.closeEntityModelModal());
-    // Also reset advanced enum modal state to avoid stale or dangling UI
-    setIsAdvancedOpen(false);
-    setAdvancedFieldId(null);
-    setEnumOptions([]);
-    setEnumEditableKeys([]);
-  }, [dispatch]);
+    // Also reset sub-modals state to avoid stale or dangling UI
+    closeEnumAdvancedModal();
+    closeSqlImportModal();
+  }, [dispatch, closeEnumAdvancedModal, closeSqlImportModal]);
 
   const handleSaveEntity = useCallback(() => {
     if (isTableEditing) {
@@ -96,184 +77,15 @@ export default function EntityModelDesignerPanel() {
       return;
     }
 
-    if (editingId) {
+    if (enumAdvancedModal.isOpen) {
       message.warning("请先完成字段高级编辑");
       return;
     }
 
-    dispatch(
-      componentTreeActions.applyEntityModelChange(form.getFieldsValue()),
-    );
+    dispatch(componentTreeActions.applyEntityModelChange(form.getFieldsValue()));
     message.success("已保存");
     onClose();
-  }, [editingId, onClose, isTableEditing, form]);
-
-  const handleOpenSqlModal = useCallback(() => {
-    setSqlInput("");
-    setIsSqlModalOpen(true);
-  }, []);
-
-  const handleImportSql = useCallback(async () => {
-    const trimmed = sqlInput.trim();
-    if (!trimmed) {
-      message.warning("请输入 SQL 建表语句");
-      return;
-    }
-
-    try {
-      setIsParsingSql(true);
-      const response = await parseSqlToEntityModel(trimmed);
-      const entity = mapParsedSqlToEntityModel(response.model);
-      dispatch(componentTreeActions.applyEntityModelChange(entity));
-      if (response.warnings?.length) {
-        message.warning(response.warnings.join("\n"));
-      } else {
-        message.success("SQL 解析完成，已生成实体模型");
-      }
-      setIsSqlModalOpen(false);
-    } catch (error) {
-      message.error((error as Error)?.message || "SQL 解析失败");
-    } finally {
-      setIsParsingSql(false);
-    }
-  }, [dispatch, sqlInput]);
-
-  const closeAdvancedModal = useCallback(() => {
-    setIsAdvancedOpen(false);
-    setAdvancedFieldId(null);
-    setEnumOptions([]);
-    setEnumEditableKeys([]);
-    setEditingId(null);
-  }, []);
-
-  const handleSaveAdvanced = useCallback(() => {
-    if (!advancedFieldId) return;
-    const fields = (form.getFieldValue("fields") as SchemaField[]) || [];
-    const nextExtra = { enum: enumOptions.map(({ label, value }) => ({ label, value })) };
-    const nextFields = fields.map((field) =>
-      field.id === advancedFieldId
-        ? {
-            ...field,
-            extra: nextExtra,
-          }
-        : field,
-    );
-
-    form.setFieldValue("fields", nextFields);
-
-    if (editingEntityModel?.id) {
-      dispatch(
-        componentTreeActions.updateEntityFieldExtra({
-          entityModelId: editingEntityModel.id,
-          fieldId: advancedFieldId,
-          extra: nextExtra,
-        }),
-      );
-    }
-
-    message.success("已更新枚举配置");
-    closeAdvancedModal();
-  }, [advancedFieldId, closeAdvancedModal, dispatch, editingEntityModel?.id, enumOptions, form]);
-
-  const fieldTableColumns = useMemo<ProColumns<SchemaField>[]>(() => {
-    return [
-      {
-        title: "字段名",
-        dataIndex: "title",
-        width: 200,
-        ellipsis: true,
-        fieldProps: { style: { width: "100%" } },
-        formItemProps: {
-          rules: [
-            { required: true, whitespace: true, message: "请输入字段名" },
-          ],
-        },
-        render: (_, item) => `${item.title || "(未命名)"}`,
-      },
-      {
-        title: "key",
-        dataIndex: "key",
-        width: 180,
-        ellipsis: true,
-        fieldProps: { style: { width: "100%" } },
-        formItemProps: {
-          rules: [{ required: true, whitespace: true, message: "请输入 key" }],
-        },
-        renderText: (val) => val || "-",
-        render: (node, item) => {
-          return (
-            <Flex style={{ width: "100%" }}>
-              {node}
-              {primaryKey !== item.key ? (
-                <Button
-                  className="set-as-pk-button"
-                  size="small"
-                  type="link"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAsPrimaryKey(item.key);
-                  }}
-                >
-                  设为主键
-                </Button>
-              ) : (
-                <Tag color="yellow">PK</Tag>
-              )}
-            </Flex>
-          );
-        },
-      },
-      {
-        title: "valueType",
-        dataIndex: "valueType",
-        valueType: "select",
-        width: 120,
-        ellipsis: true,
-        fieldProps: { style: { width: "100%" } },
-        formItemProps: {
-          rules: [{ required: true, whitespace: true, message: "请选择 type" }],
-        },
-        valueEnum: {
-          text: { text: "text" },
-          number: { text: "number" },
-          money: { text: "money" },
-          boolean: { text: "boolean" },
-          enum: { text: "enum" },
-          date: { text: "date" },
-          datetime: { text: "datetime" },
-        },
-        render: (_, item) => String(item.valueType || "text"),
-      },
-      {
-        title: "可为 null",
-        dataIndex: "isNullable",
-        valueType: "switch",
-        width: 72,
-        align: "center",
-        fieldProps: {
-          checkedChildren: "是",
-          unCheckedChildren: "否",
-        },
-      },
-      {
-        title: "可筛选",
-        dataIndex: "isFilterable",
-        valueType: "switch",
-        width: 72,
-        align: "center",
-        fieldProps: {
-          checkedChildren: "是",
-          unCheckedChildren: "否",
-        },
-      },
-    ];
-  }, [
-    currentTableEditingKey,
-    isTableEditing,
-    primaryKey,
-    setEditingId,
-    setFieldEditableKeys,
-  ]);
+  }, [enumAdvancedModal.isOpen, onClose, isTableEditing, form]);
 
   const enumTableColumns = useMemo<ProColumns<EnumOption>[]>(() => {
     return [
@@ -309,7 +121,7 @@ export default function EntityModelDesignerPanel() {
         okText="保存"
       >
         <Flex justify="flex-end" style={{ marginBottom: 12 }}>
-          <Button onClick={handleOpenSqlModal}>从 SQL 导入</Button>
+          <Button onClick={sqlImportModal.open}>从 SQL 导入</Button>
         </Flex>
         <ProForm<EntityModel>
           grid
@@ -340,237 +152,27 @@ export default function EntityModelDesignerPanel() {
             style={{ width: "100%" }}
           >
             {(props) => (
-              <EditableProTable<SchemaField>
-                rowKey="id"
-                size="small"
-                columns={fieldTableColumns.concat([
-                  {
-                    title: "操作",
-                    valueType: "option",
-                    width: 280,
-                    render: (_, item, _index, action) => {
-                      const itemId = String(item.id);
-                      const disableEditBtn =
-                        isTableEditing &&
-                        String(currentTableEditingKey) !== itemId;
-
-                      return [
-                        <Button
-                          key="edit"
-                          size="small"
-                          disabled={disableEditBtn}
-                          icon={<EditOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const ok = action?.startEditable?.(item.id);
-                            if (ok === false) return;
-                            setFieldEditableKeys([item.id]);
-                          }}
-                        >
-                          编辑
-                        </Button>,
-                        <Button
-                          key="advEdit"
-                          size="small"
-                          icon={<SettingOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (String(item.valueType) !== "enum") {
-                              message.info("当前仅支持 enum 类型的高级设置");
-                              return;
-                            }
-                            const fieldExtra = item.extra?.enum;
-                            const initialOptions = Array.isArray(fieldExtra)
-                              ? fieldExtra
-                                  .filter((opt) => opt && typeof opt === "object")
-                                  .map((opt, index) => ({
-                                    id: `enum_${item.id}_${index}`,
-                                    label: String((opt as any).label ?? ""),
-                                    value: String((opt as any).value ?? ""),
-                                  }))
-                              : [];
-                            setEnumOptions(initialOptions);
-                            setEnumEditableKeys([]);
-                            setAdvancedFieldId(String(item.id));
-                            setEditingId(String(item.id));
-                            setIsAdvancedOpen(true);
-                          }}
-                        >
-                          高级
-                        </Button>,
-                        <Button
-                          key="del"
-                          danger
-                          icon={<DeleteOutlined />}
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            Modal.confirm({
-                              title: "确认删除？",
-                              content: "删除后不可恢复",
-                              okText: "删除",
-                              okButtonProps: { danger: true },
-                              cancelText: "取消",
-                              onOk: () => {
-                                const next = (
-                                  (props.value as SchemaField[]) || []
-                                ).filter((r) => r.id !== itemId);
-                                props.onChange?.(next);
-                              },
-                            });
-                          }}
-                        >
-                          删除
-                        </Button>,
-                      ].filter(Boolean);
-                    },
-                  },
-                ])}
-                tableLayout="fixed"
+              <EntityModelFieldsTable
                 value={props.value || []}
-                bordered
-                onChange={(nextFields) =>
-                  props.onChange && props.onChange(nextFields)
-                }
-                search={false}
-                options={false}
-                ghost
-                controlled
-                recordCreatorProps={
-                  isTableEditing
-                    ? false
-                    : {
-                      position: "bottom",
-                      newRecordType: "dataSource",
-                      creatorButtonText: "添加一行数据",
-                      record: () => {
-                        const newField: SchemaField = {
-                          id: `field_${Math.random().toString(36).slice(2, 9)}`,
-                          key: "",
-                          title: "",
-                          valueType: "text",
-                          isNullable: false,
-                          isUnique: false,
-                          isFilterable: true,
-                          isAutoGenerate: false,
-                          description: "",
-                          defaultValue: undefined,
-                          extra: {},
-                        };
-                        return newField;
-                      },
-                    }
-                }
-                pagination={false}
-                locale={{ emptyText: "暂无字段，请点击“添加字段”" }}
-                editable={{
-                  type: "single",
-                  editableKeys: fieldEditableKeys,
-                  onChange: (keys) =>
-                    setFieldEditableKeys((keys || []).slice(0, 1)),
-                  actionRender: (row, _config, defaultDom) => {
-                    const saveDom = React.isValidElement(defaultDom.save)
-                      ? React.cloneElement(defaultDom.save as any, {
-                        children: (
-                          <Button
-                            size="small"
-                            type="primary"
-                            onClick={(e) => {
-                              const { error } =
-                                SchemaFieldSchema.safeParse(row);
-                              if (error) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                message.error(error.message);
-                              }
-                            }}
-                          >
-                            <SaveOutlined />
-                            保存
-                          </Button>
-                        ),
-                      })
-                      : defaultDom.save;
-
-                    const cancelDom = React.isValidElement(defaultDom.cancel)
-                      ? React.cloneElement(defaultDom.cancel as any, {
-                        children: (
-                          <Button
-                            size="small"
-                            type="default"
-                            onClick={(e) => {
-                              const { error } =
-                                SchemaFieldSchema.safeParse(row);
-                              if (error) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                message.error(error.message);
-                              }
-                            }}
-                          >
-                            <CloseOutlined />
-                            取消
-                          </Button>
-                        ),
-                      })
-                      : defaultDom.cancel;
-                    return [saveDom, cancelDom];
-                  },
-                }}
+                onChange={props.onChange}
+                primaryKey={primaryKey}
+                onSetPrimaryKey={setAsPrimaryKey}
+                isTableEditing={isTableEditing}
+                currentTableEditingKey={currentTableEditingKey}
+                fieldEditableKeys={fieldEditableKeys}
+                setFieldEditableKeys={setFieldEditableKeys}
+                onOpenEnumAdvanced={enumAdvancedModal.openForField}
               />
             )}
           </ProFormItemRender>
         </ProForm>
       </Modal>
-      <Modal
-        title="从 SQL 导入"
-        open={isSqlModalOpen}
-        onCancel={() => setIsSqlModalOpen(false)}
-        onOk={handleImportSql}
-        okText="解析并导入"
-        confirmLoading={isParsingSql}
-      >
-        <Input.TextArea
-          rows={6}
-          placeholder="请输入 MySQL CREATE TABLE 语句"
-          value={sqlInput}
-          onChange={(event) => setSqlInput(event.target.value)}
-        />
-      </Modal>
-      <Modal
-        title="枚举高级设置"
-        open={isAdvancedOpen}
-        onCancel={closeAdvancedModal}
-        onOk={handleSaveAdvanced}
-        okText="完成"
-        destroyOnClose
-      >
-        <EditableProTable<EnumOption>
-          rowKey="id"
-          size="small"
-          columns={enumTableColumns}
-          value={enumOptions}
-          onChange={(next) => setEnumOptions(next || [])}
-          recordCreatorProps={{
-            position: "bottom",
-            newRecordType: "dataSource",
-            creatorButtonText: "新增枚举项",
-            record: () => ({
-              id: `enum_${Math.random().toString(36).slice(2, 9)}`,
-              label: "",
-              value: "",
-            }),
-          }}
-          editable={{
-            type: "single",
-            editableKeys: enumEditableKeys,
-            onChange: (keys) => setEnumEditableKeys((keys || []).slice(0, 1)),
-          }}
-          pagination={false}
-          search={false}
-          options={false}
-        />
-      </Modal>
+
+      <EntityModelDesignerSubModals
+        sqlImportModal={sqlImportModal}
+        enumAdvancedModal={enumAdvancedModal}
+        enumTableColumns={enumTableColumns}
+      />
     </>
   );
 }

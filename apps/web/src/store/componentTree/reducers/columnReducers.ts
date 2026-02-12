@@ -5,7 +5,7 @@ import type { ComponentNodeWithColumns } from "@/types/Component";
 import type { ComponentTreeState } from "../componentTreeSlice";
 import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
 import { makeColumnId } from "../componentTreeSlice";
-import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/useAutoFillByDataIndex";
+import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField";
 import { entityModelAdapter, getSelectedNodeWithColumns } from "../componentTreeSelectors";
 
 const upsertColumnOnNode = (

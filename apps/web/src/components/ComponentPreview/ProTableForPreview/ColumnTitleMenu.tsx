@@ -4,7 +4,7 @@ import type { MenuProps } from "antd";
 import type { ProCommonColumn, SchemaField } from "@/types";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { useAppDispatch } from "@/store/hooks";
-import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/useAutoFillByDataIndex";
+import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField";
 import { DeleteOutlined, EditOutlined, EllipsisOutlined, EyeInvisibleOutlined, EyeOutlined, MoreOutlined, NumberOutlined, PlusOutlined } from "@ant-design/icons";
 
 type ColumnTitleMenuProps = {
