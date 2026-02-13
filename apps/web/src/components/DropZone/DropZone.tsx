@@ -82,26 +82,28 @@ export const DropZone: React.FC<DropZoneProps> = ({
     setIsPopoverOpen(false);
   };
 
-  const popoverContent = filteredComponents.length > 0 ? (
-    <ul style={{ listStyle: "none", margin: 0, padding: 0, overflowY: "auto" }}>
-      {filteredComponents.map((item, index) => (
-        <li
-          key={item.type}
-          style={{
-            cursor: "pointer",
-            padding: "4px 12px",
-            fontSize: '14px',
-          }}
-          onClick={() => handleSelectComponent(item.type)}
-        >
-          {item.label}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <Typography.Text type="secondary">暂无可添加组件</Typography.Text>
-  );
-
+  const popoverContent =
+    filteredComponents.length > 0 ? (
+      <ul
+        style={{ listStyle: "none", margin: 0, padding: 0, overflowY: "auto" }}
+      >
+        {filteredComponents.map((item, index) => (
+          <li
+            key={item.type}
+            style={{
+              cursor: "pointer",
+              padding: "4px 12px",
+              fontSize: "14px",
+            }}
+            onClick={() => handleSelectComponent(item.type)}
+          >
+            {item.label}
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <Typography.Text type="secondary">暂无可添加组件</Typography.Text>
+    );
 
   return (
     <Popover
@@ -110,15 +112,16 @@ export const DropZone: React.FC<DropZoneProps> = ({
       placement="right"
       arrow={false}
       overlayInnerStyle={{
-        padding: '4px 0'
+        padding: "4px 0",
       }}
       open={isPopoverOpen && !isDragging}
       onOpenChange={(open) => setIsPopoverOpen(open)}
     >
       <div
         ref={setNodeRef}
-        className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${isInvalid ? "drop-zone--invalid" : ""
-          } ${active ? "drop-zone--dragging" : ""}`}
+        className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${
+          isInvalid ? "drop-zone--invalid" : ""
+        } ${active ? "drop-zone--dragging" : ""}`}
       >
         <div className="drop-zone__icon" aria-hidden>
           +

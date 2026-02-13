@@ -1,4 +1,8 @@
-import { RuleNode, RuleNodeType, RuleParamsOfNumericRangeSchema } from "../RuleParamsDateSchema";
+import {
+  RuleNode,
+  RuleNodeType,
+  RuleParamsOfNumericRangeSchema,
+} from "../RuleParamsDateSchema";
 import NumericRangeEditor from "../ruleEditors/NumericRangeEditor";
 import { BaseStrategy } from "./BaseStrategy";
 import type { AntdRule } from "./types";
@@ -11,8 +15,9 @@ export class NumericRangeStrategy extends BaseStrategy {
   }
 
   buildDefaultMessage(node: Pick<RuleNode, "type" | "params">): string {
-    const { success, data, error } =
-      RuleParamsOfNumericRangeSchema.safeParse(node.params);
+    const { success, data, error } = RuleParamsOfNumericRangeSchema.safeParse(
+      node.params,
+    );
     if (!success) return error.message;
     const { min, max } = data;
     if (min !== undefined && max !== undefined)

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Input, Select, InputNumber, Button, Space, Divider } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
-import type { ActionNode } from '@/types/actions';
-import { useActionFlow } from '@/services/actionFlows/hooks/useActionFlow';
-import { useAppSelector } from '@/store/hooks';
-import { variableSelectors } from '@/store/componentTree/componentTreeSelectors';
-import './NodeProperties.css';
+import React, { useEffect, useState } from "react";
+import { Form, Input, Select, InputNumber, Button, Space, Divider } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
+import type { ActionNode } from "@/types/actions";
+import { useActionFlow } from "@/services/actionFlows/hooks/useActionFlow";
+import { useAppSelector } from "@/store/hooks";
+import { variableSelectors } from "@/store/componentTree/componentTreeSelectors";
+import "./NodeProperties.css";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -71,7 +71,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
 
     // 根据节点类型渲染不同的表单字段
     switch (nodeType) {
-      case 'action.httpRequest':
+      case "action.httpRequest":
         return (
           <>
             <Form.Item label="URL" name="url" rules={[{ required: true }]}>
@@ -98,10 +98,14 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case 'action.navigate':
+      case "action.navigate":
         return (
           <>
-            <Form.Item label="目标路径" name="path" rules={[{ required: true }]}>
+            <Form.Item
+              label="目标路径"
+              name="path"
+              rules={[{ required: true }]}
+            >
               <Input placeholder="/dashboard" />
             </Form.Item>
             <Form.Item label="在新标签页打开" name="newTab">
@@ -113,7 +117,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case 'action.setVariable':
+      case "action.setVariable":
         return (
           <>
             <Form.Item
@@ -139,7 +143,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case 'action.showMessage':
+      case "action.showMessage":
         return (
           <>
             <Form.Item
@@ -163,18 +167,22 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case 'control.delay':
+      case "control.delay":
         return (
           <Form.Item
             label="延迟时间(毫秒)"
             name="duration"
             rules={[{ required: true }]}
           >
-            <InputNumber min={0} defaultValue={1000} style={{ width: '100%' }} />
+            <InputNumber
+              min={0}
+              defaultValue={1000}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
         );
 
-      case 'control.condition':
+      case "control.condition":
         return (
           <>
             <Form.Item
@@ -182,10 +190,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
               name="condition"
               rules={[{ required: true }]}
             >
-              <TextArea
-                rows={3}
-                placeholder="input.value > 100"
-              />
+              <TextArea rows={3} placeholder="input.value > 100" />
             </Form.Item>
             <Form.Item label="条件说明" name="description">
               <TextArea rows={2} placeholder="描述这个条件的用途" />
@@ -193,7 +198,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case 'control.loop':
+      case "control.loop":
         return (
           <>
             <Form.Item label="循环类型" name="loopType">
@@ -209,7 +214,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case 'data.transform':
+      case "data.transform":
         return (
           <>
             <Form.Item label="转换函数" name="transformer">
@@ -221,14 +226,14 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case 'component.table.refresh':
+      case "component.table.refresh":
         return (
           <Form.Item label="表格组件ID" name="componentId">
             <Input placeholder="table_1" />
           </Form.Item>
         );
 
-      case 'component.form.submit':
+      case "component.form.submit":
         return (
           <Form.Item label="表单组件ID" name="componentId">
             <Input placeholder="form_1" />

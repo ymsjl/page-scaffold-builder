@@ -5,7 +5,16 @@ import type { ProCommonColumn, SchemaField } from "@/types";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { useAppDispatch } from "@/store/hooks";
 import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField";
-import { DeleteOutlined, EditOutlined, EllipsisOutlined, EyeInvisibleOutlined, EyeOutlined, MoreOutlined, NumberOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  EllipsisOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  MoreOutlined,
+  NumberOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 
 type ColumnTitleMenuProps = {
   column: ProCommonColumn;
@@ -15,7 +24,9 @@ type ColumnTitleMenuProps = {
   entityFields: SchemaField[];
 };
 
-export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> = ({
+export const ColumnTitleMenu: React.FC<
+  PropsWithChildren<ColumnTitleMenuProps>
+> = ({
   column,
   columnIndex,
   columnsLength,
@@ -56,11 +67,23 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
     const currentTitle = getTitleText();
     if (nextTitle !== currentTitle) {
       dispatch(componentTreeActions.selectNode(tableNodeId));
-      dispatch(componentTreeActions.upsertColumnOfSelectedNode({ key: column.key, title: nextTitle }));
+      dispatch(
+        componentTreeActions.upsertColumnOfSelectedNode({
+          key: column.key,
+          title: nextTitle,
+        }),
+      );
     }
 
     setIsRenaming(false);
-  }, [cancelRename, column.key, dispatch, draftTitle, getTitleText, tableNodeId]);
+  }, [
+    cancelRename,
+    column.key,
+    dispatch,
+    draftTitle,
+    getTitleText,
+    tableNodeId,
+  ]);
 
   const handleDoubleClick = React.useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
@@ -79,7 +102,8 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
       ...entityFields.map((field) => ({
         key: `insert:${field.key}`,
         label: field.key,
-      }))];
+      })),
+    ];
   }, [entityFields]);
 
   const menuItems = React.useMemo<MenuProps["items"]>(
@@ -93,13 +117,13 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
         key: "edit",
         label: "编辑该列",
         disabled: !canOperate,
-        icon: <EditOutlined />
+        icon: <EditOutlined />,
       },
       {
         key: "delete",
         label: "删除该列",
         disabled: !canOperate,
-        icon: <DeleteOutlined />
+        icon: <DeleteOutlined />,
       },
       {
         key: "insert",
@@ -109,28 +133,28 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
         icon: <PlusOutlined />,
       },
       {
-        type: 'divider',
+        type: "divider",
       },
       {
         key: "hideInSearch",
         label: column?.hideInSearch ? "显示表单项" : "隐藏表单项",
         disabled: !canOperate,
-        icon: column?.hideInSearch ? <EyeOutlined /> : <EyeInvisibleOutlined />
+        icon: column?.hideInSearch ? <EyeOutlined /> : <EyeInvisibleOutlined />,
       },
       {
         key: "hideInTable",
         label: column?.hideInTable ? "显示表格列" : "隐藏表格列",
         disabled: !canOperate,
-        icon: column?.hideInTable ? <EyeOutlined /> : <EyeInvisibleOutlined />
+        icon: column?.hideInTable ? <EyeOutlined /> : <EyeInvisibleOutlined />,
       },
       {
-        type: 'divider',
+        type: "divider",
       },
       {
         key: "rules",
         label: "数据校验规则",
         disabled: !canOperate,
-        icon: <NumberOutlined />
+        icon: <NumberOutlined />,
       },
     ],
     [canOperate, insertItems, column],
@@ -153,11 +177,26 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
         const field = entityFields.find((item) => item.key === fieldKey);
         const newColumn = createProCommonColumnFromSchemeField(field);
         newColumn.title = "新列";
-        dispatch(componentTreeActions.upsertColumnOfSelectedNode({ insertPos: columnIndex + 1, changes: newColumn }));
+        dispatch(
+          componentTreeActions.upsertColumnOfSelectedNode({
+            insertPos: columnIndex + 1,
+            changes: newColumn,
+          }),
+        );
       } else if (key === "hideInSearch") {
-        dispatch(componentTreeActions.upsertColumnOfSelectedNode({ key: column.key, hideInSearch: !column.hideInSearch }));
+        dispatch(
+          componentTreeActions.upsertColumnOfSelectedNode({
+            key: column.key,
+            hideInSearch: !column.hideInSearch,
+          }),
+        );
       } else if (key === "hideInTable") {
-        dispatch(componentTreeActions.upsertColumnOfSelectedNode({ key: column.key, hideInTable: !column.hideInTable }));
+        dispatch(
+          componentTreeActions.upsertColumnOfSelectedNode({
+            key: column.key,
+            hideInTable: !column.hideInTable,
+          }),
+        );
       }
     },
     [column, columnIndex, columnsLength, dispatch, entityFields, tableNodeId],
@@ -188,7 +227,7 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
             size="small"
             value={draftTitle}
             autoFocus
-            style={{ width: 'auto' }}
+            style={{ width: "auto" }}
             onChange={(event) => setDraftTitle(event.target.value)}
             onBlur={applyRename}
             onKeyDown={(event) => {

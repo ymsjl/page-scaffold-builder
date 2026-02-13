@@ -11,10 +11,7 @@ const createBaseState = () => {
     componentTreeActions.addNode({ parentId: null, type: "Table" }),
   );
   const tableId = state.normalizedTree.result[0];
-  state = componentTreeReducer(
-    state,
-    componentTreeActions.selectNode(tableId),
-  );
+  state = componentTreeReducer(state, componentTreeActions.selectNode(tableId));
 
   return { state, tableId };
 };
@@ -98,7 +95,9 @@ describe("columnReducers", () => {
     const columns =
       nextState.normalizedTree.entities.nodes[tableId].props.columns;
     expect(columns.length).toBe(2);
-    const nameColumn = columns.find((c: ProCommonColumn) => c.dataIndex === "name");
+    const nameColumn = columns.find(
+      (c: ProCommonColumn) => c.dataIndex === "name",
+    );
     expect(nameColumn).toBeTruthy();
     expect(nameColumn?.title).toBe("Name");
     expect(nameColumn?.valueType).toBe("text");

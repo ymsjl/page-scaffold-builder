@@ -5,9 +5,7 @@ import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import { mapParsedSqlToEntityModel } from "@/components/EntityModelDesigner/sqlMapping";
 import { parseSqlToEntityModel } from "@/utils/sqlParser";
 
-export function useSqlImportModal(params: {
-  dispatch: (action: any) => void;
-}) {
+export function useSqlImportModal(params: { dispatch: (action: any) => void }) {
   const { dispatch } = params;
   const [isOpen, setIsOpen] = useState(false);
   const [sqlInput, setSqlInput] = useState("");

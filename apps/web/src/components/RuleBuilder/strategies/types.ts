@@ -1,9 +1,6 @@
 import type { FormItemProps } from "antd";
 import type React from "react";
-import {
-  RuleNode,
-  RuleNodeType,
-} from "../RuleParamsDateSchema";
+import { RuleNode, RuleNodeType } from "../RuleParamsDateSchema";
 
 export type AntdRule = Exclude<FormItemProps["rules"], undefined>[number];
 export type RuleDescriptor = Pick<RuleNode, "type" | "params" | "message">;

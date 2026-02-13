@@ -12,5 +12,8 @@ export abstract class BaseStrategy implements RuleNodeStrategy {
 
   abstract buildDefaultMessage(node: Pick<RuleNode, "type" | "params">): string;
   abstract toRule(node: RuleNode, message: string): AntdRule | null;
-  abstract applyFieldProps(node: RuleNode, fieldProps: Record<string, any>): void;
+  abstract applyFieldProps(
+    node: RuleNode,
+    fieldProps: Record<string, any>,
+  ): void;
 }

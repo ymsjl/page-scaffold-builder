@@ -38,10 +38,7 @@ export const createEntityModelReducers = () => {
      * @description 开始编辑已有实体模型
      * @param action.payload 实体模型ID
      */
-    startEditEntityModel: (
-      state: State,
-      action: PayloadAction<string>,
-    ) => {
+    startEditEntityModel: (state: State, action: PayloadAction<string>) => {
       state.isEntityModelModalOpen = true;
       state.editingEntityModelId = action.payload;
     },
@@ -66,10 +63,7 @@ export const createEntityModelReducers = () => {
      * @description 删除实体模型
      * @param action.payload 实体模型ID
      */
-    deleteEntityModel: (
-      state: State,
-      action: PayloadAction<string>,
-    ) => {
+    deleteEntityModel: (state: State, action: PayloadAction<string>) => {
       entityModelAdapter.removeOne(state.entityModel, action.payload);
     },
 
@@ -94,9 +88,9 @@ export const createEntityModelReducers = () => {
           fields: entity.fields.map((field) =>
             field.id === fieldId
               ? {
-                ...field,
-                extra,
-              }
+                  ...field,
+                  extra,
+                }
               : field,
           ),
         },

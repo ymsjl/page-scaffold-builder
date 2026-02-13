@@ -1,4 +1,8 @@
-import { RuleNode, RuleNodeType, DateRangeSpanParamsSchema } from "../RuleParamsDateSchema";
+import {
+  RuleNode,
+  RuleNodeType,
+  DateRangeSpanParamsSchema,
+} from "../RuleParamsDateSchema";
 import DateRangeSpanEditor from "../ruleEditors/DateRangeSpanEditor";
 import { BaseStrategy } from "./BaseStrategy";
 import { parseValueDate } from "./utils";

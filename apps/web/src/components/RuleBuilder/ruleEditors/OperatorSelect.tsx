@@ -10,7 +10,12 @@ type Props = {
   style?: React.CSSProperties;
 };
 
-export default React.memo(function OperatorSelect({ value, onChange, options, style }: Props) {
+export default React.memo(function OperatorSelect({
+  value,
+  onChange,
+  options,
+  style,
+}: Props) {
   return (
     <Select
       value={value}

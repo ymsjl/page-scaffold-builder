@@ -11,66 +11,73 @@ import { RuleTemplate } from "./RuleParamsDateSchema";
 import { RULE_LIBRARY } from "./RULE_LIBRARY";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 
-const RuleCard: React.FC<{ ruleTemplate: RuleTemplate }> = React.memo(({ ruleTemplate }) => {
-  const dispatch = useAppDispatch();
-  return (
-    <Card size="small" style={{ width: 200 }}>
-      <Space direction="vertical" style={{ width: "100%" }} size={4}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography.Text strong>{ruleTemplate.name}</Typography.Text>
-          <Button
-            size="small"
-            type="text"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              dispatch(componentTreeActions.addRuleNodeToEditingColumn(ruleTemplate))
-            }
-          />
-        </div>
-        <Typography.Text type="secondary">
-          {ruleTemplate.description}
-        </Typography.Text>
-      </Space>
-    </Card>
-  );
-});
+const RuleCard: React.FC<{ ruleTemplate: RuleTemplate }> = React.memo(
+  ({ ruleTemplate }) => {
+    const dispatch = useAppDispatch();
+    return (
+      <Card size="small" style={{ width: 200 }}>
+        <Space direction="vertical" style={{ width: "100%" }} size={4}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography.Text strong>{ruleTemplate.name}</Typography.Text>
+            <Button
+              size="small"
+              type="text"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                dispatch(
+                  componentTreeActions.addRuleNodeToEditingColumn(ruleTemplate),
+                )
+              }
+            />
+          </div>
+          <Typography.Text type="secondary">
+            {ruleTemplate.description}
+          </Typography.Text>
+        </Space>
+      </Card>
+    );
+  },
+);
 
 RuleCard.displayName = "RuleCard";
 
-const RuleLibrary: React.FC<{ valueType?: string }> = React.memo(({ valueType }) => {
-  const items = RULE_LIBRARY.filter((item) => {
-    if (!valueType) return true;
-    return (
-      item.applicableTo.includes("all") || item.applicableTo.includes(valueType)
-    );
-  });
+const RuleLibrary: React.FC<{ valueType?: string }> = React.memo(
+  ({ valueType }) => {
+    const items = RULE_LIBRARY.filter((item) => {
+      if (!valueType) return true;
+      return (
+        item.applicableTo.includes("all") ||
+        item.applicableTo.includes(valueType)
+      );
+    });
 
-  return (
-    <Swiper
-      direction="horizontal"
-      slidesPerView="auto"
-      spaceBetween={12}
-      freeMode={{ enabled: true }}
-      mousewheel={{ forceToAxis: true }}
-      scrollbar={{ draggable: true }}
-      modules={[FreeMode, Mousewheel, Scrollbar]}
-      grabCursor
-      style={{ paddingBottom: 12 }}
-    >
-      {items.map((rule) => (
-        <SwiperSlide key={rule.type} style={{ width: "auto" }}>
-          <RuleCard ruleTemplate={rule} />
-        </SwiperSlide>
-      ))}
-    </Swiper>
-  );
-});
+    return (
+      <Swiper
+        direction="horizontal"
+        slidesPerView="auto"
+        spaceBetween={12}
+        freeMode={{ enabled: true }}
+        mousewheel={{ forceToAxis: true }}
+        scrollbar={{ draggable: true }}
+        modules={[FreeMode, Mousewheel, Scrollbar]}
+        grabCursor
+        style={{ paddingBottom: 12 }}
+      >
+        {items.map((rule) => (
+          <SwiperSlide key={rule.type} style={{ width: "auto" }}>
+            <RuleCard ruleTemplate={rule} />
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    );
+  },
+);
 
 RuleLibrary.displayName = "RuleLibrary";
 

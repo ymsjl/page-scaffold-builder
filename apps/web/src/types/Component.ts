@@ -1,7 +1,15 @@
 import type React from "react";
 import { ProCommonColumn, PropAttribute } from "@/types";
 
-export const COMPONENT_TYPES = ["Page", "Table", "Form", "Description", "Button", "Text", "Modal"] as const;
+export const COMPONENT_TYPES = [
+  "Page",
+  "Table",
+  "Form",
+  "Description",
+  "Button",
+  "Text",
+  "Modal",
+] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 export type SlotRenderMode = "inline" | "panel";
@@ -23,7 +31,7 @@ export interface SlotDefinition {
  * 用于 ReactNode 类型的 props，允许将组件树中的节点作为 props 传递
  */
 export interface NodeRef {
-  type: 'nodeRef';
+  type: "nodeRef";
   nodeId: string;
 }
 
@@ -45,12 +53,12 @@ export interface ToolbarActionButtonProps {
  */
 export function isNodeRef(value: unknown): value is NodeRef {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'type' in value &&
-    (value as NodeRef).type === 'nodeRef' &&
-    'nodeId' in value &&
-    typeof (value as NodeRef).nodeId === 'string'
+    "type" in value &&
+    (value as NodeRef).type === "nodeRef" &&
+    "nodeId" in value &&
+    typeof (value as NodeRef).nodeId === "string"
   );
 }
 
@@ -73,15 +81,14 @@ export interface ComponentInstance<P = Record<string, any>> {
 
   /** 子组件节点 */
   children?: ComponentInstance[];
-  /** 
+  /**
    * Action 绑定配置
-   * 
+   *
    * 映射事件名到 Action Flow ID
    * 例如: { "onClick": "flow_123", "onSubmit": "flow_456" }
    */
   actionBindings?: Record<string, string>;
 }
-
 
 // 组件类型元信息，相当于组件的“类定义”
 export interface ComponentPrototype {
@@ -123,8 +130,10 @@ export interface ComponentPrototype {
   }>;
 }
 
-export interface ComponentNode<P = Record<string, any>>
-  extends Omit<ComponentInstance<P>, "children"> {
+export interface ComponentNode<P = Record<string, any>> extends Omit<
+  ComponentInstance<P>,
+  "children"
+> {
   parentId?: ComponentId | null;
   childrenIds: ComponentId[];
 }

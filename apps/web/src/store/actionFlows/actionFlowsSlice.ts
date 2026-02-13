@@ -1,4 +1,8 @@
-import { createSlice, createEntityAdapter, PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createEntityAdapter,
+  PayloadAction,
+} from "@reduxjs/toolkit";
 import type { ActionFlow, ActionNodeBase, ActionEdge } from "@/types/actions";
 import { makeIdCreator } from "@/utils/makeIdCreator";
 
@@ -48,7 +52,14 @@ const slice = createSlice({
      * @param action.payload.description 流程描述
      * @param action.payload.id 可选的流程 ID（如果不提供则自动生成）
      */
-    createFlow: (state, action: PayloadAction<{ name: string; description?: string; id?: string }>) => {
+    createFlow: (
+      state,
+      action: PayloadAction<{
+        name: string;
+        description?: string;
+        id?: string;
+      }>,
+    ) => {
       const flow: ActionFlow = {
         id: action.payload.id || makeFlowId(),
         name: action.payload.name,
@@ -67,10 +78,13 @@ const slice = createSlice({
      * @param action.payload.id Flow ID
      * @param action.payload.changes 更新内容
      */
-    updateFlow: (state, action: PayloadAction<{
-      id: string;
-      changes: Partial<Omit<ActionFlow, "id">>
-    }>) => {
+    updateFlow: (
+      state,
+      action: PayloadAction<{
+        id: string;
+        changes: Partial<Omit<ActionFlow, "id">>;
+      }>,
+    ) => {
       const { id, changes } = action.payload;
       flowAdapter.updateOne(state.flows, {
         id,
@@ -107,12 +121,15 @@ const slice = createSlice({
      * @param action.payload.position 节点位置
      * @param action.payload.params 节点参数
      */
-    addNode: (state, action: PayloadAction<{
-      type: string;
-      label?: string;
-      position?: { x: number; y: number };
-      params?: Record<string, any>;
-    }>) => {
+    addNode: (
+      state,
+      action: PayloadAction<{
+        type: string;
+        label?: string;
+        position?: { x: number; y: number };
+        params?: Record<string, any>;
+      }>,
+    ) => {
       if (!state.activeFlowId) return;
 
       const flow = state.flows.entities[state.activeFlowId];
@@ -138,16 +155,21 @@ const slice = createSlice({
      * @param action.payload.nodeId 节点 ID
      * @param action.payload.changes 更新内容
      */
-    updateNode: (state, action: PayloadAction<{
-      nodeId: string;
-      changes: Partial<ActionNodeBase>;
-    }>) => {
+    updateNode: (
+      state,
+      action: PayloadAction<{
+        nodeId: string;
+        changes: Partial<ActionNodeBase>;
+      }>,
+    ) => {
       if (!state.activeFlowId) return;
 
       const flow = state.flows.entities[state.activeFlowId];
       if (!flow) return;
 
-      const nodeIndex = flow.nodes.findIndex(n => n.id === action.payload.nodeId);
+      const nodeIndex = flow.nodes.findIndex(
+        (n) => n.id === action.payload.nodeId,
+      );
       if (nodeIndex >= 0) {
         Object.assign(flow.nodes[nodeIndex], action.payload.changes);
         flow.updatedAt = Date.now();
@@ -158,17 +180,22 @@ const slice = createSlice({
      * @description 批量更新节点位置（用于拖拽）
      * @param action.payload 节点位置更新数组
      */
-    updateNodePositions: (state, action: PayloadAction<Array<{
-      nodeId: string;
-      position: { x: number; y: number };
-    }>>) => {
+    updateNodePositions: (
+      state,
+      action: PayloadAction<
+        Array<{
+          nodeId: string;
+          position: { x: number; y: number };
+        }>
+      >,
+    ) => {
       if (!state.activeFlowId) return;
 
       const flow = state.flows.entities[state.activeFlowId];
       if (!flow) return;
 
       action.payload.forEach(({ nodeId, position }) => {
-        const node = flow.nodes.find(n => n.id === nodeId);
+        const node = flow.nodes.find((n) => n.id === nodeId);
         if (node) {
           node.position = position;
         }
@@ -188,15 +215,17 @@ const slice = createSlice({
       if (!flow) return;
 
       // 删除节点
-      flow.nodes = flow.nodes.filter(n => n.id !== action.payload);
+      flow.nodes = flow.nodes.filter((n) => n.id !== action.payload);
 
       // 删除相关的边
       flow.edges = flow.edges.filter(
-        e => e.source !== action.payload && e.target !== action.payload
+        (e) => e.source !== action.payload && e.target !== action.payload,
       );
 
       // 从选中列表中移除
-      state.selectedNodeIds = state.selectedNodeIds.filter(id => id !== action.payload);
+      state.selectedNodeIds = state.selectedNodeIds.filter(
+        (id) => id !== action.payload,
+      );
 
       flow.updatedAt = Date.now();
     },
@@ -213,10 +242,11 @@ const slice = createSlice({
 
       // 检查是否已存在相同的连接
       const existingEdge = flow.edges.find(
-        e => e.source === action.payload.source &&
+        (e) =>
+          e.source === action.payload.source &&
           e.sourcePort === action.payload.sourcePort &&
           e.target === action.payload.target &&
-          e.targetPort === action.payload.targetPort
+          e.targetPort === action.payload.targetPort,
       );
 
       if (existingEdge) return;
@@ -235,16 +265,21 @@ const slice = createSlice({
      * @param action.payload.edgeId 边 ID
      * @param action.payload.changes 更新内容
      */
-    updateEdge: (state, action: PayloadAction<{
-      edgeId: string;
-      changes: Partial<ActionEdge>;
-    }>) => {
+    updateEdge: (
+      state,
+      action: PayloadAction<{
+        edgeId: string;
+        changes: Partial<ActionEdge>;
+      }>,
+    ) => {
       if (!state.activeFlowId) return;
 
       const flow = state.flows.entities[state.activeFlowId];
       if (!flow) return;
 
-      const edgeIndex = flow.edges.findIndex(e => e.id === action.payload.edgeId);
+      const edgeIndex = flow.edges.findIndex(
+        (e) => e.id === action.payload.edgeId,
+      );
       if (edgeIndex >= 0) {
         Object.assign(flow.edges[edgeIndex], action.payload.changes);
         flow.updatedAt = Date.now();
@@ -261,7 +296,7 @@ const slice = createSlice({
       const flow = state.flows.entities[state.activeFlowId];
       if (!flow) return;
 
-      flow.edges = flow.edges.filter(e => e.id !== action.payload);
+      flow.edges = flow.edges.filter((e) => e.id !== action.payload);
       flow.updatedAt = Date.now();
     },
 
@@ -304,7 +339,7 @@ export default slice.reducer;
 // ============================================
 
 export const flowSelectors = flowAdapter.getSelectors(
-  (state: { actionFlows: ActionFlowsState }) => state.actionFlows.flows
+  (state: { actionFlows: ActionFlowsState }) => state.actionFlows.flows,
 );
 
 // ============================================

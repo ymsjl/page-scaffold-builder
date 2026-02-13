@@ -7,7 +7,7 @@ import { SetVariableNodeStrategy } from "./SetVariableNodeStrategy";
 
 /**
  * 节点策略注册表
- * 
+ *
  * 管理所有可用的节点策略
  */
 export class NodeStrategyRegistry {
@@ -38,7 +38,9 @@ export class NodeStrategyRegistry {
    */
   register(strategy: NodeStrategy): void {
     if (this.strategies.has(strategy.type)) {
-      console.warn(`Strategy for type "${strategy.type}" already exists. Overwriting.`);
+      console.warn(
+        `Strategy for type "${strategy.type}" already exists. Overwriting.`,
+      );
     }
     this.strategies.set(strategy.type, strategy);
   }
@@ -78,8 +80,10 @@ export class NodeStrategyRegistry {
   /**
    * 按分类获取策略
    */
-  getStrategiesByCategory(category: "control" | "data" | "action" | "component"): NodeStrategy[] {
-    return this.getAllStrategies().filter(s => s.category === category);
+  getStrategiesByCategory(
+    category: "control" | "data" | "action" | "component",
+  ): NodeStrategy[] {
+    return this.getAllStrategies().filter((s) => s.category === category);
   }
 }
 

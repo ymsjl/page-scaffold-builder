@@ -1,9 +1,13 @@
 import type { NodeStrategy } from "./NodeStrategy";
-import type { ActionNodeBase, FlowExecutionContext, Port } from "@/types/actions";
+import type {
+  ActionNodeBase,
+  FlowExecutionContext,
+  Port,
+} from "@/types/actions";
 
 /**
  * 节点策略抽象基类
- * 
+ *
  * 提供公共实现，减少重复代码
  */
 export abstract class BaseNodeStrategy implements NodeStrategy {
@@ -19,7 +23,7 @@ export abstract class BaseNodeStrategy implements NodeStrategy {
   abstract execute(
     node: ActionNodeBase,
     inputs: Record<string, any>,
-    context: FlowExecutionContext
+    context: FlowExecutionContext,
   ): Promise<Record<string, any>>;
 
   /**
@@ -70,9 +74,9 @@ export abstract class BaseNodeStrategy implements NodeStrategy {
   protected getInput<T = any>(
     inputs: Record<string, any>,
     portId: string,
-    defaultValue?: T
+    defaultValue?: T,
   ): T {
-    return portId in inputs ? inputs[portId] : defaultValue as T;
+    return portId in inputs ? inputs[portId] : (defaultValue as T);
   }
 
   /**

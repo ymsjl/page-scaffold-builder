@@ -53,9 +53,9 @@ export function useEnumAdvancedModal(params: {
     const nextFields = fields.map((field) =>
       field.id === String(fieldId)
         ? {
-          ...field,
-          extra: nextExtra,
-        }
+            ...field,
+            extra: nextExtra,
+          }
         : field,
     );
 

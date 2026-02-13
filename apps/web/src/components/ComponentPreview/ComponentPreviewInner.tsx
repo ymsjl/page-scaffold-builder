@@ -11,7 +11,11 @@ type ComponentPreviewInnerProps = {
 };
 
 const ComponentPreviewInner = React.memo(
-  ({ node, componentPrototype, containerVariant = "builder" }: ComponentPreviewInnerProps) => {
+  ({
+    node,
+    componentPrototype,
+    containerVariant = "builder",
+  }: ComponentPreviewInnerProps) => {
     const resolvedProps = useResolvedProps(node, componentPrototype);
     const componentElem = useMemo(() => {
       const Component = componentPrototype.component;
@@ -24,7 +28,7 @@ const ComponentPreviewInner = React.memo(
         );
       }
       return (
-        <Component {...resolvedProps} key={node.id} >
+        <Component {...resolvedProps} key={node.id}>
           {resolvedProps.children as React.ReactNode}
         </Component>
       );
@@ -33,9 +37,16 @@ const ComponentPreviewInner = React.memo(
     const containerStyle =
       containerVariant === "final" ? FINAL_CONTAINER_STYLE : CONTAINER_STYLE;
 
-    return <div id="modal-preview-root" style={{ ...containerStyle, position: 'relative' }} > {componentElem}</ div>;
+    return (
+      <div
+        id="modal-preview-root"
+        style={{ ...containerStyle, position: "relative" }}
+      >
+        {" "}
+        {componentElem}
+      </div>
+    );
   },
 );
 
 export default ComponentPreviewInner;
-

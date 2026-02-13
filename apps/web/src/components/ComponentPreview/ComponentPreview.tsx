@@ -21,7 +21,7 @@ const TOOLBAR_STYLE: React.CSSProperties = {
   right: 0,
   left: 0,
   margin: "0 auto",
-  width: 'max-content',
+  width: "max-content",
   zIndex: 20,
 };
 
@@ -40,16 +40,15 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   const [mode, setMode] = React.useState<PreviewMode>(initialMode);
   const rootNode = useAppSelector(selectFirstParentPageNode);
   const componentTreeState = useAppSelector(selectComponentTreeState);
-  if (!rootNode) return <div style={EMPTY_STATE_STYLE}>请选择一个组件实例以查看预览</div>;
+  if (!rootNode)
+    return <div style={EMPTY_STATE_STYLE}>请选择一个组件实例以查看预览</div>;
 
   const componentPrototype = getComponentPrototype(rootNode.type, {
     previewMode: mode,
   });
 
   if (!componentPrototype) {
-    return (
-      <div style={ERROR_STATE_STYLE}>未知的组件类型: {rootNode.type}</div>
-    );
+    return <div style={ERROR_STATE_STYLE}>未知的组件类型: {rootNode.type}</div>;
   }
 
   const handleOpenNewWindowPreview = () => {
@@ -74,7 +73,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       const url = new URL(window.location.href);
       url.searchParams.set("previewOnly", "1");
       url.searchParams.set("sid", sid);
-
 
       const win = window.open(url.toString(), "_blank", "noopener,noreferrer");
       if (!win) {
@@ -110,7 +108,13 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 />
               </Space.Compact>
 
-              <Button icon={<ExportOutlined />} size="small" shape="round" onClick={handleOpenNewWindowPreview} title="在新窗口打开预览" />
+              <Button
+                icon={<ExportOutlined />}
+                size="small"
+                shape="round"
+                onClick={handleOpenNewWindowPreview}
+                title="在新窗口打开预览"
+              />
             </Space>
           </div>
         </div>

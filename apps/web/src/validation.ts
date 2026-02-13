@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const SchemaFieldSchema = z.object({
   id: z.string(),
@@ -19,8 +19,8 @@ export type SchemaField = z.infer<typeof SchemaFieldSchema>;
 export const EntityModelSchema = z
   .object({
     id: z.string(),
-    name: z.string().min(1, 'Name is required'),
-    title: z.string().min(1, 'Title is required'),
+    name: z.string().min(1, "Name is required"),
+    title: z.string().min(1, "Title is required"),
     fields: z.array(SchemaFieldSchema),
     primaryKey: z.string().optional(),
   })
@@ -28,11 +28,17 @@ export const EntityModelSchema = z
   .superRefine((val, ctx) => {
     const ids = val.fields.map((f: any) => f.id);
     if (!ids.includes(val.primaryKey)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'primaryKey must be one of field ids' });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "primaryKey must be one of field ids",
+      });
     }
     const dup = ids.find((id: string, i: number) => ids.indexOf(id) !== i);
     if (dup) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Duplicate field id: ${dup}` });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Duplicate field id: ${dup}`,
+      });
     }
   });
 
@@ -46,7 +52,19 @@ export const PropAttributeSchema = z.object({
   // as opposed to primitive values (`string`, `number`, etc.) or structural types
   // like `object`, `array`, or nested `schema` definitions.
   // `reactNode` and `reactNodeArray` represent props that accept React component references
-  type: z.enum(['string', 'number', 'boolean', 'enum', 'date', 'object', 'array', 'schema', 'actionFlow', 'reactNode', 'reactNodeArray']),
+  type: z.enum([
+    "string",
+    "number",
+    "boolean",
+    "enum",
+    "date",
+    "object",
+    "array",
+    "schema",
+    "actionFlow",
+    "reactNode",
+    "reactNodeArray",
+  ]),
   // For reactNode/reactNodeArray types, specify which component types can be dropped
   acceptTypes: z.array(z.string()).optional(),
   options: z.array(z.object({ label: z.string(), value: z.any() })).optional(),
@@ -55,7 +73,7 @@ export const PropAttributeSchema = z.object({
   description: z.string().optional(),
   get children() {
     return z.array(PropAttributeSchema).optional();
-  }
+  },
 });
 
 export type PropAttribute = z.infer<typeof PropAttributeSchema>;

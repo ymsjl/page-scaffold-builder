@@ -1,13 +1,13 @@
-import React, { useCallback, useState } from 'react';
-import { Button, Select, Space, Typography, message } from 'antd';
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { actionFlowsActions } from '@/store/actionFlows/actionFlowsSlice';
+import React, { useCallback, useState } from "react";
+import { Button, Select, Space, Typography, message } from "antd";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { actionFlowsActions } from "@/store/actionFlows/actionFlowsSlice";
 import {
   selectActionFlowOptions,
   selectFlowById,
-} from '@/store/actionFlows/actionFlowsSelectors';
-import { ActionFlowEditorDrawer } from './ActionFlowEditorDrawer';
+} from "@/store/actionFlows/actionFlowsSelectors";
+import { ActionFlowEditorDrawer } from "./ActionFlowEditorDrawer";
 
 interface ActionFlowSelectorProps {
   value?: string;
@@ -18,7 +18,7 @@ interface ActionFlowSelectorProps {
 export const ActionFlowSelector: React.FC<ActionFlowSelectorProps> = ({
   value,
   onChange,
-  placeholder = '选择动作流',
+  placeholder = "选择动作流",
 }) => {
   const dispatch = useAppDispatch();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -42,10 +42,9 @@ export const ActionFlowSelector: React.FC<ActionFlowSelectorProps> = ({
     dispatch(
       actionFlowsActions.createFlow({
         id: newFlowId,
-        name: '新动作流',
-        description: '',
-
-      })
+        name: "新动作流",
+        description: "",
+      }),
     );
 
     // 设置为当前值
@@ -55,7 +54,7 @@ export const ActionFlowSelector: React.FC<ActionFlowSelectorProps> = ({
     setEditingFlowId(newFlowId);
     setDrawerOpen(true);
 
-    message.success('已创建新动作流');
+    message.success("已创建新动作流");
   }, [dispatch, onChange]);
 
   const handleDrawerClose = useCallback(() => {
@@ -65,7 +64,7 @@ export const ActionFlowSelector: React.FC<ActionFlowSelectorProps> = ({
 
   return (
     <>
-      <Space.Compact style={{ width: '100%' }}>
+      <Space.Compact style={{ width: "100%" }}>
         <Select
           style={{ flex: 1 }}
           value={value}
@@ -91,8 +90,11 @@ export const ActionFlowSelector: React.FC<ActionFlowSelectorProps> = ({
       </Space.Compact>
 
       {selectedFlow && (
-        <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
-          {selectedFlow.description || '暂无描述'}
+        <Typography.Text
+          type="secondary"
+          style={{ fontSize: 12, display: "block", marginTop: 4 }}
+        >
+          {selectedFlow.description || "暂无描述"}
         </Typography.Text>
       )}
 

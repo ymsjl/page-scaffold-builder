@@ -92,14 +92,18 @@ export const TableRefreshNodeParamsSchema = z.object({
   resetPage: z.boolean().default(false),
   clearFilters: z.boolean().default(false),
 });
-export type TableRefreshNodeParams = z.infer<typeof TableRefreshNodeParamsSchema>;
+export type TableRefreshNodeParams = z.infer<
+  typeof TableRefreshNodeParamsSchema
+>;
 
 /** 表格设置选中行节点 */
 export const TableSetSelectedRowsNodeParamsSchema = z.object({
   componentId: z.string().optional(),
   rowKeys: z.array(z.string()),
 });
-export type TableSetSelectedRowsNodeParams = z.infer<typeof TableSetSelectedRowsNodeParamsSchema>;
+export type TableSetSelectedRowsNodeParams = z.infer<
+  typeof TableSetSelectedRowsNodeParamsSchema
+>;
 
 /** 表单提交节点 */
 export const FormSubmitNodeParamsSchema = z.object({
@@ -123,14 +127,18 @@ export const FormSetFieldValueNodeParamsSchema = z.object({
   fieldName: z.string(),
   value: z.any(),
 });
-export type FormSetFieldValueNodeParams = z.infer<typeof FormSetFieldValueNodeParamsSchema>;
+export type FormSetFieldValueNodeParams = z.infer<
+  typeof FormSetFieldValueNodeParamsSchema
+>;
 
 /** 表单批量设置字段值节点 */
 export const FormSetFieldsValueNodeParamsSchema = z.object({
   componentId: z.string().optional(),
   values: z.any(),
 });
-export type FormSetFieldsValueNodeParams = z.infer<typeof FormSetFieldsValueNodeParamsSchema>;
+export type FormSetFieldsValueNodeParams = z.infer<
+  typeof FormSetFieldsValueNodeParamsSchema
+>;
 
 // ============== 节点注册表 ==============
 
@@ -166,26 +174,26 @@ export type NodeType = keyof typeof NODE_TYPE_SCHEMAS;
  * Action Node Type (完整类型字符串，用于可视化编辑器)
  */
 export type ActionNodeType =
-  | 'control.entry'
-  | 'control.exit'
-  | 'control.condition'
-  | 'control.loop'
-  | 'control.parallel'
-  | 'control.delay'
-  | 'data.transform'
-  | 'data.merge'
-  | 'data.filter'
-  | 'action.httpRequest'
-  | 'action.setVariable'
-  | 'action.navigate'
-  | 'action.showMessage'
-  | 'action.confirm'
-  | 'component.table.refresh'
-  | 'component.form.submit'
-  | 'component.form.validate'
-  | 'component.form.reset'
-  | 'component.modal.open'
-  | 'component.modal.close';
+  | "control.entry"
+  | "control.exit"
+  | "control.condition"
+  | "control.loop"
+  | "control.parallel"
+  | "control.delay"
+  | "data.transform"
+  | "data.merge"
+  | "data.filter"
+  | "action.httpRequest"
+  | "action.setVariable"
+  | "action.navigate"
+  | "action.showMessage"
+  | "action.confirm"
+  | "component.table.refresh"
+  | "component.form.submit"
+  | "component.form.validate"
+  | "component.form.reset"
+  | "component.modal.open"
+  | "component.modal.close";
 
 /** 所有节点参数类型的联合类型 */
 export type NodeParams =

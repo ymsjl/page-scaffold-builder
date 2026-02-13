@@ -1,6 +1,6 @@
 // Test setup file for vitest + @testing-library
 // Polyfill window.matchMedia for libraries like antd that use responsive observers
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({
     matches: false,
@@ -14,4 +14,4 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";

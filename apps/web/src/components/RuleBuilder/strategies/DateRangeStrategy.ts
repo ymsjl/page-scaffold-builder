@@ -1,5 +1,9 @@
 import dayjs from "dayjs";
-import { RuleNode, RuleNodeType, DateRangeParamsSchema } from "../RuleParamsDateSchema";
+import {
+  RuleNode,
+  RuleNodeType,
+  DateRangeParamsSchema,
+} from "../RuleParamsDateSchema";
 import { parseDateSpec } from "../utils/dateSpec";
 import DateRangeEditor from "../ruleEditors/DateRangeEditor";
 import { BaseStrategy } from "./BaseStrategy";

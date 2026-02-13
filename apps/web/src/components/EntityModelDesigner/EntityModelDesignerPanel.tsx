@@ -82,7 +82,9 @@ export default function EntityModelDesignerPanel() {
       return;
     }
 
-    dispatch(componentTreeActions.applyEntityModelChange(form.getFieldsValue()));
+    dispatch(
+      componentTreeActions.applyEntityModelChange(form.getFieldsValue()),
+    );
     message.success("已保存");
     onClose();
   }, [enumAdvancedModal.isOpen, onClose, isTableEditing, form]);

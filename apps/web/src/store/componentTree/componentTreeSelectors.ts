@@ -16,9 +16,7 @@
 
 import { createSelector } from "reselect";
 import type { RootState } from "../rootReducer";
-import {
-  type ComponentTreeState,
-} from "./componentTreeSlice";
+import { type ComponentTreeState } from "./componentTreeSlice";
 
 import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
 import type {
@@ -168,35 +166,37 @@ export const selectSelectedNode = createSelector(
   getSelectedNode,
 );
 
-export const getNodeIdsInPropertyPanel = (state: MaybeWritable<ComponentTreeState>) => {
+export const getNodeIdsInPropertyPanel = (
+  state: MaybeWritable<ComponentTreeState>,
+) => {
   return state.propertyPanelNodeIds || [];
-}
+};
 export const selectNodeIdsInPropertyPanel = createSelector(
   selectComponentTreeState,
   getNodeIdsInPropertyPanel,
-)
+);
 
 export const selectShowBackInPropertyPanel = createSelector(
   selectNodeIdsInPropertyPanel,
   (nodeIds) => !!nodeIds && nodeIds.length > 0,
-)
+);
 
 export const getNodeInPropertyPanelResult = (
   components: Record<string, ComponentNode>,
   selectedNode: ComponentNode | null | undefined,
-  nodeIds: string[]
+  nodeIds: string[],
 ) => {
   if (!nodeIds || nodeIds.length === 0) {
-    return selectedNode
+    return selectedNode;
   } else {
-    return components[nodeIds[nodeIds.length - 1]] || null
+    return components[nodeIds[nodeIds.length - 1]] || null;
   }
-}
+};
 export const selectNodeInPropertyPanel = createSelector(
   selectComponentNodesEntities,
   selectSelectedNode,
   selectNodeIdsInPropertyPanel,
-  getNodeInPropertyPanelResult
+  getNodeInPropertyPanelResult,
 );
 
 export const getSelectedNodeProps = (
@@ -355,15 +355,17 @@ export const selectVariables = createSelector(
 
 export const variableSelectors = variableAdapter.getSelectors(selectVariables);
 
-export const getIsVariableModalOpen = (state: MaybeWritable<ComponentTreeState>) =>
-  state.isVariableModalOpen;
+export const getIsVariableModalOpen = (
+  state: MaybeWritable<ComponentTreeState>,
+) => state.isVariableModalOpen;
 export const selectIsVariableModalOpen = createSelector(
   selectComponentTreeState,
   getIsVariableModalOpen,
 );
 
-export const getEditingVariableId = (state: MaybeWritable<ComponentTreeState>) =>
-  state.editingVariableId;
+export const getEditingVariableId = (
+  state: MaybeWritable<ComponentTreeState>,
+) => state.editingVariableId;
 export const selectEditingVariableId = createSelector(
   selectComponentTreeState,
   getEditingVariableId,
@@ -389,6 +391,9 @@ export const selectVariableValues = createSelector(
 );
 
 export const selectVariableValueByName = (name: string) =>
-  createSelector(selectVariableValues, (values): PrimitiveVariableValue | undefined => {
-    return values[name];
-  });
+  createSelector(
+    selectVariableValues,
+    (values): PrimitiveVariableValue | undefined => {
+      return values[name];
+    },
+  );

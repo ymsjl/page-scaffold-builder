@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import type { ComponentType as AppComponentType } from "@/types";
 
 export interface DragData {
@@ -33,7 +39,7 @@ export const DragDropProvider: React.FC<{ children: React.ReactNode }> = ({
       activeDropZoneId,
       setActiveDropZoneId,
     }),
-    [activeDrag, activeDropZoneId]
+    [activeDrag, activeDropZoneId],
   );
 
   return (
@@ -46,7 +52,9 @@ export const DragDropProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useDragDropContext = (): DragDropContextValue => {
   const context = useContext(DragDropContext);
   if (!context) {
-    throw new Error("useDragDropContext must be used within a DragDropProvider");
+    throw new Error(
+      "useDragDropContext must be used within a DragDropProvider",
+    );
   }
   return context;
 };
@@ -56,7 +64,7 @@ export const useDragDropContext = (): DragDropContextValue => {
  */
 export const isDropAccepted = (
   dragData: DragData | null,
-  acceptTypes?: string[]
+  acceptTypes?: string[],
 ): boolean => {
   if (!dragData) return false;
   if (!acceptTypes || acceptTypes.length === 0) return true;

@@ -3,7 +3,12 @@ import type { ParsedSqlModel } from "@/utils/sqlParser";
 
 const mapSqlTypeToValueType = (sqlType: string): SchemaField["valueType"] => {
   const normalized = sqlType.toLowerCase();
-  if (normalized.includes("int") || normalized.includes("decimal") || normalized.includes("float") || normalized.includes("double")) {
+  if (
+    normalized.includes("int") ||
+    normalized.includes("decimal") ||
+    normalized.includes("float") ||
+    normalized.includes("double")
+  ) {
     return "number";
   }
   if (normalized.includes("bool")) {

@@ -3,12 +3,11 @@ import type { ProValueEnum } from "../ColumnSchemaEditorProps";
 import { VALUE_TYPE_ENUM_MAP } from "./constants";
 import { getRecommendedWidth } from "./getRecommendedWidth";
 
-
 export const createProCommonColumnFromSchemeField = (
-  field?: SchemaField
-): Omit<ProCommonColumn, "key"> & { key?: string; } => {
+  field?: SchemaField,
+): Omit<ProCommonColumn, "key"> & { key?: string } => {
   const valueType = field?.valueType || "text";
-  const result: Omit<ProCommonColumn, "key"> & { dataIndex?: string; } = {
+  const result: Omit<ProCommonColumn, "key"> & { dataIndex?: string } = {
     title: field?.title ?? "",
     dataIndex: field?.key ?? "",
     valueType: VALUE_TYPE_ENUM_MAP[valueType] || valueType,
@@ -34,7 +33,7 @@ export const createProCommonColumnFromSchemeField = (
           };
           return acc;
         },
-        {} as ProValueEnum
+        {} as ProValueEnum,
       );
     }
   }

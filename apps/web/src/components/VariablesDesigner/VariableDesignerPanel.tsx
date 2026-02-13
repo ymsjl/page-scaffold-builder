@@ -86,10 +86,7 @@ const VariableDesignerPanel: React.FC = () => {
       destroyOnClose
       okText="保存"
     >
-      <Form
-        form={form}
-        layout="vertical"
-      >
+      <Form form={form} layout="vertical">
         <Form.Item
           label="变量名"
           name="name"

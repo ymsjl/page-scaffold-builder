@@ -1,5 +1,9 @@
 import { BaseNodeStrategy } from "./BaseNodeStrategy";
-import type { ActionNodeBase, FlowExecutionContext, Port } from "@/types/actions";
+import type {
+  ActionNodeBase,
+  FlowExecutionContext,
+  Port,
+} from "@/types/actions";
 import { SetVariableNodeParamsSchema } from "@/types/actions";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
 import type { PrimitiveVariableValue } from "@/types";
@@ -31,7 +35,11 @@ export class SetVariableNodeStrategy extends BaseNodeStrategy {
     context: FlowExecutionContext,
   ): Promise<Record<string, any>> {
     const params = SetVariableNodeParamsSchema.parse(node.params);
-    const variableName = this.getInput(inputs, "variableName", params.variableName);
+    const variableName = this.getInput(
+      inputs,
+      "variableName",
+      params.variableName,
+    );
     const rawValue = this.getInput(inputs, "value", params.value);
 
     if (!variableName || typeof variableName !== "string") {
@@ -65,7 +73,12 @@ export class SetVariableNodeStrategy extends BaseNodeStrategy {
   getInputPorts(_node: ActionNodeBase): Port[] {
     return [
       { id: "trigger", name: "Trigger", type: "exec", required: false },
-      { id: "variableName", name: "Variable Name", type: "string", required: false },
+      {
+        id: "variableName",
+        name: "Variable Name",
+        type: "string",
+        required: false,
+      },
       { id: "value", name: "Value", type: "any", required: false },
     ];
   }

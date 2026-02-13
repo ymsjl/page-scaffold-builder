@@ -1,6 +1,9 @@
 import { PayloadAction } from "@reduxjs/toolkit";
 import { WritableDraft } from "immer";
-import type { RuleNodeParams, RuleTemplate } from "@/components/RuleBuilder/RuleParamsDateSchema";
+import type {
+  RuleNodeParams,
+  RuleTemplate,
+} from "@/components/RuleBuilder/RuleParamsDateSchema";
 import type { ComponentTreeState } from "../componentTreeSlice";
 import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
 import { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";

@@ -2,7 +2,13 @@ import React, { memo, useMemo } from "react";
 import { Row, Col, Select, Input } from "antd";
 import { UI_PATTERN_PRESETS } from "../utils";
 
-export default memo(function PatternRuleEditor({ params, updateParams }: { params: any; updateParams: (next: Record<string, any>) => void; }) {
+export default memo(function PatternRuleEditor({
+  params,
+  updateParams,
+}: {
+  params: any;
+  updateParams: (next: Record<string, any>) => void;
+}) {
   const patternSelectedKey = useMemo(() => {
     const p = params?.pattern || "";
     const found = UI_PATTERN_PRESETS.find(

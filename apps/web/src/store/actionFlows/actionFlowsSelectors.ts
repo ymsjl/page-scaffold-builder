@@ -9,7 +9,7 @@ import { flowAdapter } from "./actionFlowsSlice";
 export const selectActionFlowsState = (state: RootState) => state.actionFlows;
 
 export const flowSelectors = flowAdapter.getSelectors(
-  (state: RootState) => state.actionFlows.flows
+  (state: RootState) => state.actionFlows.flows,
 );
 
 // ============================================
@@ -21,23 +21,22 @@ export const selectActiveFlowId = (state: RootState) =>
 
 export const selectActiveFlow = createSelector(
   [flowSelectors.selectEntities, selectActiveFlowId],
-  (entities, activeId) => activeId ? entities[activeId] : null
+  (entities, activeId) => (activeId ? entities[activeId] : null),
 );
 
 export const selectAllFlows = createSelector(
   flowSelectors.selectAll,
-  (flows) => flows
+  (flows) => flows,
 );
 
-export const selectActionFlowOptions = createSelector(
-  selectAllFlows,
-  (flows) => flows.map((flow) => ({ label: flow.name, value: flow.id }))
+export const selectActionFlowOptions = createSelector(selectAllFlows, (flows) =>
+  flows.map((flow) => ({ label: flow.name, value: flow.id })),
 );
 
 export const selectFlowById = (flowId: string) =>
   createSelector(
     flowSelectors.selectEntities,
-    (entities) => entities[flowId] || null
+    (entities) => entities[flowId] || null,
   );
 
 // ============================================
@@ -46,19 +45,18 @@ export const selectFlowById = (flowId: string) =>
 
 export const selectActiveFlowNodes = createSelector(
   selectActiveFlow,
-  (flow) => flow?.nodes || []
+  (flow) => flow?.nodes || [],
 );
 
 export const selectActiveFlowNodeById = (nodeId: string) =>
   createSelector(
     selectActiveFlowNodes,
-    (nodes) => nodes.find(n => n.id === nodeId) || null
+    (nodes) => nodes.find((n) => n.id === nodeId) || null,
   );
 
 export const selectActiveFlowNodesByType = (nodeType: string) =>
-  createSelector(
-    selectActiveFlowNodes,
-    (nodes) => nodes.filter(n => n.type === nodeType)
+  createSelector(selectActiveFlowNodes, (nodes) =>
+    nodes.filter((n) => n.type === nodeType),
   );
 
 // ============================================
@@ -67,25 +65,23 @@ export const selectActiveFlowNodesByType = (nodeType: string) =>
 
 export const selectActiveFlowEdges = createSelector(
   selectActiveFlow,
-  (flow) => flow?.edges || []
+  (flow) => flow?.edges || [],
 );
 
 export const selectActiveFlowEdgeById = (edgeId: string) =>
   createSelector(
     selectActiveFlowEdges,
-    (edges) => edges.find(e => e.id === edgeId) || null
+    (edges) => edges.find((e) => e.id === edgeId) || null,
   );
 
 export const selectIncomingEdges = (nodeId: string) =>
-  createSelector(
-    selectActiveFlowEdges,
-    (edges) => edges.filter(e => e.target === nodeId)
+  createSelector(selectActiveFlowEdges, (edges) =>
+    edges.filter((e) => e.target === nodeId),
   );
 
 export const selectOutgoingEdges = (nodeId: string) =>
-  createSelector(
-    selectActiveFlowEdges,
-    (edges) => edges.filter(e => e.source === nodeId)
+  createSelector(selectActiveFlowEdges, (edges) =>
+    edges.filter((e) => e.source === nodeId),
   );
 
 // ============================================
@@ -97,13 +93,12 @@ export const selectSelectedNodeIds = (state: RootState) =>
 
 export const selectSelectedNodes = createSelector(
   [selectActiveFlowNodes, selectSelectedNodeIds],
-  (nodes, selectedIds) => nodes.filter(n => selectedIds.includes(n.id))
+  (nodes, selectedIds) => nodes.filter((n) => selectedIds.includes(n.id)),
 );
 
 export const selectIsNodeSelected = (nodeId: string) =>
-  createSelector(
-    selectSelectedNodeIds,
-    (selectedIds) => selectedIds.includes(nodeId)
+  createSelector(selectSelectedNodeIds, (selectedIds) =>
+    selectedIds.includes(nodeId),
   );
 
 // ============================================
@@ -116,9 +111,9 @@ export const selectIsNodeSelected = (nodeId: string) =>
 export const selectEntryNodes = createSelector(
   [selectActiveFlowNodes, selectActiveFlowEdges],
   (nodes, edges) => {
-    const nodesWithInput = new Set(edges.map(e => e.target));
-    return nodes.filter(n => !nodesWithInput.has(n.id));
-  }
+    const nodesWithInput = new Set(edges.map((e) => e.target));
+    return nodes.filter((n) => !nodesWithInput.has(n.id));
+  },
 );
 
 /**
@@ -127,9 +122,9 @@ export const selectEntryNodes = createSelector(
 export const selectExitNodes = createSelector(
   [selectActiveFlowNodes, selectActiveFlowEdges],
   (nodes, edges) => {
-    const nodesWithOutput = new Set(edges.map(e => e.source));
-    return nodes.filter(n => !nodesWithOutput.has(n.id));
-  }
+    const nodesWithOutput = new Set(edges.map((e) => e.source));
+    return nodes.filter((n) => !nodesWithOutput.has(n.id));
+  },
 );
 
 /**
@@ -139,11 +134,11 @@ export const selectIsolatedNodes = createSelector(
   [selectActiveFlowNodes, selectActiveFlowEdges],
   (nodes, edges) => {
     const connectedNodes = new Set([
-      ...edges.map(e => e.source),
-      ...edges.map(e => e.target),
+      ...edges.map((e) => e.source),
+      ...edges.map((e) => e.target),
     ]);
-    return nodes.filter(n => !connectedNodes.has(n.id));
-  }
+    return nodes.filter((n) => !connectedNodes.has(n.id));
+  },
 );
 
 /**
@@ -157,7 +152,7 @@ export const selectHasCycle = createSelector(
     const recursionStack = new Set<string>();
 
     const adjacencyList = new Map<string, string[]>();
-    edges.forEach(edge => {
+    edges.forEach((edge) => {
       if (!adjacencyList.has(edge.source)) {
         adjacencyList.set(edge.source, []);
       }
@@ -192,7 +187,7 @@ export const selectHasCycle = createSelector(
     }
 
     return false;
-  }
+  },
 );
 
 // ============================================
@@ -201,13 +196,16 @@ export const selectHasCycle = createSelector(
 
 export const selectActiveFlowMetadata = createSelector(
   selectActiveFlow,
-  (flow) => flow ? {
-    id: flow.id,
-    name: flow.name,
-    description: flow.description,
-    nodeCount: flow.nodes.length,
-    edgeCount: flow.edges.length,
-    createdAt: flow.createdAt,
-    updatedAt: flow.updatedAt,
-  } : null
+  (flow) =>
+    flow
+      ? {
+          id: flow.id,
+          name: flow.name,
+          description: flow.description,
+          nodeCount: flow.nodes.length,
+          edgeCount: flow.edges.length,
+          createdAt: flow.createdAt,
+          updatedAt: flow.updatedAt,
+        }
+      : null,
 );

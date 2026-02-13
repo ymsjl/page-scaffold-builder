@@ -1,4 +1,8 @@
-import { RuleNode, RuleNodeType, RuleParamsOfPatternSchema } from "../RuleParamsDateSchema";
+import {
+  RuleNode,
+  RuleNodeType,
+  RuleParamsOfPatternSchema,
+} from "../RuleParamsDateSchema";
 import PatternRuleEditor from "../ruleEditors/PatternRuleEditor";
 import { BaseStrategy } from "./BaseStrategy";
 import type { AntdRule } from "./types";

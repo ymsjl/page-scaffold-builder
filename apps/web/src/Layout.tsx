@@ -1,6 +1,22 @@
 import React, { ComponentProps, useEffect, useCallback } from "react";
-import { Layout, Button, Collapse, Space, Typography, Flex, Menu, Card, message } from "antd";
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  Layout,
+  Button,
+  Collapse,
+  Space,
+  Typography,
+  Flex,
+  Menu,
+  Card,
+  message,
+} from "antd";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import ComponentTree from "./components/ComponentTree/ComponentTree";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
@@ -11,7 +27,12 @@ import {
 } from "./store/componentTree/componentTreeSelectors";
 import { componentTreeActions } from "./store/componentTree/componentTreeSlice";
 import EntityModelDesignerPanel from "./components/EntityModelDesigner/EntityModelDesignerPanel";
-import { DeleteOutlined, FileAddOutlined, PlusOutlined, HolderOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  FileAddOutlined,
+  PlusOutlined,
+  HolderOutlined,
+} from "@ant-design/icons";
 import ComponentPreview from "./components/ComponentPreview/ComponentPreview";
 import PropertyPanel from "./components/PropertyPanel/PropertyPanel";
 import { ProCard } from "@ant-design/pro-components";
@@ -27,9 +48,11 @@ const styles: { [key: string]: React.CSSProperties } = {
 };
 
 // 拖拽预览组件
-const DragOverlayContent: React.FC<{ nodeId: string | null }> = ({ nodeId }) => {
-  const node = useAppSelector(
-    (state) => (nodeId ? componentNodesSelectors.selectById(state, nodeId) : null)
+const DragOverlayContent: React.FC<{ nodeId: string | null }> = ({
+  nodeId,
+}) => {
+  const node = useAppSelector((state) =>
+    nodeId ? componentNodesSelectors.selectById(state, nodeId) : null,
   );
 
   if (!node) return null;
@@ -68,12 +91,14 @@ export function PageScaffoldBuilderLayout() {
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
-    const dragData = active.data.current as { type: string; nodeId: string } | undefined;
+    const dragData = active.data.current as
+      | { type: string; nodeId: string }
+      | undefined;
     if (dragData?.type === "treeNode") {
       setActiveNodeId(dragData.nodeId);
     }
@@ -90,11 +115,17 @@ export function PageScaffoldBuilderLayout() {
         | { type: string; nodeId: string; nodeType: string }
         | undefined;
       const dropData = over.data.current as
-        | { type: string; targetNodeId: string; propPath: string; acceptTypes?: string[] }
+        | {
+            type: string;
+            targetNodeId: string;
+            propPath: string;
+            acceptTypes?: string[];
+          }
         | undefined;
 
       // 验证拖拽和放置数据
-      if (dragData?.type !== "treeNode" || dropData?.type !== "dropZone") return;
+      if (dragData?.type !== "treeNode" || dropData?.type !== "dropZone")
+        return;
 
       // 检查组件类型是否被接受
       if (
@@ -112,11 +143,11 @@ export function PageScaffoldBuilderLayout() {
           targetNodeId: dropData.targetNodeId,
           propPath: dropData.propPath,
           refNodeId: dragData.nodeId,
-        })
+        }),
       );
       message.success("组件已添加");
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleDragCancel = useCallback(() => {
@@ -150,9 +181,16 @@ export function PageScaffoldBuilderLayout() {
                 extra={
                   <Button
                     icon={<FileAddOutlined />}
-                    size='small'
+                    size="small"
                     title="添加新页面"
-                    onClick={() => dispatch(componentTreeActions.addNode({ parentId: null, type: "Page" }))}
+                    onClick={() =>
+                      dispatch(
+                        componentTreeActions.addNode({
+                          parentId: null,
+                          type: "Page",
+                        }),
+                      )
+                    }
                     type="text"
                   />
                 }
@@ -169,8 +207,10 @@ export function PageScaffoldBuilderLayout() {
                 extra={
                   <Button
                     icon={<PlusOutlined />}
-                    size='small'
-                    onClick={() => dispatch(componentTreeActions.startCreateEntityModel())}
+                    size="small"
+                    onClick={() =>
+                      dispatch(componentTreeActions.startCreateEntityModel())
+                    }
                     type="text"
                   />
                 }
@@ -179,7 +219,11 @@ export function PageScaffoldBuilderLayout() {
                   {entityModels?.map((et) => (
                     <div
                       key={et.id}
-                      onClick={() => dispatch(componentTreeActions.startEditEntityModel(et.id))}
+                      onClick={() =>
+                        dispatch(
+                          componentTreeActions.startEditEntityModel(et.id),
+                        )
+                      }
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -194,7 +238,9 @@ export function PageScaffoldBuilderLayout() {
                         danger
                         onClick={(e) => {
                           e.stopPropagation();
-                          dispatch(componentTreeActions.deleteEntityModel(et.id));
+                          dispatch(
+                            componentTreeActions.deleteEntityModel(et.id),
+                          );
                         }}
                       />
                     </div>
@@ -211,8 +257,10 @@ export function PageScaffoldBuilderLayout() {
                 extra={
                   <Button
                     icon={<PlusOutlined />}
-                    size='small'
-                    onClick={() => dispatch(componentTreeActions.startCreateVariable())}
+                    size="small"
+                    onClick={() =>
+                      dispatch(componentTreeActions.startCreateVariable())
+                    }
                     type="text"
                   />
                 }
@@ -221,7 +269,11 @@ export function PageScaffoldBuilderLayout() {
                   {variables?.map((variable) => (
                     <div
                       key={variable.id}
-                      onClick={() => dispatch(componentTreeActions.startEditVariable(variable.id))}
+                      onClick={() =>
+                        dispatch(
+                          componentTreeActions.startEditVariable(variable.id),
+                        )
+                      }
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -236,7 +288,9 @@ export function PageScaffoldBuilderLayout() {
                         danger
                         onClick={(e) => {
                           e.stopPropagation();
-                          dispatch(componentTreeActions.deleteVariable(variable.id));
+                          dispatch(
+                            componentTreeActions.deleteVariable(variable.id),
+                          );
                         }}
                       />
                     </div>
@@ -245,7 +299,13 @@ export function PageScaffoldBuilderLayout() {
               </ProCard>
             </Layout.Sider>
 
-            <Layout.Content style={{ height: "100%", overflow: "hidden", padding: "16px 12px" }}>
+            <Layout.Content
+              style={{
+                height: "100%",
+                overflow: "hidden",
+                padding: "16px 12px",
+              }}
+            >
               <ComponentPreview />
             </Layout.Content>
 
@@ -253,7 +313,6 @@ export function PageScaffoldBuilderLayout() {
               width={300}
               trigger={null}
               style={{ background: "none", padding: "16px 8px" }}
-
             >
               <PropertyPanel />
             </Layout.Sider>

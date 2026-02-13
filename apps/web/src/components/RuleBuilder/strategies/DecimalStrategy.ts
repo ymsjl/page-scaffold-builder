@@ -1,4 +1,8 @@
-import { RuleNode, RuleNodeType, RuleParamsOfDecimalSchema } from "../RuleParamsDateSchema";
+import {
+  RuleNode,
+  RuleNodeType,
+  RuleParamsOfDecimalSchema,
+} from "../RuleParamsDateSchema";
 import DecimalRuleEditor from "../ruleEditors/DecimalRuleEditor";
 import { BaseStrategy } from "./BaseStrategy";
 import type { AntdRule } from "./types";

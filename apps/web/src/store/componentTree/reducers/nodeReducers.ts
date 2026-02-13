@@ -22,7 +22,9 @@ export const createNodeReducers = () => {
      */
     addNode: (
       state: State,
-      { payload: { parentId, type } }: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
+      {
+        payload: { parentId, type },
+      }: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
     ) => {
       const nodes = state.normalizedTree.entities.nodes;
       const rootIds = state.normalizedTree.result;
@@ -53,10 +55,7 @@ export const createNodeReducers = () => {
      * @description 移除组件节点及其子节点
      * @param action.payload 组件节点ID
      */
-    removeNode: (
-      state: State,
-      { payload: id }: PayloadAction<string>,
-    ) => {
+    removeNode: (state: State, { payload: id }: PayloadAction<string>) => {
       const nodes = state.normalizedTree.entities.nodes;
       const rootIds = state.normalizedTree.result;
       const node = nodes[id];
@@ -92,7 +91,9 @@ export const createNodeReducers = () => {
      */
     updateNode: (
       state: State,
-      { payload: { id, updates } }: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
+      {
+        payload: { id, updates },
+      }: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
     ) => {
       const nodes = state.normalizedTree.entities.nodes;
       const node = nodes[id];
@@ -102,7 +103,9 @@ export const createNodeReducers = () => {
 
     updateNodeProps: (
       state: State,
-      { payload: { id, props } }: PayloadAction<{ id: string; props: Record<string, any> }>,
+      {
+        payload: { id, props },
+      }: PayloadAction<{ id: string; props: Record<string, any> }>,
     ) => {
       const nodes = state.normalizedTree.entities.nodes;
       const node = nodes[id];
@@ -114,10 +117,7 @@ export const createNodeReducers = () => {
      * @description 选择组件节点
      * @param action.payload 组件节点ID
      */
-    selectNode: (
-      state: State,
-      { payload }: PayloadAction<string | null>,
-    ) => {
+    selectNode: (state: State, { payload }: PayloadAction<string | null>) => {
       state.selectedNodeId = payload;
     },
 
@@ -125,10 +125,7 @@ export const createNodeReducers = () => {
      * @description 设置展开的节点ID列表
      * @param action.payload 展开的节点ID列表
      */
-    setExpandedKeys: (
-      state: State,
-      { payload }: PayloadAction<string[]>,
-    ) => {
+    setExpandedKeys: (state: State, { payload }: PayloadAction<string[]>) => {
       state.expandedKeys = payload;
     },
 
@@ -144,9 +141,7 @@ export const createNodeReducers = () => {
       }
     },
 
-    popNodeFromPropertyPanel: (
-      state: State,
-    ) => {
+    popNodeFromPropertyPanel: (state: State) => {
       if (!state.propertyPanelNodeIds) {
         return;
       }
@@ -157,10 +152,7 @@ export const createNodeReducers = () => {
      * @description 展开指定节点
      * @param action.payload 节点ID
      */
-    expandNode: (
-      state: State,
-      { payload }: PayloadAction<string>,
-    ) => {
+    expandNode: (state: State, { payload }: PayloadAction<string>) => {
       const nodeId = payload;
       if (!state.expandedKeys.includes(nodeId)) {
         state.expandedKeys.push(nodeId);

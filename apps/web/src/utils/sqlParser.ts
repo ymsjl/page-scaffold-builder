@@ -77,8 +77,8 @@ const isNullable = (definition: AnyRecord): boolean => {
   if (typeof nullable === "boolean") return nullable;
   const constraints = definition.constraints;
   if (!Array.isArray(constraints)) return true;
-  return !constraints.some((item) =>
-    String((item as AnyRecord)?.type).toLowerCase() === "not null",
+  return !constraints.some(
+    (item) => String((item as AnyRecord)?.type).toLowerCase() === "not null",
   );
 };
 
@@ -96,7 +96,8 @@ const extractFields = (definitions: unknown[]): ParsedSqlField[] => {
     const record = asRecord(definition);
     if (!record) return;
 
-    const column = record.column || record.name || record.field || record.resource;
+    const column =
+      record.column || record.name || record.field || record.resource;
     const columnName = normalizeIdentifier(column);
     if (!columnName) return;
 
@@ -129,7 +130,9 @@ const collectCreateStatements = (statements: unknown[]): AnyRecord[] =>
     return acc;
   }, []);
 
-export const parseSqlToEntityModel = async (sql: string): Promise<{
+export const parseSqlToEntityModel = async (
+  sql: string,
+): Promise<{
   model: ParsedSqlModel;
   warnings: string[];
 }> => {
@@ -145,7 +148,9 @@ export const parseSqlToEntityModel = async (sql: string): Promise<{
   }
 
   if (createStatements.length > 1) {
-    warnings.push("Multiple CREATE TABLE statements detected; using the first.");
+    warnings.push(
+      "Multiple CREATE TABLE statements detected; using the first.",
+    );
   }
 
   const first = createStatements[0];

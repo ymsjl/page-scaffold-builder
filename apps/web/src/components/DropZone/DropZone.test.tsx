@@ -16,7 +16,9 @@ const mockUseDroppable = vi.mocked(useDroppable);
 
 const buildStoreWithPage = () => {
   const store = configureStore({ reducer: rootReducer });
-  store.dispatch(componentTreeActions.addNode({ parentId: null, type: "Page" }));
+  store.dispatch(
+    componentTreeActions.addNode({ parentId: null, type: "Page" }),
+  );
   const rootId = store.getState().componentTree.normalizedTree.result[0];
   if (!rootId) {
     throw new Error("Expected root Page node to exist");
@@ -65,9 +67,9 @@ describe("DropZone add component", () => {
     );
 
     expect(createdNode).toBeTruthy();
-    expect(state.normalizedTree.entities.nodes[rootId]?.props?.children).toEqual([
-      { type: "nodeRef", nodeId: createdNode?.id },
-    ]);
+    expect(
+      state.normalizedTree.entities.nodes[rootId]?.props?.children,
+    ).toEqual([{ type: "nodeRef", nodeId: createdNode?.id }]);
   });
 
   it("does not open the popover while dragging", async () => {

@@ -43,7 +43,8 @@ export function stringifyDateSpec(s?: RuleParamsDate) {
 
 export function parseValueDate(value: any) {
   if (!value) return null;
-  if (dayjs.isDayjs(value)) return value.isValid() ? value.startOf("day") : null;
+  if (dayjs.isDayjs(value))
+    return value.isValid() ? value.startOf("day") : null;
   if (typeof value === "string") {
     const d = dayjs(value, "YYYY-MM-DD", true);
     return d.isValid() ? d.startOf("day") : null;

@@ -10,7 +10,7 @@ import { getSelectedNodeWithColumns } from "../componentTreeSelectors";
 import { entityModelAdapter } from "../componentTreeAdapters";
 
 const upsertColumnOnNode = (
-  props: WritableDraft<ComponentNodeWithColumns['props']>,
+  props: WritableDraft<ComponentNodeWithColumns["props"]>,
   changes: Partial<ProCommonColumn>,
   insertPos?: number,
 ) => {
@@ -19,8 +19,15 @@ const upsertColumnOnNode = (
   if (idx >= 0) {
     Object.assign(props.columns[idx], changes);
   } else {
-    const validatedChanges = ProCommonColumnSchema.parse({ ...changes, key: changes.key ?? makeColumnId() });
-    if (typeof insertPos === "number" && insertPos >= 0 && insertPos <= props.columns.length) {
+    const validatedChanges = ProCommonColumnSchema.parse({
+      ...changes,
+      key: changes.key ?? makeColumnId(),
+    });
+    if (
+      typeof insertPos === "number" &&
+      insertPos >= 0 &&
+      insertPos <= props.columns.length
+    ) {
       props.columns.splice(insertPos, 0, validatedChanges);
     } else {
       props.columns.push(validatedChanges);
@@ -42,9 +49,7 @@ export const createColumnReducers = () => {
      * 根据节点的 entityModelId 属性，从实体模型中获取字段列表，
      * 为每个字段生成对应的列配置并添加到节点的列配置中，避免重复添加相同 key 的列
      */
-    addColumnsFromEntityModelToSelectedNode: (
-      state: State,
-    ) => {
+    addColumnsFromEntityModelToSelectedNode: (state: State) => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
 
@@ -54,15 +59,15 @@ export const createColumnReducers = () => {
 
       props.columns = props?.columns ?? [];
       const existingKeys = new Set(props.columns?.map((c) => c.key) ?? []);
-      const newColumns = entityModelAdapter
-        .getSelectors()
-        .selectById(state.entityModel, entityModelId)
-        ?.fields
-        ?.filter((field) => !existingKeys.has(field.key))
-        ?.map((field) => ({
-          key: makeColumnId(),
-          ...createProCommonColumnFromSchemeField(field),
-        })) ?? [];
+      const newColumns =
+        entityModelAdapter
+          .getSelectors()
+          .selectById(state.entityModel, entityModelId)
+          ?.fields?.filter((field) => !existingKeys.has(field.key))
+          ?.map((field) => ({
+            key: makeColumnId(),
+            ...createProCommonColumnFromSchemeField(field),
+          })) ?? [];
       props.columns.push(...newColumns);
     },
 
@@ -99,10 +104,15 @@ export const createColumnReducers = () => {
      */
     upsertColumnOfSelectedNode: (
       state: State,
-      { payload }: PayloadAction<Partial<ProCommonColumn> | {
-        insertPos?: number;
-        changes: Partial<ProCommonColumn>;
-      }>,
+      {
+        payload,
+      }: PayloadAction<
+        | Partial<ProCommonColumn>
+        | {
+            insertPos?: number;
+            changes: Partial<ProCommonColumn>;
+          }
+      >,
     ) => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
@@ -147,12 +157,7 @@ export const createColumnReducers = () => {
 
       const props = node.props;
       const columns = props.columns;
-      if (
-        from < 0 ||
-        from >= columns.length ||
-        to < 0 ||
-        to >= columns.length
-      )
+      if (from < 0 || from >= columns.length || to < 0 || to >= columns.length)
         return;
 
       const [movedItem] = columns.splice(from, 1);

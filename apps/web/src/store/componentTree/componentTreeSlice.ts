@@ -1,6 +1,4 @@
-import {
-  createSlice,
-} from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { NormalizedComponentTree } from "@/types/Component";
 import type { ProCommonColumn } from "@/types";
@@ -115,4 +113,3 @@ const slice = createSlice({
 
 export const componentTreeActions = slice.actions;
 export default slice.reducer;
-

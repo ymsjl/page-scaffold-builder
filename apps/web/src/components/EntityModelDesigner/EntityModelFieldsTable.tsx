@@ -53,7 +53,9 @@ export function EntityModelFieldsTable(props: {
         ellipsis: true,
         fieldProps: { style: { width: "100%" } },
         formItemProps: {
-          rules: [{ required: true, whitespace: true, message: "请输入字段名" }],
+          rules: [
+            { required: true, whitespace: true, message: "请输入字段名" },
+          ],
         },
         render: (_, item) => `${item.title || "(未命名)"}`,
       },
@@ -214,11 +216,11 @@ export function EntityModelFieldsTable(props: {
         isTableEditing
           ? false
           : {
-            position: "bottom",
-            newRecordType: "dataSource",
-            creatorButtonText: "添加一行数据",
-            record: () => createNewFieldDraft(),
-          }
+              position: "bottom",
+              newRecordType: "dataSource",
+              creatorButtonText: "添加一行数据",
+              record: () => createNewFieldDraft(),
+            }
       }
       pagination={false}
       locale={{ emptyText: "暂无字段，请点击“添加字段”" }}
@@ -229,47 +231,48 @@ export function EntityModelFieldsTable(props: {
         actionRender: (row, _config, defaultDom) => {
           const saveDom = React.isValidElement(defaultDom.save)
             ? React.cloneElement(defaultDom.save as any, {
-              children: (
-                <Button
-                  size="small"
-                  type="primary"
-                  onClick={(e) => {
-                    const { error } = SchemaFieldSchema.safeParse(row);
-                    if (error) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      message.error(error.message);
-                    }
-                  }}
-                >
-                  <SaveOutlined />
-                  保存
-                </Button>
-              ),
-            })
+                children: (
+                  <Button
+                    size="small"
+                    type="primary"
+                    onClick={(e) => {
+                      const { error } = SchemaFieldSchema.safeParse(row);
+                      if (error) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        message.error(error.message);
+                      }
+                    }}
+                  >
+                    <SaveOutlined />
+                    保存
+                  </Button>
+                ),
+              })
             : defaultDom.save;
 
           const cancelDom = React.isValidElement(defaultDom.cancel)
             ? (() => {
-              const originalCancel = defaultDom.cancel as React.ReactElement<any>;
-              const originalOnClick = originalCancel.props?.onClick;
-              return React.cloneElement(originalCancel, {
-                children: (
-                  <Button
-                    size="small"
-                    type="default"
-                    onClick={(e) => {
-                      if (typeof originalOnClick === "function") {
-                        originalOnClick(e);
-                      }
-                    }}
-                  >
-                    <CloseOutlined />
-                    取消
-                  </Button>
-                ),
-              });
-            })()
+                const originalCancel =
+                  defaultDom.cancel as React.ReactElement<any>;
+                const originalOnClick = originalCancel.props?.onClick;
+                return React.cloneElement(originalCancel, {
+                  children: (
+                    <Button
+                      size="small"
+                      type="default"
+                      onClick={(e) => {
+                        if (typeof originalOnClick === "function") {
+                          originalOnClick(e);
+                        }
+                      }}
+                    >
+                      <CloseOutlined />
+                      取消
+                    </Button>
+                  ),
+                });
+              })()
             : defaultDom.cancel;
 
           return [saveDom, cancelDom];

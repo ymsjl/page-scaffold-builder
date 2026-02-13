@@ -96,7 +96,10 @@ export function computeOperatorParams(
   eqKey?: string,
 ) {
   if (op === "eq") {
-    const v = (eqKey && params[eqKey] !== undefined ? params[eqKey] : params[minKey] ?? params[maxKey]) ?? undefined;
+    const v =
+      (eqKey && params[eqKey] !== undefined
+        ? params[eqKey]
+        : (params[minKey] ?? params[maxKey])) ?? undefined;
     const result: Record<string, any> = { operator: "eq" };
     if (eqKey) {
       result[eqKey] = v;

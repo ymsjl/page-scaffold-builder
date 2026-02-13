@@ -38,7 +38,9 @@ const ProTableForPurePreview: React.FC<SerializableProTableProps> = (props) => {
     });
   }, [columns, renderedRowActions]);
 
-  return <ProTable {...restProps} columns={mergedColumns} dataSource={dataSource} />;
+  return (
+    <ProTable {...restProps} columns={mergedColumns} dataSource={dataSource} />
+  );
 };
 
 export default ProTableForPurePreview;

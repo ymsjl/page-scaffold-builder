@@ -24,7 +24,12 @@ const RuleItem: React.FC<RuleItemProps> = memo(({ node }) => {
 
   const updateParams = useCallback(
     (next: Record<string, any>) =>
-      dispatch(componentTreeActions.updateRuleNodeParamsOfEditingColumn({ id, params: next })),
+      dispatch(
+        componentTreeActions.updateRuleNodeParamsOfEditingColumn({
+          id,
+          params: next,
+        }),
+      ),
     [id, dispatch],
   );
 

@@ -40,7 +40,9 @@ const resolveVariableRefsInValue = (
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => resolveVariableRefsInValue(item, variableValues));
+    return value.map((item) =>
+      resolveVariableRefsInValue(item, variableValues),
+    );
   }
 
   if (isNodeRef(value) || value === null || typeof value !== "object") {
@@ -94,7 +96,13 @@ export const useResolvedProps = (
       ...(componentPrototype.defaultProps || {}),
       ...nodeProps,
     }),
-    [node.id, node.type, nodeProps, componentPrototype.defaultProps, previewMode],
+    [
+      node.id,
+      node.type,
+      nodeProps,
+      componentPrototype.defaultProps,
+      previewMode,
+    ],
   );
 
   if (node.isContainer) {
@@ -102,7 +110,11 @@ export const useResolvedProps = (
   }
 
   const resolvedVariableProps = useMemo(
-    () => resolveVariableRefsInValue(mergedProps, variableValues) as Record<string, unknown>,
+    () =>
+      resolveVariableRefsInValue(mergedProps, variableValues) as Record<
+        string,
+        unknown
+      >,
     [mergedProps, variableValues],
   );
 
@@ -123,7 +135,13 @@ export const useResolvedProps = (
         }),
       );
     }, resolvedVariableProps);
-  }, [actionFlowPropPaths, createFlowHandler, node.id, nodeProps, resolvedVariableProps]);
+  }, [
+    actionFlowPropPaths,
+    createFlowHandler,
+    node.id,
+    nodeProps,
+    resolvedVariableProps,
+  ]);
 
   return useMemo(
     () =>
@@ -142,9 +160,7 @@ export const useResolvedProps = (
               acceptTypes={slot.acceptTypes}
               label={slot.label}
             />
-          ) : (
-            null
-          ),
+          ) : null,
         wrapElement: (slot, ref, element) =>
           previewMode === "edit" ? (
             <SlotItemWrapper
@@ -159,7 +175,14 @@ export const useResolvedProps = (
             element
           ),
       }),
-    [executableFlowProps, slots, slotRefsMap, nodeIdToElement, node.id, previewMode],
+    [
+      executableFlowProps,
+      slots,
+      slotRefsMap,
+      nodeIdToElement,
+      node.id,
+      previewMode,
+    ],
   );
 };
 
@@ -168,8 +191,8 @@ export const useResolvedProps = (
  */
 const RenderSingleNodeOrNull: React.FC<{ nodeId: string }> = ({ nodeId }) => {
   const previewMode = usePreviewMode();
-  const node = useAppSelector(
-    (state) => componentNodesSelectors.selectById(state, nodeId),
+  const node = useAppSelector((state) =>
+    componentNodesSelectors.selectById(state, nodeId),
   ) as ComponentNode | undefined;
 
   if (!node) {

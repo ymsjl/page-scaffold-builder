@@ -4,7 +4,17 @@ import {
   BetaSchemaForm,
   ProFormColumnsType,
 } from "@ant-design/pro-components";
-import { Button, Flex, Form, Input, InputNumber, List, Select, Space, Typography } from "antd";
+import {
+  Button,
+  Flex,
+  Form,
+  Input,
+  InputNumber,
+  List,
+  Select,
+  Space,
+  Typography,
+} from "antd";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   componentNodesSelectors,
@@ -25,7 +35,12 @@ import {
   PrimitiveVariableValue,
 } from "@/types";
 import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
-import { AppstoreOutlined, LeftOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
+import {
+  AppstoreOutlined,
+  LeftOutlined,
+  PlusOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
 import { ActionFlowSelector } from "./ActionFlowSelector";
 import { getValueByPath } from "../ComponentPreview/slotPath";
 
@@ -103,7 +118,9 @@ const buildNestedPropValue = (name: string | string[], value: unknown) => {
 const isPrimitivePropType = (type: FlattenedPropAttribute["type"]) =>
   type === "string" || type === "number" || type === "boolean";
 
-const getDefaultPrimitiveValue = (type: FlattenedPropAttribute["type"]): PrimitiveVariableValue => {
+const getDefaultPrimitiveValue = (
+  type: FlattenedPropAttribute["type"],
+): PrimitiveVariableValue => {
   if (type === "boolean") return false;
   if (type === "number") return 0;
   return "";
@@ -225,7 +242,12 @@ const PropertyPanel: React.FC = () => {
   const handleValuesChange = useCallback(
     (changedValues: Record<string, any>) => {
       if (!selectedNodeId) return;
-      dispatch(componentTreeActions.updateNodeProps({ id: selectedNodeId, props: changedValues }));
+      dispatch(
+        componentTreeActions.updateNodeProps({
+          id: selectedNodeId,
+          props: changedValues,
+        }),
+      );
     },
     [dispatch, selectedNodeId],
   );
@@ -328,21 +350,20 @@ const PropertyPanel: React.FC = () => {
           size="small"
           dataSource={items}
           renderItem={(node) => (
-            <List.Item
-              key={node.id}
-              style={{ padding: "4px 0" }}
-            >
+            <List.Item key={node.id} style={{ padding: "4px 0" }}>
               <Button
                 type="text"
                 size="middle"
                 icon={<AppstoreOutlined />}
-                onClick={() => dispatch(componentTreeActions.pushNodeToPropertyPanel(node.id))}
+                onClick={() =>
+                  dispatch(
+                    componentTreeActions.pushNodeToPropertyPanel(node.id),
+                  )
+                }
                 block
                 style={{ justifyContent: "flex-start" }}
               >
-                <Typography.Text ellipsis>
-                  {node.name}
-                </Typography.Text>
+                <Typography.Text ellipsis>{node.name}</Typography.Text>
                 <div style={{ flex: 1 }}></div>
                 <RightOutlined />
               </Button>
@@ -427,20 +448,24 @@ const PropertyPanel: React.FC = () => {
                 title="新增行操作按钮"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log('columns', columns)
-                  if (!columns?.some(col => col.valueType === 'option')) {
-                    dispatch(componentTreeActions.upsertColumnOfSelectedNode({
-                      title: '操作',
-                      valueType: 'option',
-                      dataIndex: '',
-                      width: 240
-                    }))
+                  console.log("columns", columns);
+                  if (!columns?.some((col) => col.valueType === "option")) {
+                    dispatch(
+                      componentTreeActions.upsertColumnOfSelectedNode({
+                        title: "操作",
+                        valueType: "option",
+                        dataIndex: "",
+                        width: 240,
+                      }),
+                    );
                   }
-                  dispatch(componentTreeActions.addNodeToSlot({
-                    targetNodeId: selectedNodeId!,
-                    propPath: 'rowActions',
-                    type: "Button",
-                  }));
+                  dispatch(
+                    componentTreeActions.addNodeToSlot({
+                      targetNodeId: selectedNodeId!,
+                      propPath: "rowActions",
+                      type: "Button",
+                    }),
+                  );
                 }}
                 icon={<PlusOutlined />}
               />
@@ -484,7 +509,15 @@ const PropertyPanel: React.FC = () => {
 
   const cardTitleElem = (
     <Space>
-      {showBackInPropertyPanel && <Button icon={<LeftOutlined />} size="small" onClick={() => dispatch(componentTreeActions.popNodeFromPropertyPanel())} />}
+      {showBackInPropertyPanel && (
+        <Button
+          icon={<LeftOutlined />}
+          size="small"
+          onClick={() =>
+            dispatch(componentTreeActions.popNodeFromPropertyPanel())
+          }
+        />
+      )}
       <Typography.Text>{`属性面板：${selectedNode.name}`}</Typography.Text>
     </Space>
   );
@@ -555,12 +588,14 @@ const PropertyPanel: React.FC = () => {
       >
         <Button
           onClick={() => {
-            dispatch(componentTreeActions.updateNodeProps({
-              id: selectedNodeId!,
-              props: {
-                dataSource: generateDataSource(columns)
-              }
-            }))
+            dispatch(
+              componentTreeActions.updateNodeProps({
+                id: selectedNodeId!,
+                props: {
+                  dataSource: generateDataSource(columns),
+                },
+              }),
+            );
           }}
         >
           生成模拟数据

@@ -24,8 +24,11 @@ export const mapValueTypeToValue = (col: ProCommonColumn) => {
 };
 
 export const generateDataSource = (columns: ProCommonColumn[]) => {
-  return columns.reduce((acc, col) => {
-    acc[col.dataIndex as string] = mapValueTypeToValue(col);
-    return acc;
-  }, {} as Record<string, unknown>);
-}
+  return columns.reduce(
+    (acc, col) => {
+      acc[col.dataIndex as string] = mapValueTypeToValue(col);
+      return acc;
+    },
+    {} as Record<string, unknown>,
+  );
+};

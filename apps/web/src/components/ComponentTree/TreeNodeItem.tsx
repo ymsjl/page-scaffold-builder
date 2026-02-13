@@ -1,6 +1,11 @@
 import React from "react";
 import type { ComponentInstance, ComponentType } from "@/types";
-import { PlusOutlined, DeleteOutlined, CheckOutlined, HolderOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  CheckOutlined,
+  HolderOutlined,
+} from "@ant-design/icons";
 import { useDraggable } from "@dnd-kit/core";
 import { useAppDispatch } from "@/store/hooks";
 import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
@@ -28,27 +33,22 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
   // 仅为非容器组件启用拖拽
   const isDraggable = !node.isContainer;
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({
-    id: `tree-node-${node.id}`,
-    data: {
-      type: "treeNode",
-      nodeId: node.id,
-      nodeType: node.type,
-    },
-    disabled: !isDraggable,
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `tree-node-${node.id}`,
+      data: {
+        type: "treeNode",
+        nodeId: node.id,
+        nodeType: node.type,
+      },
+      disabled: !isDraggable,
+    });
 
   const style: React.CSSProperties = transform
     ? {
-      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      opacity: isDragging ? 0.5 : 1,
-    }
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
     : {};
 
   React.useEffect(() => {
@@ -65,7 +65,12 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   const handleSaveEdit = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (editingName && editingName.trim()) {
-      dispatch(componentTreeActions.updateNode({ id: node.id, updates: { name: editingName.trim() } }));
+      dispatch(
+        componentTreeActions.updateNode({
+          id: node.id,
+          updates: { name: editingName.trim() },
+        }),
+      );
     }
     setIsEditing(false);
   };
@@ -87,11 +92,20 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
     const type = key as ComponentType;
     if (!node?.id) {
       // eslint-disable-next-line no-console
-      console.warn("[TreeNodeItem] handleSelectComponent: missing node id", node);
+      console.warn(
+        "[TreeNodeItem] handleSelectComponent: missing node id",
+        node,
+      );
       return;
     }
-    
-    dispatch(componentTreeActions.addNodeToSlot({ targetNodeId: node.id, propPath: "children", type }));
+
+    dispatch(
+      componentTreeActions.addNodeToSlot({
+        targetNodeId: node.id,
+        propPath: "children",
+        type,
+      }),
+    );
     dispatch(componentTreeActions.expandNode(node.id));
     setShowAddDropdownNodeId(null);
   };
@@ -104,22 +118,22 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   return (
     <div
       ref={setNodeRef}
-      style={{ padding: '4px', paddingLeft: `${level * 8}px`, ...style }}
+      style={{ padding: "4px", paddingLeft: `${level * 8}px`, ...style }}
       {...attributes}
     >
-      <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+      <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
         {/* 拖拽手柄 - 仅非容器组件显示 */}
         {isDraggable && (
           <div
             {...listeners}
             style={{
-              cursor: isDragging ? 'grabbing' : 'grab',
-              padding: '0 4px',
-              display: 'flex',
-              alignItems: 'center',
+              cursor: isDragging ? "grabbing" : "grab",
+              padding: "0 4px",
+              display: "flex",
+              alignItems: "center",
             }}
           >
-            <HolderOutlined style={{ color: '#999', fontSize: 12 }} />
+            <HolderOutlined style={{ color: "#999", fontSize: 12 }} />
           </div>
         )}
         <div style={{ flex: 1 }}>
@@ -156,8 +170,11 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
             <>
               {node.isContainer && (
                 <Dropdown
-                  menu={{ items: dropdownItems, onClick: handleSelectComponentFromMenu }}
-                  trigger={['click']}
+                  menu={{
+                    items: dropdownItems,
+                    onClick: handleSelectComponentFromMenu,
+                  }}
+                  trigger={["click"]}
                   open={isAddDropdownVisible}
                   onOpenChange={(open) => {
                     if (open) {

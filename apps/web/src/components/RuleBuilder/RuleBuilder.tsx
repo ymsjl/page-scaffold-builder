@@ -12,37 +12,33 @@ interface RuleBuilderProps {
   valueType?: string;
 }
 
-const RuleBuilder: React.FC<RuleBuilderProps> = React.memo(({ name, label, valueType }) => {
-  const dispatch = useAppDispatch();
-  const lastValueTypeRef = useRef(valueType);
+const RuleBuilder: React.FC<RuleBuilderProps> = React.memo(
+  ({ name, label, valueType }) => {
+    const dispatch = useAppDispatch();
+    const lastValueTypeRef = useRef(valueType);
 
-  // 在打开该弹窗时，会初始化表单值，此时不触发规则节点重置，以免 ruleNodes 刚被初始化就被清空
-  useEffect(() => {
-    if (lastValueTypeRef.current !== valueType) {
-      // 只有在不是第一次打开弹窗时，才重置规则节点
-      if (!(lastValueTypeRef.current === undefined && valueType !== undefined)) {
-        dispatch(componentTreeActions.updateEditingColumn({ ruleNodes: [] }));
+    // 在打开该弹窗时，会初始化表单值，此时不触发规则节点重置，以免 ruleNodes 刚被初始化就被清空
+    useEffect(() => {
+      if (lastValueTypeRef.current !== valueType) {
+        // 只有在不是第一次打开弹窗时，才重置规则节点
+        if (
+          !(lastValueTypeRef.current === undefined && valueType !== undefined)
+        ) {
+          dispatch(componentTreeActions.updateEditingColumn({ ruleNodes: [] }));
+        }
+        lastValueTypeRef.current = valueType;
       }
-      lastValueTypeRef.current = valueType;
-    }
-  }, [valueType, dispatch]);
+    }, [valueType, dispatch]);
 
-  return (
-    <Space
-      direction="vertical"
-      style={{ width: "100%" }}
-      size="middle"
-    >
-      <RulePreview
-        name={name}
-        label={label}
-        valueType={valueType}
-      />
-      <RuleLibrary valueType={valueType} />
-      <RuleCanvas />
-    </Space>
-  )
-});
+    return (
+      <Space direction="vertical" style={{ width: "100%" }} size="middle">
+        <RulePreview name={name} label={label} valueType={valueType} />
+        <RuleLibrary valueType={valueType} />
+        <RuleCanvas />
+      </Space>
+    );
+  },
+);
 
 RuleBuilder.displayName = "RuleBuilder";
 

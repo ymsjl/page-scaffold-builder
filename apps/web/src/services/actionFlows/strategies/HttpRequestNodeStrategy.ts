@@ -1,5 +1,9 @@
 import { BaseNodeStrategy } from "./BaseNodeStrategy";
-import type { ActionNodeBase, FlowExecutionContext, Port } from "@/types/actions";
+import type {
+  ActionNodeBase,
+  FlowExecutionContext,
+  Port,
+} from "@/types/actions";
 import { HttpRequestNodeParamsSchema } from "@/types/actions";
 
 /**
@@ -15,19 +19,22 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
   async execute(
     node: ActionNodeBase,
     inputs: Record<string, any>,
-    _context: FlowExecutionContext
+    _context: FlowExecutionContext,
   ): Promise<Record<string, any>> {
     // 解析并验证参数
     const params = HttpRequestNodeParamsSchema.parse(node.params);
-    
+
     // 允许从输入端口覆盖参数
     const url = this.getInput(inputs, "url", params.url);
     const method = this.getInput(inputs, "method", params.method);
     const body = this.getInput(inputs, "body", params.body);
-    const headers = { ...params.headers, ...this.getInput(inputs, "headers", {}) };
-    
+    const headers = {
+      ...params.headers,
+      ...this.getInput(inputs, "headers", {}),
+    };
+
     this.log(`Executing HTTP ${method} ${url}`);
-    
+
     try {
       const controller = new AbortController();
       const timeoutId = params.timeout
@@ -43,7 +50,7 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,
       });
-      
+
       if (timeoutId) clearTimeout(timeoutId);
 
       let data: any;
@@ -53,7 +60,7 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
       } else {
         data = await response.text();
       }
-      
+
       return this.createOutput({
         response: data,
         status: response.status,
@@ -64,7 +71,7 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
     } catch (error) {
       this.logError("HTTP request failed", error);
       throw new Error(
-        `HTTP Request failed: ${error instanceof Error ? error.message : String(error)}`
+        `HTTP Request failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -85,8 +92,18 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
       { id: "error", name: "Error", type: "exec", required: false },
       { id: "response", name: "Response", type: "any", required: false },
       { id: "status", name: "Status Code", type: "number", required: false },
-      { id: "statusText", name: "Status Text", type: "string", required: false },
-      { id: "headers", name: "Response Headers", type: "object", required: false },
+      {
+        id: "statusText",
+        name: "Status Text",
+        type: "string",
+        required: false,
+      },
+      {
+        id: "headers",
+        name: "Response Headers",
+        type: "object",
+        required: false,
+      },
     ];
   }
 
@@ -95,10 +112,10 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
     if (!baseValidation.valid) return baseValidation;
 
     const errors: string[] = [];
-    
+
     try {
       const params = HttpRequestNodeParamsSchema.parse(node.params);
-      
+
       if (!params.url || params.url.trim() === "") {
         errors.push("URL 不能为空");
       }

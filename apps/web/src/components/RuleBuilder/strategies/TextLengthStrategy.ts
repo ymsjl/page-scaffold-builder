@@ -1,4 +1,8 @@
-import { RuleNode, RuleNodeType, RuleParamsOfTextLengthSchema } from "../RuleParamsDateSchema";
+import {
+  RuleNode,
+  RuleNodeType,
+  RuleParamsOfTextLengthSchema,
+} from "../RuleParamsDateSchema";
 import LengthRuleEditor from "../ruleEditors/LengthRuleEditor";
 import { BaseStrategy } from "./BaseStrategy";
 import type { AntdRule } from "./types";

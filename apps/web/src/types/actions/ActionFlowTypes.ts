@@ -6,15 +6,15 @@ import { z } from "zod";
 
 /** 端口类型枚举 */
 export const PortTypeSchema = z.enum([
-  "exec",        // 执行流（控制流）
-  "any",         // 任意数据
+  "exec", // 执行流（控制流）
+  "any", // 任意数据
   "string",
   "number",
   "boolean",
   "object",
   "array",
   "httpResponse", // HTTP 响应
-  "formData",     // 表单数据
+  "formData", // 表单数据
 ]);
 export type PortType = z.infer<typeof PortTypeSchema>;
 
@@ -43,23 +43,25 @@ export const ActionNodeBaseSchema = z.object({
   label: z.string(),
   /** 节点参数配置 */
   params: z.any().default({}),
-  
+
   // ==== 可视化相关 ====
   /** 节点在画布上的位置 */
-  position: z.object({
-    x: z.number().default(0),
-    y: z.number().default(0),
-  }).optional(),
-  
+  position: z
+    .object({
+      x: z.number().default(0),
+      y: z.number().default(0),
+    })
+    .optional(),
+
   /** UI 样式（颜色、图标等） */
   style: z.any().optional(),
-  
+
   // ==== 端口定义 ====
   /** 输入端口 */
   inputs: z.array(PortSchema).default([]),
   /** 输出端口 */
   outputs: z.array(PortSchema).default([]),
-  
+
   // ==== 元数据 ====
   /** 节点描述 */
   description: z.string().optional(),
@@ -87,11 +89,11 @@ export const ActionEdgeSchema = z.object({
   targetPort: z.string().optional(),
   /** React Flow 目标 Handle ID */
   targetHandle: z.string().optional(),
-  
+
   // ==== 条件执行 ====
   /** 条件表达式（可选，用于条件分支） */
   condition: z.string().optional(),
-  
+
   // ==== 可视化相关 ====
   /** 边的样式 */
   style: z.any().optional(),
@@ -111,18 +113,18 @@ export const ActionFlowSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  
+
   /** 所有节点 */
   nodes: z.array(ActionNodeBaseSchema).default([]),
   /** 所有边 */
   edges: z.array(ActionEdgeSchema).default([]),
-  
+
   /** 入口节点 ID */
   entryNodeId: z.string().optional(),
-  
+
   /** 流程变量（初始上下文） */
   variables: z.any().optional(),
-  
+
   /** 创建/更新时间 */
   createdAt: z.number().optional(),
   updatedAt: z.number().optional(),
@@ -151,20 +153,22 @@ export const FlowExecutionContextSchema = z.object({
   /** 组件上下文（触发来源） */
   componentId: z.string().optional(),
   componentProps: z.any().optional(),
-  
+
   /** 全局服务访问 */
-  services: z.object({
-    store: z.any().optional(),      // Redux store
-    router: z.any().optional(),     // 路由
-    message: z.any().optional(),    // 消息服务
-  }).optional(),
-  
+  services: z
+    .object({
+      store: z.any().optional(), // Redux store
+      router: z.any().optional(), // 路由
+      message: z.any().optional(), // 消息服务
+    })
+    .optional(),
+
   /** 流程变量（动态） */
   variables: z.any().default({}),
-  
+
   /** 已执行节点的输出缓存 */
   nodeOutputs: z.any().default({}),
-  
+
   /** 触发事件数据 */
   eventData: z.any().optional(),
 });

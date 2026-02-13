@@ -1,5 +1,9 @@
 import { BaseNodeStrategy } from "./BaseNodeStrategy";
-import type { ActionNodeBase, FlowExecutionContext, Port } from "@/types/actions";
+import type {
+  ActionNodeBase,
+  FlowExecutionContext,
+  Port,
+} from "@/types/actions";
 import { DelayNodeParamsSchema } from "@/types/actions";
 
 /**
@@ -15,14 +19,14 @@ export class DelayNodeStrategy extends BaseNodeStrategy {
   async execute(
     node: ActionNodeBase,
     inputs: Record<string, any>,
-    _context: FlowExecutionContext
+    _context: FlowExecutionContext,
   ): Promise<Record<string, any>> {
     const params = DelayNodeParamsSchema.parse(node.params);
-    
+
     const duration = this.getInput(inputs, "duration", params.duration);
-    
+
     this.log(`Delaying for ${duration}ms`);
-    
+
     await new Promise((resolve) => setTimeout(resolve, duration));
 
     return this.createOutput({
@@ -34,7 +38,12 @@ export class DelayNodeStrategy extends BaseNodeStrategy {
   getInputPorts(_node: ActionNodeBase): Port[] {
     return [
       { id: "trigger", name: "Trigger", type: "exec", required: false },
-      { id: "duration", name: "Duration (ms)", type: "number", required: false },
+      {
+        id: "duration",
+        name: "Duration (ms)",
+        type: "number",
+        required: false,
+      },
     ];
   }
 
@@ -50,10 +59,10 @@ export class DelayNodeStrategy extends BaseNodeStrategy {
     if (!baseValidation.valid) return baseValidation;
 
     const errors: string[] = [];
-    
+
     try {
       const params = DelayNodeParamsSchema.parse(node.params);
-      
+
       if (params.duration < 0) {
         errors.push("延时时间不能为负数");
       }
