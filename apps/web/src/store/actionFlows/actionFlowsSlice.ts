@@ -1,10 +1,7 @@
-import {
-  createSlice,
-  createEntityAdapter,
-  PayloadAction,
-} from "@reduxjs/toolkit";
-import type { ActionFlow, ActionNodeBase, ActionEdge } from "@/types/actions";
-import { makeIdCreator } from "@/utils/makeIdCreator";
+import { createSlice, createEntityAdapter } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type { ActionFlow, ActionNodeBase, ActionEdge } from '@/types/actions';
+import { makeIdCreator } from '@/utils/makeIdCreator';
 
 // ============================================
 // Entity Adapters
@@ -16,9 +13,9 @@ export const flowAdapter = createEntityAdapter<ActionFlow>();
 // ID 生成器
 // ============================================
 
-export const makeFlowId = makeIdCreator("flow");
-export const makeNodeId = makeIdCreator("node");
-export const makeEdgeId = makeIdCreator("edge");
+export const makeFlowId = makeIdCreator('flow');
+export const makeNodeId = makeIdCreator('node');
+export const makeEdgeId = makeIdCreator('edge');
 
 // ============================================
 // State 定义
@@ -43,7 +40,7 @@ const initialState: ActionFlowsState = {
 // ============================================
 
 const slice = createSlice({
-  name: "actionFlows",
+  name: 'actionFlows',
   initialState,
   reducers: {
     /**
@@ -82,7 +79,7 @@ const slice = createSlice({
       state,
       action: PayloadAction<{
         id: string;
-        changes: Partial<Omit<ActionFlow, "id">>;
+        changes: Partial<Omit<ActionFlow, 'id'>>;
       }>,
     ) => {
       const { id, changes } = action.payload;
@@ -167,9 +164,7 @@ const slice = createSlice({
       const flow = state.flows.entities[state.activeFlowId];
       if (!flow) return;
 
-      const nodeIndex = flow.nodes.findIndex(
-        (n) => n.id === action.payload.nodeId,
-      );
+      const nodeIndex = flow.nodes.findIndex((n) => n.id === action.payload.nodeId);
       if (nodeIndex >= 0) {
         Object.assign(flow.nodes[nodeIndex], action.payload.changes);
         flow.updatedAt = Date.now();
@@ -223,9 +218,7 @@ const slice = createSlice({
       );
 
       // 从选中列表中移除
-      state.selectedNodeIds = state.selectedNodeIds.filter(
-        (id) => id !== action.payload,
-      );
+      state.selectedNodeIds = state.selectedNodeIds.filter((id) => id !== action.payload);
 
       flow.updatedAt = Date.now();
     },
@@ -234,7 +227,7 @@ const slice = createSlice({
      * @description 添加边（连接）
      * @param action.payload 边定义
      */
-    addEdge: (state, action: PayloadAction<Omit<ActionEdge, "id">>) => {
+    addEdge: (state, action: PayloadAction<Omit<ActionEdge, 'id'>>) => {
       if (!state.activeFlowId) return;
 
       const flow = state.flows.entities[state.activeFlowId];
@@ -277,9 +270,7 @@ const slice = createSlice({
       const flow = state.flows.entities[state.activeFlowId];
       if (!flow) return;
 
-      const edgeIndex = flow.edges.findIndex(
-        (e) => e.id === action.payload.edgeId,
-      );
+      const edgeIndex = flow.edges.findIndex((e) => e.id === action.payload.edgeId);
       if (edgeIndex >= 0) {
         Object.assign(flow.edges[edgeIndex], action.payload.changes);
         flow.updatedAt = Date.now();
@@ -348,7 +339,7 @@ export const flowSelectors = flowAdapter.getSelectors(
 
 // Persist the main actionFlows slice fields so user-created flows survive across sessions.
 export const actionFlowsPersistWhitelist: (keyof ActionFlowsState)[] = [
-  "flows",
-  "activeFlowId",
-  "selectedNodeIds",
+  'flows',
+  'activeFlowId',
+  'selectedNodeIds',
 ];

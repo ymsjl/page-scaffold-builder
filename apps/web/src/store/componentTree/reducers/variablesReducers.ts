@@ -1,9 +1,9 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { WritableDraft } from "immer";
-import type { PrimitiveVariableValue } from "@/types";
-import type { ComponentTreeState } from "../componentTreeSlice";
-import { makeVariableId } from "../componentTreeSlice";
-import { variableAdapter } from "../componentTreeAdapters";
+import { type PayloadAction } from '@reduxjs/toolkit';
+import { type WritableDraft } from 'immer';
+import type { PrimitiveVariableValue } from '@/types';
+import { makeVariableId } from '@/utils/makeIdCreator';
+import type { ComponentTreeState } from '../componentTreeSlice';
+import { variableAdapter } from '../componentTreeAdapters';
 
 type VariableChangePayload = {
   name: string;
@@ -15,14 +15,16 @@ type SetVariableValuePayload = {
   value: PrimitiveVariableValue;
 };
 
-const buildVariableValuesFromDefinitions = (
-  state: WritableDraft<ComponentTreeState>,
-) => {
-  const nextValues: Record<string, PrimitiveVariableValue> = {};
-  for (const variable of Object.values(state.variables.entities)) {
-    if (!variable) continue;
-    nextValues[variable.name] = variable.initialValue;
-  }
+const buildVariableValuesFromDefinitions = (state: WritableDraft<ComponentTreeState>) => {
+  const nextValues = Object.values(state.variables.entities).reduce(
+    (acc, variable) => {
+      if (variable) {
+        acc[variable.name] = variable.initialValue;
+      }
+      return acc;
+    },
+    {} as Record<string, PrimitiveVariableValue>,
+  );
   state.variableValues = nextValues;
 };
 
@@ -45,10 +47,7 @@ export const createVariablesReducers = () => {
       state.editingVariableId = null;
     },
 
-    applyVariableChange: (
-      state: State,
-      action: PayloadAction<VariableChangePayload>,
-    ) => {
+    applyVariableChange: (state: State, action: PayloadAction<VariableChangePayload>) => {
       const editingVariable = state.editingVariableId
         ? state.variables.entities[state.editingVariableId]
         : null;
@@ -84,10 +83,7 @@ export const createVariablesReducers = () => {
       }
     },
 
-    setVariableValue: (
-      state: State,
-      action: PayloadAction<SetVariableValuePayload>,
-    ) => {
+    setVariableValue: (state: State, action: PayloadAction<SetVariableValuePayload>) => {
       const variable = Object.values(state.variables.entities).find(
         (item) => item?.name === action.payload.name,
       );

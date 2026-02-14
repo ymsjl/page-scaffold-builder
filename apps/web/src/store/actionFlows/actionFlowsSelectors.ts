@@ -1,6 +1,6 @@
-import { createSelector } from "reselect";
-import type { RootState } from "../rootReducer";
-import { flowAdapter } from "./actionFlowsSlice";
+import { createSelector } from 'reselect';
+import type { RootState } from '../rootReducer';
+import { flowAdapter } from './actionFlowsSlice';
 
 // ============================================
 // 基础 Selectors
@@ -16,80 +16,54 @@ export const flowSelectors = flowAdapter.getSelectors(
 // Flow Selectors
 // ============================================
 
-export const selectActiveFlowId = (state: RootState) =>
-  state.actionFlows.activeFlowId;
+export const selectActiveFlowId = (state: RootState) => state.actionFlows.activeFlowId;
 
 export const selectActiveFlow = createSelector(
   [flowSelectors.selectEntities, selectActiveFlowId],
   (entities, activeId) => (activeId ? entities[activeId] : null),
 );
 
-export const selectAllFlows = createSelector(
-  flowSelectors.selectAll,
-  (flows) => flows,
-);
+export const selectAllFlows = createSelector(flowSelectors.selectAll, (flows) => flows);
 
 export const selectActionFlowOptions = createSelector(selectAllFlows, (flows) =>
   flows.map((flow) => ({ label: flow.name, value: flow.id })),
 );
 
 export const selectFlowById = (flowId: string) =>
-  createSelector(
-    flowSelectors.selectEntities,
-    (entities) => entities[flowId] || null,
-  );
+  createSelector(flowSelectors.selectEntities, (entities) => entities[flowId] || null);
 
 // ============================================
 // Node Selectors
 // ============================================
 
-export const selectActiveFlowNodes = createSelector(
-  selectActiveFlow,
-  (flow) => flow?.nodes || [],
-);
+export const selectActiveFlowNodes = createSelector(selectActiveFlow, (flow) => flow?.nodes || []);
 
 export const selectActiveFlowNodeById = (nodeId: string) =>
-  createSelector(
-    selectActiveFlowNodes,
-    (nodes) => nodes.find((n) => n.id === nodeId) || null,
-  );
+  createSelector(selectActiveFlowNodes, (nodes) => nodes.find((n) => n.id === nodeId) || null);
 
 export const selectActiveFlowNodesByType = (nodeType: string) =>
-  createSelector(selectActiveFlowNodes, (nodes) =>
-    nodes.filter((n) => n.type === nodeType),
-  );
+  createSelector(selectActiveFlowNodes, (nodes) => nodes.filter((n) => n.type === nodeType));
 
 // ============================================
 // Edge Selectors
 // ============================================
 
-export const selectActiveFlowEdges = createSelector(
-  selectActiveFlow,
-  (flow) => flow?.edges || [],
-);
+export const selectActiveFlowEdges = createSelector(selectActiveFlow, (flow) => flow?.edges || []);
 
 export const selectActiveFlowEdgeById = (edgeId: string) =>
-  createSelector(
-    selectActiveFlowEdges,
-    (edges) => edges.find((e) => e.id === edgeId) || null,
-  );
+  createSelector(selectActiveFlowEdges, (edges) => edges.find((e) => e.id === edgeId) || null);
 
 export const selectIncomingEdges = (nodeId: string) =>
-  createSelector(selectActiveFlowEdges, (edges) =>
-    edges.filter((e) => e.target === nodeId),
-  );
+  createSelector(selectActiveFlowEdges, (edges) => edges.filter((e) => e.target === nodeId));
 
 export const selectOutgoingEdges = (nodeId: string) =>
-  createSelector(selectActiveFlowEdges, (edges) =>
-    edges.filter((e) => e.source === nodeId),
-  );
+  createSelector(selectActiveFlowEdges, (edges) => edges.filter((e) => e.source === nodeId));
 
 // ============================================
 // Selection Selectors
 // ============================================
 
-export const selectSelectedNodeIds = (state: RootState) =>
-  state.actionFlows.selectedNodeIds;
+export const selectSelectedNodeIds = (state: RootState) => state.actionFlows.selectedNodeIds;
 
 export const selectSelectedNodes = createSelector(
   [selectActiveFlowNodes, selectSelectedNodeIds],
@@ -97,9 +71,7 @@ export const selectSelectedNodes = createSelector(
 );
 
 export const selectIsNodeSelected = (nodeId: string) =>
-  createSelector(selectSelectedNodeIds, (selectedIds) =>
-    selectedIds.includes(nodeId),
-  );
+  createSelector(selectSelectedNodeIds, (selectedIds) => selectedIds.includes(nodeId));
 
 // ============================================
 // 图结构分析 Selectors
@@ -133,10 +105,7 @@ export const selectExitNodes = createSelector(
 export const selectIsolatedNodes = createSelector(
   [selectActiveFlowNodes, selectActiveFlowEdges],
   (nodes, edges) => {
-    const connectedNodes = new Set([
-      ...edges.map((e) => e.source),
-      ...edges.map((e) => e.target),
-    ]);
+    const connectedNodes = new Set([...edges.map((e) => e.source), ...edges.map((e) => e.target)]);
     return nodes.filter((n) => !connectedNodes.has(n.id));
   },
 );
@@ -164,29 +133,18 @@ export const selectHasCycle = createSelector(
       recursionStack.add(nodeId);
 
       const neighbors = adjacencyList.get(nodeId) || [];
-      for (const neighbor of neighbors) {
+      const hasCycle = neighbors.some((neighbor) => {
         if (!visited.has(neighbor)) {
-          if (hasCycleUtil(neighbor)) {
-            return true;
-          }
-        } else if (recursionStack.has(neighbor)) {
-          return true;
+          return hasCycleUtil(neighbor);
         }
-      }
+        return recursionStack.has(neighbor);
+      });
 
       recursionStack.delete(nodeId);
-      return false;
+      return hasCycle;
     };
 
-    for (const node of nodes) {
-      if (!visited.has(node.id)) {
-        if (hasCycleUtil(node.id)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
+    return nodes.some((node) => !visited.has(node.id) && hasCycleUtil(node.id));
   },
 );
 
@@ -194,18 +152,16 @@ export const selectHasCycle = createSelector(
 // Flow 元数据 Selectors
 // ============================================
 
-export const selectActiveFlowMetadata = createSelector(
-  selectActiveFlow,
-  (flow) =>
-    flow
-      ? {
-          id: flow.id,
-          name: flow.name,
-          description: flow.description,
-          nodeCount: flow.nodes.length,
-          edgeCount: flow.edges.length,
-          createdAt: flow.createdAt,
-          updatedAt: flow.updatedAt,
-        }
-      : null,
+export const selectActiveFlowMetadata = createSelector(selectActiveFlow, (flow) =>
+  flow
+    ? {
+        id: flow.id,
+        name: flow.name,
+        description: flow.description,
+        nodeCount: flow.nodes.length,
+        edgeCount: flow.edges.length,
+        createdAt: flow.createdAt,
+        updatedAt: flow.updatedAt,
+      }
+    : null,
 );

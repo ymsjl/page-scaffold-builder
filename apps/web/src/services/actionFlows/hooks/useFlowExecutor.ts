@@ -1,14 +1,10 @@
-import { useCallback, useRef, useState } from "react";
-import { useAppSelector } from "@/store/hooks";
-import type {
-  FlowExecutionContext,
-  NodeExecutionResult,
-} from "@/types/actions";
-import { FlowExecutor } from "../core/FlowExecutor";
-import { nodeStrategyRegistry } from "../strategies/NodeStrategyRegistry";
-import { message } from "antd";
-import store from "@/store/store";
-import { selectVariableValues } from "@/store/componentTree/componentTreeSelectors";
+import { useCallback, useRef, useState } from 'react';
+import { useAppSelector } from '@/store/hooks';
+import type { FlowExecutionContext, NodeExecutionResult } from '@/types/actions';
+import { message } from 'antd';
+import { selectVariableValues } from '@/store/componentTree/componentTreeSelectors';
+import { FlowExecutor } from '../core/FlowExecutor';
+import { nodeStrategyRegistry } from '../strategies/NodeStrategyRegistry';
 
 /**
  * 使用 FlowExecutor 的 Hook
@@ -19,12 +15,8 @@ export function useFlowExecutor() {
   // 使用 useRef 保持执行器实例稳定 (Vercel best practice: rerender-use-ref-transient-values)
   const executorRef = useRef(new FlowExecutor(nodeStrategyRegistry));
   const [isExecuting, setIsExecuting] = useState(false);
-  const [executionResults, setExecutionResults] = useState<
-    NodeExecutionResult[]
-  >([]);
-  const flowEntities = useAppSelector(
-    (state) => state.actionFlows.flows.entities,
-  );
+  const [executionResults, setExecutionResults] = useState<NodeExecutionResult[]>([]);
+  const flowEntities = useAppSelector((state) => state.actionFlows.flows.entities);
   const globalVariableValues = useAppSelector(selectVariableValues);
 
   /**
@@ -58,25 +50,19 @@ export function useFlowExecutor() {
           nodeOutputs: {},
           services: {
             ...(context?.services || {}),
-            store,
           },
         };
 
         // 执行 Flow
-        const results = await executorRef.current.executeFlow(
-          flow,
-          executionContext,
-        );
+        const results = await executorRef.current.executeFlow(flow, executionContext);
         setExecutionResults(results);
 
         // 检查是否有失败的节点
         const failedNodes = results.filter((r) => !r.success);
         if (failedNodes.length > 0) {
-          message.error(
-            `Flow execution completed with ${failedNodes.length} error(s)`,
-          );
+          message.error(`Flow execution completed with ${failedNodes.length} error(s)`);
         } else {
-          message.success("Flow executed successfully");
+          message.success('Flow executed successfully');
         }
 
         return results;

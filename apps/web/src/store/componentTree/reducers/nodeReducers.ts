@@ -1,11 +1,10 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { WritableDraft } from "immer";
-import type { ComponentInstance, ComponentNode } from "@/types/Component";
-import type { ComponentTreeState } from "../componentTreeSlice";
-import { getComponentPrototype } from "@/componentMetas";
-import { makeNodeId } from "../componentTreeSlice";
-import { normalizeComponentTree } from "../componentTreeNormalization";
-import { merge } from "lodash-es";
+import { type PayloadAction } from '@reduxjs/toolkit';
+import { type WritableDraft } from 'immer';
+import { merge } from 'lodash-es';
+import type { ComponentInstance, ComponentNode } from '@/types/Component';
+import { makeNodeId } from '@/utils/makeIdCreator';
+import type { ComponentTreeState } from '../componentTreeSlice';
+import { normalizeComponentTree } from '../componentTreeNormalization';
 
 /**
  * 节点管理相关的 Reducers
@@ -19,23 +18,31 @@ export const createNodeReducers = () => {
      * @description 添加组件节点
      * @param action.payload.parentId 父组件节点ID
      * @param action.payload.type 组件类型
+     * @param action.payload.label 组件名称（可选，默认为"New {type}"）
+     * @param action.payload.isContainer 是否为容器组件（可选）
+     * @param action.payload.defaultProps 默认属性（可选）
      */
     addNode: (
       state: State,
       {
-        payload: { parentId, type },
-      }: PayloadAction<Pick<ComponentNode, "parentId" | "type">>,
+        payload: { parentId, type, label, isContainer, defaultProps },
+      }: PayloadAction<
+        Pick<ComponentNode, 'parentId' | 'type'> & {
+          label?: string;
+          isContainer?: boolean;
+          defaultProps?: Record<string, any>;
+        }
+      >,
     ) => {
-      const nodes = state.normalizedTree.entities.nodes;
+      const { nodes } = state.normalizedTree.entities;
       const rootIds = state.normalizedTree.result;
-      const prototype = getComponentPrototype(type);
       const node: ComponentNode = {
         id: makeNodeId(),
         parentId,
         type,
-        name: `New ${prototype?.label}`,
-        isContainer: prototype?.isContainer,
-        props: prototype?.defaultProps ? { ...prototype.defaultProps } : {},
+        name: label || `New ${type}`,
+        isContainer: isContainer ?? false,
+        props: defaultProps ? { ...defaultProps } : {},
         childrenIds: [],
       };
       nodes[node.id] = node;
@@ -56,7 +63,7 @@ export const createNodeReducers = () => {
      * @param action.payload 组件节点ID
      */
     removeNode: (state: State, { payload: id }: PayloadAction<string>) => {
-      const nodes = state.normalizedTree.entities.nodes;
+      const { nodes } = state.normalizedTree.entities;
       const rootIds = state.normalizedTree.result;
       const node = nodes[id];
       if (!node) return;
@@ -91,11 +98,9 @@ export const createNodeReducers = () => {
      */
     updateNode: (
       state: State,
-      {
-        payload: { id, updates },
-      }: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
+      { payload: { id, updates } }: PayloadAction<{ id: string; updates: Partial<ComponentNode> }>,
     ) => {
-      const nodes = state.normalizedTree.entities.nodes;
+      const { nodes } = state.normalizedTree.entities;
       const node = nodes[id];
       if (!node) return;
       nodes[id] = { ...node, ...updates };
@@ -103,11 +108,9 @@ export const createNodeReducers = () => {
 
     updateNodeProps: (
       state: State,
-      {
-        payload: { id, props },
-      }: PayloadAction<{ id: string; props: Record<string, any> }>,
+      { payload: { id, props } }: PayloadAction<{ id: string; props: Record<string, any> }>,
     ) => {
-      const nodes = state.normalizedTree.entities.nodes;
+      const { nodes } = state.normalizedTree.entities;
       const node = nodes[id];
       if (!node) return;
       nodes[id].props = merge({}, nodes[id].props, props);
@@ -129,10 +132,7 @@ export const createNodeReducers = () => {
       state.expandedKeys = payload;
     },
 
-    pushNodeToPropertyPanel: (
-      state: State,
-      { payload }: PayloadAction<string>,
-    ) => {
+    pushNodeToPropertyPanel: (state: State, { payload }: PayloadAction<string>) => {
       if (!state.propertyPanelNodeIds) {
         state.propertyPanelNodeIds = [];
       }

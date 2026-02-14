@@ -1,16 +1,16 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { current, WritableDraft } from "immer";
-import type { ProCommonColumn } from "@/types";
-import type { ComponentNodeWithColumns } from "@/types/Component";
-import type { ComponentTreeState } from "../componentTreeSlice";
-import { ProCommonColumnSchema } from "@/types/tableColumsTypes";
-import { makeColumnId } from "../componentTreeSlice";
-import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField";
-import { getSelectedNodeWithColumns } from "../componentTreeSelectors";
-import { entityModelAdapter } from "../componentTreeAdapters";
+import { type PayloadAction } from '@reduxjs/toolkit';
+import { type WritableDraft } from 'immer';
+import type { ProCommonColumn } from '@/types';
+import type { ComponentNodeWithColumns } from '@/types/Component';
+import { ProCommonColumnSchema } from '@/types/tableColumsTypes';
+import { makeColumnId } from '@/utils/makeIdCreator';
+import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
+import type { ComponentTreeState } from '../componentTreeSlice';
+import { getSelectedNodeWithColumns } from '../componentTreeSelectors';
+import { entityModelAdapter } from '../componentTreeAdapters';
 
 const upsertColumnOnNode = (
-  props: WritableDraft<ComponentNodeWithColumns["props"]>,
+  props: WritableDraft<ComponentNodeWithColumns['props']>,
   changes: Partial<ProCommonColumn>,
   insertPos?: number,
 ) => {
@@ -23,11 +23,7 @@ const upsertColumnOnNode = (
       ...changes,
       key: changes.key ?? makeColumnId(),
     });
-    if (
-      typeof insertPos === "number" &&
-      insertPos >= 0 &&
-      insertPos <= props.columns.length
-    ) {
+    if (typeof insertPos === 'number' && insertPos >= 0 && insertPos <= props.columns.length) {
       props.columns.splice(insertPos, 0, validatedChanges);
     } else {
       props.columns.push(validatedChanges);
@@ -53,7 +49,7 @@ export const createColumnReducers = () => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
 
-      const props = node.props;
+      const { props } = node;
       const entityModelId = props?.entityModelId;
       if (!entityModelId) return;
 
@@ -81,7 +77,7 @@ export const createColumnReducers = () => {
       state: State,
       action: PayloadAction<Partial<ProCommonColumn>>,
     ) => {
-      const editingColumn = state.editingColumn;
+      const { editingColumn } = state;
       if (!editingColumn) return;
       const { key = makeColumnId() } = editingColumn;
       const nextColumn = ProCommonColumnSchema.parse({
@@ -117,8 +113,8 @@ export const createColumnReducers = () => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
 
-      const changes = "changes" in payload ? payload.changes : payload;
-      const insertPos = "insertPos" in payload ? payload.insertPos : undefined;
+      const changes = 'changes' in payload ? payload.changes : payload;
+      const insertPos = 'insertPos' in payload ? payload.insertPos : undefined;
       upsertColumnOnNode(node.props, changes, insertPos);
     },
 
@@ -126,14 +122,11 @@ export const createColumnReducers = () => {
      * @description 删除选中节点的列配置
      * @param payload 列的 key;
      */
-    deleteColumnForSelectedNode: (
-      state: State,
-      action: PayloadAction<string>,
-    ) => {
+    deleteColumnForSelectedNode: (state: State, action: PayloadAction<string>) => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
 
-      const props = node.props;
+      const { props } = node;
       const idx = props.columns.findIndex((c) => c.key === action.payload);
       if (idx >= 0) {
         props.columns.splice(idx, 1);
@@ -155,10 +148,9 @@ export const createColumnReducers = () => {
       const node = getSelectedNodeWithColumns(state);
       if (!node) return;
 
-      const props = node.props;
-      const columns = props.columns;
-      if (from < 0 || from >= columns.length || to < 0 || to >= columns.length)
-        return;
+      const { props } = node;
+      const { columns } = props;
+      if (from < 0 || from >= columns.length || to < 0 || to >= columns.length) return;
 
       const [movedItem] = columns.splice(from, 1);
       columns.splice(to, 0, movedItem);

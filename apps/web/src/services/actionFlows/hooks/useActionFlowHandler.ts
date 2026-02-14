@@ -1,6 +1,7 @@
-import { useCallback } from "react";
-import type { FlowExecutionContext } from "@/types/actions";
-import { useFlowExecutor } from "./useFlowExecutor";
+import { useCallback } from 'react';
+import type { FlowExecutionContext } from '@/types/actions';
+import { useAppDispatch } from '@/store/hooks';
+import { useFlowExecutor } from './useFlowExecutor';
 
 type CreateFlowHandlerOptions = {
   componentId?: string;
@@ -10,6 +11,7 @@ type CreateFlowHandlerOptions = {
 
 export function useActionFlowHandler() {
   const { executeFlow } = useFlowExecutor();
+  const dispatch = useAppDispatch();
 
   const createFlowHandler = useCallback(
     (flowId: string, options?: CreateFlowHandlerOptions) => {
@@ -17,6 +19,9 @@ export function useActionFlowHandler() {
         const context: Partial<FlowExecutionContext> = {
           componentId: options?.componentId,
           componentProps: options?.componentProps,
+          services: {
+            dispatch,
+          },
           eventData: {
             eventName: options?.eventName,
             payload: eventData,
@@ -27,7 +32,7 @@ export function useActionFlowHandler() {
         await executeFlow(flowId, context);
       };
     },
-    [executeFlow],
+    [dispatch, executeFlow],
   );
 
   return {

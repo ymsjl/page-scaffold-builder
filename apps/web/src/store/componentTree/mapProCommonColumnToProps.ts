@@ -1,7 +1,8 @@
-import type { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
-import { FormItemPropsZ, ProCommonColumn } from "@/types/tableColumsTypes";
-import { ProFieldValueType, ProSchema } from "@ant-design/pro-components";
+import type { ProFieldValueType, ProSchema } from '@ant-design/pro-components';
+
+import type { RuleNode } from '@/components/RuleBuilder/RuleParamsDateSchema';
+import { ruleNodeContext } from '@/components/RuleBuilder/strategies';
+import type { FormItemPropsZ, ProCommonColumn } from '@/types/tableColumsTypes';
 
 export const ruleNodesToColumnProps = (
   nodes: RuleNode[],
@@ -14,16 +15,14 @@ export const ruleNodesToColumnProps = (
   const enabledRuleNodes = nodes.filter((n) => n.enabled);
 
   const formItemProps: Partial<FormItemPropsZ> = {
-    rules: enabledRuleNodes?.map((node) =>
-      ruleNodeContext.toRule(node, node.message),
-    ),
+    rules: enabledRuleNodes?.map((node) => ruleNodeContext.toRule(node, node.message)),
   };
 
   const fieldProps: Record<string, any> = {};
 
-  for (const node of enabledRuleNodes) {
+  enabledRuleNodes.forEach((node) => {
     ruleNodeContext.applyFieldProps(node, fieldProps);
-  }
+  });
 
   const result: {
     formItemProps?: FormItemPropsZ;
@@ -39,27 +38,19 @@ export const ruleNodesToColumnProps = (
 export const mapProCommonColumnToProps = (
   column: Partial<ProCommonColumn>,
 ): ProSchema<Record<string, any>> => {
-  const {
-    ruleNodes,
-    formItemProps,
-    fieldProps,
-    valueType,
-    ...restColumnProps
-  } = column;
+  const { ruleNodes, formItemProps, fieldProps, valueType, ...restColumnProps } = column;
   const columnPropsCalcByRules = ruleNodesToColumnProps(ruleNodes || []);
   return {
-    ...{ title: "", dataIndex: "", key: "" },
+    ...{ title: '', dataIndex: '', key: '' },
     valueType: valueType as ProFieldValueType,
     ...restColumnProps,
-    formItemProps: Object.assign(
-      {},
-      columnPropsCalcByRules.formItemProps,
-      formItemProps,
-    ),
-    fieldProps: Object.assign(
-      {},
-      columnPropsCalcByRules.fieldProps,
-      fieldProps,
-    ),
+    formItemProps: {
+      ...columnPropsCalcByRules.formItemProps,
+      ...formItemProps,
+    },
+    fieldProps: {
+      ...columnPropsCalcByRules.fieldProps,
+      ...fieldProps,
+    },
   };
 };

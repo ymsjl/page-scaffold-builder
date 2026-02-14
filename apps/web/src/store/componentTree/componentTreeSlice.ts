@@ -1,9 +1,7 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
-import type { NormalizedComponentTree } from "@/types/Component";
-import type { ProCommonColumn } from "@/types";
-import type { PrimitiveVariableValue } from "@/types";
-import { makeIdCreator } from "@/utils/makeIdCreator";
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type { NormalizedComponentTree } from '@/types/Component';
+import type { ProCommonColumn, PrimitiveVariableValue } from '@/types';
 import {
   createNodeReducers,
   createColumnReducers,
@@ -12,15 +10,9 @@ import {
   createEntityModelReducers,
   createNodeRefReducers,
   createVariablesReducers,
-} from "./reducers";
-import { createEmptyNormalizedTree } from "./componentTreeNormalization";
-import { entityModelAdapter, variableAdapter } from "./componentTreeAdapters";
-
-export const makeColumnId = makeIdCreator("column");
-export const makeNodeId = makeIdCreator("node");
-export const makeRuleId = makeIdCreator("rule");
-export const makeEntityModelId = makeIdCreator("et");
-export const makeVariableId = makeIdCreator("var");
+} from './reducers';
+import { createEmptyNormalizedTree } from './componentTreeNormalization';
+import { entityModelAdapter, variableAdapter } from './componentTreeAdapters';
 
 export interface ComponentTreeState {
   selectedNodeId: string | null;
@@ -56,16 +48,16 @@ const initialState: ComponentTreeState = {
 
 export type ComponentTreeSnapshot = Pick<
   ComponentTreeState,
-  | "selectedNodeId"
-  | "expandedKeys"
-  | "normalizedTree"
-  | "entityModel"
-  | "variables"
-  | "variableValues"
+  | 'selectedNodeId'
+  | 'expandedKeys'
+  | 'normalizedTree'
+  | 'entityModel'
+  | 'variables'
+  | 'variableValues'
 >;
 
 const slice = createSlice({
-  name: "componentTree",
+  name: 'componentTree',
   initialState,
   reducers: {
     ...createNodeReducers(),
@@ -75,13 +67,10 @@ const slice = createSlice({
     ...createRuleNodeReducers(),
     ...createEntityModelReducers(),
     ...createVariablesReducers(),
-    hydrateFromSnapshot: (
-      state,
-      action: PayloadAction<Partial<ComponentTreeSnapshot>>,
-    ) => {
+    hydrateFromSnapshot: (state, action: PayloadAction<Partial<ComponentTreeSnapshot>>) => {
       const next = action.payload;
 
-      if (typeof next.selectedNodeId !== "undefined") {
+      if (typeof next.selectedNodeId !== 'undefined') {
         state.selectedNodeId = next.selectedNodeId;
       }
       if (Array.isArray(next.expandedKeys)) {

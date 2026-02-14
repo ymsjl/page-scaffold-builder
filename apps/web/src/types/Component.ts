@@ -1,19 +1,19 @@
-import type React from "react";
-import { ProCommonColumn, PropAttribute } from "@/types";
+import type React from 'react';
+import { type ProCommonColumn, type PropAttribute } from '@/types';
 
 export const COMPONENT_TYPES = [
-  "Page",
-  "Table",
-  "Form",
-  "Description",
-  "Button",
-  "Text",
-  "Modal",
+  'Page',
+  'Table',
+  'Form',
+  'Description',
+  'Button',
+  'Text',
+  'Modal',
 ] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
-export type SlotRenderMode = "inline" | "panel";
-export type SlotKind = "reactNode" | "reactNodeArray";
+export type SlotRenderMode = 'inline' | 'panel';
+export type SlotKind = 'reactNode' | 'reactNodeArray';
 
 export interface SlotDefinition {
   id: string;
@@ -31,21 +31,21 @@ export interface SlotDefinition {
  * 用于 ReactNode 类型的 props，允许将组件树中的节点作为 props 传递
  */
 export interface NodeRef {
-  type: "nodeRef";
+  type: 'nodeRef';
   nodeId: string;
 }
 
 export interface ToolbarActionButtonProps {
   key?: string;
   children: React.ReactNode;
-  type?: "default" | "primary" | "dashed" | "link" | "text";
-  size?: "large" | "middle" | "small";
+  type?: 'default' | 'primary' | 'dashed' | 'link' | 'text';
+  size?: 'large' | 'middle' | 'small';
   danger?: boolean;
   disabled?: boolean;
   loading?: boolean;
   block?: boolean;
   ghost?: boolean;
-  htmlType?: "button" | "submit" | "reset";
+  htmlType?: 'button' | 'submit' | 'reset';
 }
 
 /**
@@ -53,12 +53,12 @@ export interface ToolbarActionButtonProps {
  */
 export function isNodeRef(value: unknown): value is NodeRef {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "type" in value &&
-    (value as NodeRef).type === "nodeRef" &&
-    "nodeId" in value &&
-    typeof (value as NodeRef).nodeId === "string"
+    'type' in value &&
+    (value as NodeRef).type === 'nodeRef' &&
+    'nodeId' in value &&
+    typeof (value as NodeRef).nodeId === 'string'
   );
 }
 
@@ -132,7 +132,7 @@ export interface ComponentPrototype {
 
 export interface ComponentNode<P = Record<string, any>> extends Omit<
   ComponentInstance<P>,
-  "children"
+  'children'
 > {
   parentId?: ComponentId | null;
   childrenIds: ComponentId[];

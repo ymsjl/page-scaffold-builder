@@ -1,21 +1,19 @@
-import { normalize, schema } from "normalizr";
+import { normalize, schema } from 'normalizr';
 import type {
   ComponentInstance,
   ComponentNode,
   ComponentId,
   NormalizedComponentTree,
-} from "@/types/Component";
+} from '@/types/Component';
 
 export const componentNodeSchema = new schema.Entity(
-  "nodes",
+  'nodes',
   {},
   {
-    idAttribute: "id",
+    idAttribute: 'id',
     processStrategy: (value: ComponentInstance) => {
       const { children, ...rest } = value as ComponentInstance;
-      const childrenIds = Array.isArray(children)
-        ? children.map((child) => child.id)
-        : [];
+      const childrenIds = Array.isArray(children) ? children.map((child) => child.id) : [];
 
       return {
         ...rest,
@@ -37,10 +35,7 @@ export const normalizeComponentTree = (
 
   return {
     entities: {
-      nodes: (normalized.entities.nodes || {}) as Record<
-        ComponentId,
-        ComponentNode
-      >,
+      nodes: (normalized.entities.nodes || {}) as Record<ComponentId, ComponentNode>,
     },
     result: (normalized.result || []) as ComponentId[],
   };

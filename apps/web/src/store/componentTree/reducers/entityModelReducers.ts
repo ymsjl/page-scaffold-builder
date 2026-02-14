@@ -1,9 +1,9 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { WritableDraft } from "immer";
-import type { EntityModel } from "@/types";
-import type { ComponentTreeState } from "../componentTreeSlice";
-import { makeEntityModelId } from "../componentTreeSlice";
-import { entityModelAdapter } from "../componentTreeAdapters";
+import { type PayloadAction } from '@reduxjs/toolkit';
+import { type WritableDraft } from 'immer';
+import type { EntityModel } from '@/types';
+import { makeEntityModelId } from '@/utils/makeIdCreator';
+import type { ComponentTreeState } from '../componentTreeSlice';
+import { entityModelAdapter } from '../componentTreeAdapters';
 
 type UpdateFieldExtraPayload = {
   entityModelId: string;
@@ -47,10 +47,7 @@ export const createEntityModelReducers = () => {
      * @description 应用实体模型的变更（创建或更新）
      * @param action.payload 实体模型数据（不含ID）
      */
-    applyEntityModelChange: (
-      state: State,
-      action: PayloadAction<Omit<EntityModel, "id">>,
-    ) => {
+    applyEntityModelChange: (state: State, action: PayloadAction<Omit<EntityModel, 'id'>>) => {
       entityModelAdapter.upsertOne(state.entityModel, {
         ...action.payload,
         id: state.editingEntityModelId ?? makeEntityModelId(),
@@ -73,10 +70,7 @@ export const createEntityModelReducers = () => {
      * @param action.payload.fieldId 字段ID
      * @param action.payload.extra 字段扩展配置
      */
-    updateEntityFieldExtra: (
-      state: State,
-      action: PayloadAction<UpdateFieldExtraPayload>,
-    ) => {
+    updateEntityFieldExtra: (state: State, action: PayloadAction<UpdateFieldExtraPayload>) => {
       const { entityModelId, fieldId, extra } = action.payload;
       const entity = state.entityModel.entities[entityModelId];
       if (!entity || !entity.fields) {

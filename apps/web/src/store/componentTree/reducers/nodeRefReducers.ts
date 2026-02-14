@@ -1,12 +1,11 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { WritableDraft } from "immer";
-import type { ComponentNode } from "@/types/Component";
-import type { ComponentTreeState } from "../componentTreeSlice";
-import { getComponentPrototype } from "@/componentMetas";
-import { makeNodeId } from "../componentTreeSlice";
+import { type PayloadAction } from '@reduxjs/toolkit';
+import { type WritableDraft } from 'immer';
+import type { ComponentNode } from '@/types/Component';
+import { makeNodeId } from '@/utils/makeIdCreator';
+import type { ComponentTreeState } from '../componentTreeSlice';
 
 // Constants
-const NODE_REF_TYPE = "nodeRef" as const;
+const NODE_REF_TYPE = 'nodeRef' as const;
 
 // Helper functions
 const getPropsPathTarget = (
@@ -14,12 +13,12 @@ const getPropsPathTarget = (
   propPath: string,
   createMissing: boolean,
 ): { parent: Record<string, any>; key: string } | null => {
-  const pathParts = propPath.split(".");
+  const pathParts = propPath.split('.');
   let current: Record<string, any> = node.props;
 
-  for (let i = 0; i < pathParts.length - 1; i++) {
+  for (let i = 0; i < pathParts.length - 1; i += 1) {
     const part = pathParts[i];
-    if (!current[part] || typeof current[part] !== "object") {
+    if (!current[part] || typeof current[part] !== 'object') {
       if (!createMissing) return null;
       current[part] = {};
     }
@@ -66,30 +65,33 @@ export const createNodeRefReducers = () => {
      * @param action.payload.targetNodeId 目标节点ID
      * @param action.payload.propPath props 路径，如 "toolbar.actions"
      * @param action.payload.type 新增节点的组件类型
+     * @param action.payload.label 组件名称（可选，默认为"New {type}"）
+     * @param action.payload.isContainer 是否为容器组件（可选）
+     * @param action.payload.defaultProps 默认属性（可选）
      */
     addNodeToSlot: (
       state: State,
       action: PayloadAction<{
         targetNodeId: string;
         propPath: string;
-        type: ComponentNode["type"];
+        type: ComponentNode['type'];
+        label?: string;
+        isContainer?: boolean;
+        defaultProps?: Record<string, any>;
       }>,
     ) => {
-      const nodes = state.normalizedTree.entities.nodes;
-      const { targetNodeId, propPath, type } = action.payload;
+      const { nodes } = state.normalizedTree.entities;
+      const { targetNodeId, propPath, type, label, isContainer, defaultProps } = action.payload;
       const targetNode = nodes[targetNodeId];
       if (!targetNode) return;
-
-      const prototype = getComponentPrototype(type);
-      if (!prototype) return;
 
       const newNode: ComponentNode = {
         id: makeNodeId(),
         parentId: targetNodeId,
         type,
-        name: `New ${prototype?.label}`,
-        isContainer: prototype?.isContainer,
-        props: prototype?.defaultProps ? { ...prototype.defaultProps } : {},
+        name: label || `New ${type}`,
+        isContainer: isContainer ?? false,
+        props: defaultProps ? { ...defaultProps } : {},
         childrenIds: [],
       };
 
@@ -116,7 +118,7 @@ export const createNodeRefReducers = () => {
         refNodeId: string;
       }>,
     ) => {
-      const nodes = state.normalizedTree.entities.nodes;
+      const { nodes } = state.normalizedTree.entities;
       const { targetNodeId, propPath, refNodeId } = action.payload;
       const node = nodes[targetNodeId];
       if (!node) return;
@@ -138,7 +140,7 @@ export const createNodeRefReducers = () => {
         refNodeId: string;
       }>,
     ) => {
-      const nodes = state.normalizedTree.entities.nodes;
+      const { nodes } = state.normalizedTree.entities;
       const { targetNodeId, propPath, refNodeId } = action.payload;
       const node = nodes[targetNodeId];
       if (!node) return;
@@ -149,13 +151,9 @@ export const createNodeRefReducers = () => {
 
       if (Array.isArray(parent[key])) {
         parent[key] = parent[key].filter(
-          (ref: any) =>
-            !(ref?.type === NODE_REF_TYPE && ref?.nodeId === refNodeId),
+          (ref: any) => !(ref?.type === NODE_REF_TYPE && ref?.nodeId === refNodeId),
         );
-      } else if (
-        parent[key]?.type === NODE_REF_TYPE &&
-        parent[key]?.nodeId === refNodeId
-      ) {
+      } else if (parent[key]?.type === NODE_REF_TYPE && parent[key]?.nodeId === refNodeId) {
         parent[key] = null;
       }
     },
@@ -176,7 +174,7 @@ export const createNodeRefReducers = () => {
         to: number;
       }>,
     ) => {
-      const nodes = state.normalizedTree.entities.nodes;
+      const { nodes } = state.normalizedTree.entities;
       const { targetNodeId, propPath, from, to } = action.payload;
       const node = nodes[targetNodeId];
       if (!node) return;

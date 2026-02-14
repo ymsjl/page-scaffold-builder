@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // ============================================
 // 端口系统（数据流）
@@ -6,15 +6,15 @@ import { z } from "zod";
 
 /** 端口类型枚举 */
 export const PortTypeSchema = z.enum([
-  "exec", // 执行流（控制流）
-  "any", // 任意数据
-  "string",
-  "number",
-  "boolean",
-  "object",
-  "array",
-  "httpResponse", // HTTP 响应
-  "formData", // 表单数据
+  'exec', // 执行流（控制流）
+  'any', // 任意数据
+  'string',
+  'number',
+  'boolean',
+  'object',
+  'array',
+  'httpResponse', // HTTP 响应
+  'formData', // 表单数据
 ]);
 export type PortType = z.infer<typeof PortTypeSchema>;
 
@@ -158,6 +158,7 @@ export const FlowExecutionContextSchema = z.object({
   services: z
     .object({
       store: z.any().optional(), // Redux store
+      dispatch: z.any().optional(), // Redux dispatch
       router: z.any().optional(), // 路由
       message: z.any().optional(), // 消息服务
     })

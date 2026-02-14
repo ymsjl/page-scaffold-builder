@@ -1,11 +1,21 @@
-import React from "react";
-import { useDroppable } from "@dnd-kit/core";
-import { List, Popover, Typography } from "antd";
-import { useAppDispatch } from "@/store/hooks";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import { availableComponents } from "@/componentMetas";
-import type { ComponentType } from "@/types";
-import "./DropZone.css";
+import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { Popover, Typography } from 'antd';
+import { useAppDispatch } from '@/store/hooks';
+import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import type { ComponentType } from '@/types';
+import { COMPONENT_TYPES } from '@/types/Component';
+import './DropZone.css';
+
+const componentLabelMap: Record<ComponentType, string> = {
+  Page: '页面组件',
+  Table: '表格组件',
+  Form: '表单组件',
+  Description: '描述组件',
+  Button: '按钮组件',
+  Text: '文本组件',
+  Modal: '模态框组件',
+};
 
 interface DropZoneProps {
   /** 放置区域的唯一标识符，格式: targetNodeId:propPath */
@@ -32,7 +42,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
   const { isOver, setNodeRef, active } = useDroppable({
     id,
     data: {
-      type: "dropZone",
+      type: 'dropZone',
       targetNodeId,
       propPath,
       acceptTypes,
@@ -40,15 +50,11 @@ export const DropZone: React.FC<DropZoneProps> = ({
   });
 
   // 检查当前拖拽的组件是否被接受
-  const dragData = active?.data?.current as
-    | { type: string; nodeType: string }
-    | undefined;
+  const dragData = active?.data?.current as { type: string; nodeType: string } | undefined;
 
   const isAccepted =
-    dragData?.type === "treeNode" &&
-    (!acceptTypes ||
-      acceptTypes.length === 0 ||
-      acceptTypes.includes(dragData.nodeType));
+    dragData?.type === 'treeNode' &&
+    (!acceptTypes || acceptTypes.length === 0 || acceptTypes.includes(dragData.nodeType));
 
   const isActive = isOver && isAccepted;
   const isInvalid = isOver && !isAccepted;
@@ -56,12 +62,11 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
   const filteredComponents = React.useMemo(
     () =>
-      availableComponents.filter(
-        (comp) =>
-          !acceptTypes ||
-          acceptTypes.length === 0 ||
-          acceptTypes.includes(comp.type),
-      ),
+      COMPONENT_TYPES.filter((type) => type !== 'Page')
+        .map((type) => ({ type, label: componentLabelMap[type] ?? type }))
+        .filter(
+          (comp) => !acceptTypes || acceptTypes.length === 0 || acceptTypes.includes(comp.type),
+        ),
     [acceptTypes],
   );
 
@@ -77,6 +82,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         targetNodeId,
         propPath,
         type,
+        label: componentLabelMap[type],
       }),
     );
     setIsPopoverOpen(false);
@@ -84,20 +90,31 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
   const popoverContent =
     filteredComponents.length > 0 ? (
-      <ul
-        style={{ listStyle: "none", margin: 0, padding: 0, overflowY: "auto" }}
-      >
-        {filteredComponents.map((item, index) => (
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, overflowY: 'auto' }}>
+        {filteredComponents.map((item) => (
           <li
             key={item.type}
             style={{
-              cursor: "pointer",
-              padding: "4px 12px",
-              fontSize: "14px",
+              padding: '0',
+              margin: '0',
+              listStyle: 'none',
             }}
-            onClick={() => handleSelectComponent(item.type)}
           >
-            {item.label}
+            <button
+              type="button"
+              style={{
+                cursor: 'pointer',
+                padding: '4px 12px',
+                fontSize: '14px',
+                border: 'none',
+                background: 'transparent',
+                textAlign: 'left',
+                width: '100%',
+              }}
+              onClick={() => handleSelectComponent(item.type)}
+            >
+              {item.label}
+            </button>
           </li>
         ))}
       </ul>
@@ -112,20 +129,22 @@ export const DropZone: React.FC<DropZoneProps> = ({
       placement="right"
       arrow={false}
       overlayInnerStyle={{
-        padding: "4px 0",
+        padding: '4px 0',
       }}
       open={isPopoverOpen && !isDragging}
       onOpenChange={(open) => setIsPopoverOpen(open)}
     >
       <div
         ref={setNodeRef}
-        className={`drop-zone ${isActive ? "drop-zone--active" : ""} ${
-          isInvalid ? "drop-zone--invalid" : ""
-        } ${active ? "drop-zone--dragging" : ""}`}
+        className={`drop-zone ${isActive ? 'drop-zone--active' : ''} ${
+          isInvalid ? 'drop-zone--invalid' : ''
+        } ${active ? 'drop-zone--dragging' : ''}`}
+        title={label}
       >
         <div className="drop-zone__icon" aria-hidden>
           +
         </div>
+        {label ? <div className="drop-zone__label">{label}</div> : null}
       </div>
     </Popover>
   );

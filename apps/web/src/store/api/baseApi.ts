@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export type SqlParseRequest = {
   sql: string;
@@ -22,16 +22,16 @@ export type SqlParseResponse = {
   warnings?: string[];
 };
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 export const baseApi = createApi({
-  reducerPath: "baseApi",
+  reducerPath: 'baseApi',
   baseQuery: fetchBaseQuery({ baseUrl }),
   endpoints: (builder) => ({
     parseSql: builder.mutation<SqlParseResponse, SqlParseRequest>({
       query: (body) => ({
-        url: "/api/sql/parse",
-        method: "POST",
+        url: '/api/sql/parse',
+        method: 'POST',
         body,
       }),
     }),

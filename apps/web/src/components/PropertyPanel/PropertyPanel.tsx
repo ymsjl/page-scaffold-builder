@@ -1,21 +1,8 @@
-import React, { useCallback, useEffect, useMemo } from "react";
-import {
-  ProCard,
-  BetaSchemaForm,
-  ProFormColumnsType,
-} from "@ant-design/pro-components";
-import {
-  Button,
-  Flex,
-  Form,
-  Input,
-  InputNumber,
-  List,
-  Select,
-  Space,
-  Typography,
-} from "antd";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { ProCard, BetaSchemaForm, type ProFormColumnsType } from '@ant-design/pro-components';
+import { Button, Flex, Form, Input, InputNumber, List, Select, Space, Typography } from 'antd';
+import { AppstoreOutlined, LeftOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   componentNodesSelectors,
   entityModelSelectors,
@@ -23,87 +10,72 @@ import {
   selectNodeInPropertyPanel,
   selectShowBackInPropertyPanel,
   variableSelectors,
-} from "@/store/componentTree/componentTreeSelectors";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import { SchemaList } from "../SchemaBuilderModal/SchemaList";
-import { getComponentPrototype } from "@/componentMetas";
+} from '@/store/componentTree/componentTreeSelectors';
+import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { getComponentPrototype } from '@/componentMetas';
 import {
-  ComponentNode,
+  type ComponentNode,
   isNodeRef,
   isVariableRef,
-  PropAttribute,
-  PrimitiveVariableValue,
-} from "@/types";
-import { VALUE_TYPE_ENUM_MAP } from "../SchemaBuilderModal/constants";
-import {
-  AppstoreOutlined,
-  LeftOutlined,
-  PlusOutlined,
-  RightOutlined,
-} from "@ant-design/icons";
-import { ActionFlowSelector } from "./ActionFlowSelector";
-import { getValueByPath } from "../ComponentPreview/slotPath";
+  type PropAttribute,
+  type PrimitiveVariableValue,
+} from '@/types';
+import { SchemaList } from '../SchemaBuilderModal/SchemaList';
+import { VALUE_TYPE_ENUM_MAP } from '../SchemaBuilderModal/constants';
+import { ActionFlowSelector } from './ActionFlowSelector';
+import { getValueByPath } from '../ComponentPreview/slotPath';
 
-import "./styles.css";
-import { generateDataSource } from "../ComponentPreview/ProTableForPreview/mapValueTypeToValue";
+import './styles.css';
+import { generateDataSource } from '../ComponentPreview/ProTableForPreview/mapValueTypeToValue';
 
-interface FlattenedPropAttribute extends Omit<PropAttribute, "name"> {
+interface FlattenedPropAttribute extends Omit<PropAttribute, 'name'> {
   name: string | string[];
   isObjectChild?: boolean; // 标记是否为对象的子属性
 }
 
-function flattenPropAttributes(
-  attrs: PropAttribute[],
-): FlattenedPropAttribute[] {
-  const result: FlattenedPropAttribute[] = [];
-
-  for (const attr of attrs) {
+function flattenPropAttributes(attrs: PropAttribute[]): FlattenedPropAttribute[] {
+  return attrs.flatMap((attr) => {
     // 如果是对象类型且有 children，则创建分组并展开子属性
-    if (attr.type === "object" && attr.children && attr.children.length > 0) {
+    if (attr.type === 'object' && attr.children && attr.children.length > 0) {
       // 为每个子属性添加路径前缀和分组信息
-      for (const child of attr.children) {
-        result.push({
-          ...child,
-          name: [attr.name, child.name], // 使用数组路径
-          group: attr.label, // 使用父属性的 label 作为分组名
-          isObjectChild: true,
-        });
-      }
-    } else {
-      // 普通属性保持不变
-      result.push(attr);
+      return attr.children.map((child) => ({
+        ...child,
+        name: [attr.name, child.name], // 使用数组路径
+        group: attr.label, // 使用父属性的 label 作为分组名
+        isObjectChild: true,
+      })) as FlattenedPropAttribute[];
     }
-  }
-
-  return result;
+    // 普通属性保持不变
+    return [attr] as FlattenedPropAttribute[];
+  });
 }
 
 const EMPTY_STATE_STYLE: React.CSSProperties = {
-  border: "1px solid #e8e8e8",
-  borderRadius: "4px",
-  background: "white",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  height: "100%",
-  color: "#999",
+  border: '1px solid #e8e8e8',
+  borderRadius: '4px',
+  background: 'white',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: '100%',
+  color: '#999',
 };
 
 const NO_CONFIG_STYLE: React.CSSProperties = {
-  borderRadius: "4px",
-  background: "white",
-  padding: "24px",
-  textAlign: "center",
-  color: "#999",
+  borderRadius: '4px',
+  background: 'white',
+  padding: '24px',
+  textAlign: 'center',
+  color: '#999',
 };
 
 const FORM_STYLES: React.CSSProperties = {
-  height: "100%",
-  overflowY: "auto",
+  height: '100%',
+  overflowY: 'auto',
 };
 
 const normalizePropPath = (name: string | string[]) =>
-  Array.isArray(name) ? name.join(".") : name;
+  Array.isArray(name) ? name.join('.') : name;
 
 const buildNestedPropValue = (name: string | string[], value: unknown) => {
   if (!Array.isArray(name)) {
@@ -115,15 +87,13 @@ const buildNestedPropValue = (name: string | string[], value: unknown) => {
     .reduce((acc, current) => ({ [current]: acc }), value as any);
 };
 
-const isPrimitivePropType = (type: FlattenedPropAttribute["type"]) =>
-  type === "string" || type === "number" || type === "boolean";
+const isPrimitivePropType = (type: FlattenedPropAttribute['type']) =>
+  type === 'string' || type === 'number' || type === 'boolean';
 
-const getDefaultPrimitiveValue = (
-  type: FlattenedPropAttribute["type"],
-): PrimitiveVariableValue => {
-  if (type === "boolean") return false;
-  if (type === "number") return 0;
-  return "";
+const getDefaultPrimitiveValue = (type: FlattenedPropAttribute['type']): PrimitiveVariableValue => {
+  if (type === 'boolean') return false;
+  if (type === 'number') return 0;
+  return '';
 };
 
 interface VariableBindingEditorProps {
@@ -145,17 +115,17 @@ const VariableBindingEditor: React.FC<VariableBindingEditorProps> = ({
   return (
     <Flex vertical gap={8}>
       <Select
-        value={isVariable ? "variable" : "constant"}
+        value={isVariable ? 'variable' : 'constant'}
         options={[
-          { label: "常量", value: "constant" },
-          { label: "变量", value: "variable" },
+          { label: '常量', value: 'constant' },
+          { label: '变量', value: 'variable' },
         ]}
         onChange={(source) => {
-          if (source === "variable") {
+          if (source === 'variable') {
             const fallbackVariableName = variableNames[0];
             if (!fallbackVariableName) return;
             onSetValue(item.name, {
-              type: "variableRef",
+              type: 'variableRef',
               variableName: fallbackVariableName,
             });
             return;
@@ -164,36 +134,42 @@ const VariableBindingEditor: React.FC<VariableBindingEditorProps> = ({
         }}
       />
 
-      {isVariable ? (
+      {isVariable && (
         <Select
           value={currentValue?.variableName}
           options={variableNames.map((name) => ({ label: name, value: name }))}
           onChange={(variableName) => {
-            onSetValue(item.name, { type: "variableRef", variableName });
+            onSetValue(item.name, { type: 'variableRef', variableName });
           }}
         />
-      ) : item.type === "boolean" ? (
+      )}
+
+      {!isVariable && item.type === 'boolean' && (
         <Select
           value={Boolean(currentValue)}
           options={[
-            { label: "true", value: true },
-            { label: "false", value: false },
+            { label: 'true', value: true },
+            { label: 'false', value: false },
           ]}
           onChange={(nextValue) => onSetValue(item.name, nextValue)}
         />
-      ) : item.type === "number" ? (
+      )}
+
+      {!isVariable && item.type === 'number' && (
         <InputNumber
-          value={typeof currentValue === "number" ? currentValue : undefined}
-          style={{ width: "100%" }}
+          value={typeof currentValue === 'number' ? currentValue : undefined}
+          style={{ width: '100%' }}
           onChange={(nextValue) => {
-            if (typeof nextValue === "number") {
+            if (typeof nextValue === 'number') {
               onSetValue(item.name, nextValue);
             }
           }}
         />
-      ) : (
+      )}
+
+      {!isVariable && item.type !== 'boolean' && item.type !== 'number' && (
         <Input
-          value={typeof currentValue === "string" ? currentValue : ""}
+          value={typeof currentValue === 'string' ? currentValue : ''}
           onChange={(event) => onSetValue(item.name, event.target.value)}
         />
       )}
@@ -274,10 +250,7 @@ const PropertyPanel: React.FC = () => {
     [entityModels],
   );
 
-  const variableNames = useMemo(
-    () => variables.map((item) => item.name),
-    [variables],
-  );
+  const variableNames = useMemo(() => variables.map((item) => item.name), [variables]);
 
   const setPropValue = useCallback(
     (name: string | string[], value: unknown) => {
@@ -294,22 +267,15 @@ const PropertyPanel: React.FC = () => {
   );
 
   const componentPrototype = useMemo(
-    () =>
-      selectedComponentType
-        ? getComponentPrototype(selectedComponentType)
-        : undefined,
+    () => (selectedComponentType ? getComponentPrototype(selectedComponentType) : undefined),
     [selectedComponentType],
   );
 
   const propAttrs = useMemo(() => {
-    const attrs = Object.values(componentPrototype?.propsTypes ?? {}).map(
-      (item) => ({
-        ...item,
-        ...(item.name === "entityModelId"
-          ? { options: entityModelOptions }
-          : {}),
-      }),
-    );
+    const attrs = Object.values(componentPrototype?.propsTypes ?? {}).map((item) => ({
+      ...item,
+      ...(item.name === 'entityModelId' ? { options: entityModelOptions } : {}),
+    }));
     // 扁平化对象类型属性
     return flattenPropAttributes(attrs);
   }, [componentPrototype, entityModelOptions]);
@@ -320,10 +286,7 @@ const PropertyPanel: React.FC = () => {
 
   const renderSchemaList = useCallback(() => <SchemaList />, []);
 
-  const renderActionFlowSelector = useCallback(
-    () => <ActionFlowSelector />,
-    [],
-  );
+  const renderActionFlowSelector = useCallback(() => <ActionFlowSelector />, []);
 
   const renderComponentPropList = useCallback(
     (item: FlattenedPropAttribute) => {
@@ -338,11 +301,7 @@ const PropertyPanel: React.FC = () => {
         .filter((node): node is ComponentNode => Boolean(node));
 
       if (items.length === 0) {
-        return (
-          <Typography.Text type="secondary">
-            暂无组件，请拖拽添加
-          </Typography.Text>
-        );
+        return <Typography.Text type="secondary">暂无组件，请拖拽添加</Typography.Text>;
       }
 
       return (
@@ -350,21 +309,17 @@ const PropertyPanel: React.FC = () => {
           size="small"
           dataSource={items}
           renderItem={(node) => (
-            <List.Item key={node.id} style={{ padding: "4px 0" }}>
+            <List.Item key={node.id} style={{ padding: '4px 0' }}>
               <Button
                 type="text"
                 size="middle"
                 icon={<AppstoreOutlined />}
-                onClick={() =>
-                  dispatch(
-                    componentTreeActions.pushNodeToPropertyPanel(node.id),
-                  )
-                }
+                onClick={() => dispatch(componentTreeActions.pushNodeToPropertyPanel(node.id))}
                 block
-                style={{ justifyContent: "flex-start" }}
+                style={{ justifyContent: 'flex-start' }}
               >
                 <Typography.Text ellipsis>{node.name}</Typography.Text>
-                <div style={{ flex: 1 }}></div>
+                <div style={{ flex: 1 }} />
                 <RightOutlined />
               </Button>
             </List.Item>
@@ -377,7 +332,7 @@ const PropertyPanel: React.FC = () => {
 
   const createColumn = useCallback(
     (item: FlattenedPropAttribute) => {
-      const valueType = VALUE_TYPE_ENUM_MAP[item.type] || item.type || "text";
+      const valueType = VALUE_TYPE_ENUM_MAP[item.type] || item.type || 'text';
       // 支持数组路径（用于嵌套对象属性）
       const nameOrPath = item.name;
       const result = {
@@ -392,25 +347,16 @@ const PropertyPanel: React.FC = () => {
       } as ProFormColumnsType<any>;
 
       // 检查 name 是否为 "columns"（兼容字符串和数组路径）
-      const itemName = Array.isArray(item.name)
-        ? item.name[item.name.length - 1]
-        : item.name;
+      const itemName = Array.isArray(item.name) ? item.name[item.name.length - 1] : item.name;
 
-      if (itemName === "columns") {
+      if (itemName === 'columns') {
         result.renderFormItem = renderSchemaList;
         result.tooltip = undefined;
         result.formItemProps = {
-          className: "schema-list-form-item",
+          className: 'schema-list-form-item',
           label: (
-            <Flex
-              align="center"
-              justify="space-between"
-              gap={8}
-              style={{ width: "100%" }}
-            >
-              <Typography.Text style={{ flex: 1 }}>
-                {item.label}
-              </Typography.Text>
+            <Flex align="center" justify="space-between" gap={8} style={{ width: '100%' }}>
+              <Typography.Text style={{ flex: 1 }}>{item.label}</Typography.Text>
 
               <Button
                 size="small"
@@ -425,22 +371,15 @@ const PropertyPanel: React.FC = () => {
             </Flex>
           ),
         };
-      } else if (itemName === "entityModelId") {
+      } else if (itemName === 'entityModelId') {
         result.valueEnum = entityModelValueEnum;
-      } else if (itemName === "rowActions") {
+      } else if (itemName === 'rowActions') {
         result.renderFormItem = () => renderComponentPropList(item);
         result.formItemProps = {
-          className: "schema-list-form-item",
+          className: 'schema-list-form-item',
           label: (
-            <Flex
-              align="center"
-              justify="space-between"
-              gap={8}
-              style={{ width: "100%" }}
-            >
-              <Typography.Text style={{ flex: 1 }}>
-                {item.label}
-              </Typography.Text>
+            <Flex align="center" justify="space-between" gap={8} style={{ width: '100%' }}>
+              <Typography.Text style={{ flex: 1 }}>{item.label}</Typography.Text>
 
               <Button
                 size="small"
@@ -448,22 +387,25 @@ const PropertyPanel: React.FC = () => {
                 title="新增行操作按钮"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("columns", columns);
-                  if (!columns?.some((col) => col.valueType === "option")) {
+                  if (!columns?.some((col) => col.valueType === 'option')) {
                     dispatch(
                       componentTreeActions.upsertColumnOfSelectedNode({
-                        title: "操作",
-                        valueType: "option",
-                        dataIndex: "",
+                        title: '操作',
+                        valueType: 'option',
+                        dataIndex: '',
                         width: 240,
                       }),
                     );
                   }
+                  const prototype = getComponentPrototype('Button');
                   dispatch(
                     componentTreeActions.addNodeToSlot({
                       targetNodeId: selectedNodeId!,
-                      propPath: "rowActions",
-                      type: "Button",
+                      propPath: 'rowActions',
+                      type: 'Button',
+                      label: prototype?.label,
+                      isContainer: prototype?.isContainer,
+                      defaultProps: prototype?.defaultProps,
                     }),
                   );
                 }}
@@ -472,12 +414,12 @@ const PropertyPanel: React.FC = () => {
             </Flex>
           ),
         };
-      } else if (item.type === "actionFlow") {
+      } else if (item.type === 'actionFlow') {
         // 动作流类型使用自定义渲染器
         result.renderFormItem = renderActionFlowSelector;
-      } else if (item.type === "reactNode" || item.type === "reactNodeArray") {
+      } else if (item.type === 'reactNode' || item.type === 'reactNodeArray') {
         result.renderFormItem = () => renderComponentPropList(item);
-        result.valueType = "text";
+        result.valueType = 'text';
       } else if (isPrimitivePropType(item.type) && variableNames.length > 0) {
         result.renderFormItem = () => (
           <VariableBindingEditor
@@ -492,12 +434,15 @@ const PropertyPanel: React.FC = () => {
       return result;
     },
     [
-      entityModelValueEnum,
-      handleStartAddingColumn,
-      renderSchemaList,
-      renderActionFlowSelector,
-      renderComponentPropList,
       variableNames,
+      renderSchemaList,
+      handleStartAddingColumn,
+      entityModelValueEnum,
+      renderComponentPropList,
+      columns,
+      dispatch,
+      selectedNodeId,
+      renderActionFlowSelector,
       form,
       setPropValue,
     ],
@@ -513,9 +458,7 @@ const PropertyPanel: React.FC = () => {
         <Button
           icon={<LeftOutlined />}
           size="small"
-          onClick={() =>
-            dispatch(componentTreeActions.popNodeFromPropertyPanel())
-          }
+          onClick={() => dispatch(componentTreeActions.popNodeFromPropertyPanel())}
         />
       )}
       <Typography.Text>{`属性面板：${selectedNode.name}`}</Typography.Text>
@@ -524,15 +467,8 @@ const PropertyPanel: React.FC = () => {
 
   if (propAttrs.length === 0) {
     return (
-      <ProCard
-        bordered
-        style={{ borderRadius: "8px" }}
-        title={cardTitleElem}
-        size="small"
-      >
-        <div style={NO_CONFIG_STYLE}>
-          组件 {selectedNode.type} 暂无可配置属性
-        </div>
+      <ProCard bordered style={{ borderRadius: '8px' }} title={cardTitleElem} size="small">
+        <div style={NO_CONFIG_STYLE}>组件 {selectedNode.type} 暂无可配置属性</div>
       </ProCard>
     );
   }
@@ -546,8 +482,8 @@ const PropertyPanel: React.FC = () => {
         headerBordered
         bordered
         size="small"
-        style={{ borderRadius: "8px" }}
-        bodyStyle={{ padding: "16px" }}
+        style={{ borderRadius: '8px' }}
+        bodyStyle={{ padding: '16px' }}
       >
         <BetaSchemaForm
           initialValues={selectedNode.props}
@@ -563,7 +499,7 @@ const PropertyPanel: React.FC = () => {
 
   const groupedPropAttr = propAttrs.reduce(
     (acc, propAttr) => {
-      const group = propAttr.group || "基础配置";
+      const group = propAttr.group || '基础配置';
       if (!acc[group]) {
         acc[group] = [];
       }
@@ -583,8 +519,8 @@ const PropertyPanel: React.FC = () => {
         collapsible
         defaultCollapsed={false}
         bordered
-        style={{ borderRadius: "8px" }}
-        bodyStyle={{ padding: "16px" }}
+        style={{ borderRadius: '8px' }}
+        bodyStyle={{ padding: '16px' }}
       >
         <Button
           onClick={() => {
@@ -611,8 +547,8 @@ const PropertyPanel: React.FC = () => {
           collapsible
           defaultCollapsed={index > 2}
           bordered
-          style={{ borderRadius: "8px", marginTop: "12px" }}
-          bodyStyle={{ padding: "16px" }}
+          style={{ borderRadius: '8px', marginTop: '12px' }}
+          bodyStyle={{ padding: '16px' }}
         >
           <BetaSchemaForm
             initialValues={selectedNode.props}

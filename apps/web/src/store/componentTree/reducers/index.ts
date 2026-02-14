@@ -6,10 +6,10 @@
  * 在主 slice 中使用 spread 操作符组合所有 reducers
  */
 
-export { createNodeReducers } from "./nodeReducers";
-export { createColumnReducers } from "./columnReducers";
-export { createColumnEditingReducers } from "./columnEditingReducers";
-export { createRuleNodeReducers } from "./ruleNodeReducers";
-export { createEntityModelReducers } from "./entityModelReducers";
-export { createNodeRefReducers } from "./nodeRefReducers";
-export { createVariablesReducers } from "./variablesReducers";
+export { createNodeReducers } from './nodeReducers';
+export { createColumnReducers } from './columnReducers';
+export { createColumnEditingReducers } from './columnEditingReducers';
+export { createRuleNodeReducers } from './ruleNodeReducers';
+export { createEntityModelReducers } from './entityModelReducers';
+export { createNodeRefReducers } from './nodeRefReducers';
+export { createVariablesReducers } from './variablesReducers';

@@ -1,13 +1,13 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { WritableDraft } from "immer";
+import { type PayloadAction } from '@reduxjs/toolkit';
+import { type WritableDraft } from 'immer';
 import type {
   RuleNodeParams,
   RuleTemplate,
-} from "@/components/RuleBuilder/RuleParamsDateSchema";
-import type { ComponentTreeState } from "../componentTreeSlice";
-import { ruleNodeContext } from "@/components/RuleBuilder/strategies";
-import { RuleNode } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { makeRuleId } from "../componentTreeSlice";
+  RuleNode,
+} from '@/components/RuleBuilder/RuleParamsDateSchema';
+import { ruleNodeContext } from '@/components/RuleBuilder/strategies';
+import { makeRuleId } from '@/utils/makeIdCreator';
+import type { ComponentTreeState } from '../componentTreeSlice';
 
 /**
  * 规则节点相关的 Reducers
@@ -21,10 +21,7 @@ export const createRuleNodeReducers = () => {
      * @description 向正在编辑的列属性中添加规则节点
      * @param action.payload 规则节点模板
      */
-    addRuleNodeToEditingColumn: (
-      state: State,
-      action: PayloadAction<RuleTemplate>,
-    ) => {
+    addRuleNodeToEditingColumn: (state: State, action: PayloadAction<RuleTemplate>) => {
       if (!state.editingColumn) return;
       const { type, defaultParams, name } = action.payload;
       const newRuleNode = {
@@ -52,26 +49,19 @@ export const createRuleNodeReducers = () => {
     ) => {
       if (!state.editingColumn?.ruleNodes) return;
       const { id, params } = action.payload;
-      const targetNode = state.editingColumn?.ruleNodes.find(
-        (n) => n.id === id,
-      );
+      const targetNode = state.editingColumn?.ruleNodes.find((n) => n.id === id);
       if (!targetNode) return;
       Object.assign(targetNode.params, params);
       targetNode.message =
         targetNode.message ||
-        ruleNodeContext
-          .getStrategyForNodeOrThrow(targetNode)
-          .buildDefaultMessage(targetNode);
+        ruleNodeContext.getStrategyForNodeOrThrow(targetNode).buildDefaultMessage(targetNode);
     },
 
     /**
      * @description 删除正在编辑的列属性中的规则节点
      * @param action.payload 规则节点ID
      */
-    deleteRuleNodeOfEditingColumn: (
-      state: State,
-      action: PayloadAction<string>,
-    ) => {
+    deleteRuleNodeOfEditingColumn: (state: State, action: PayloadAction<string>) => {
       if (!state.editingColumn?.ruleNodes) return;
       state.editingColumn.ruleNodes = state.editingColumn.ruleNodes.filter(
         (n) => n.id !== action.payload,

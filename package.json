@@ -8,6 +8,12 @@
     "lint": "pnpm -C apps/web lint",
     "format": "pnpm -C apps/web format",
     "dev:web": "pnpm -C apps/web dev",
-    "dev:api": "pnpm -C apps/api dev"
+    "dev:api": "pnpm -C apps/api dev",
+    "prepare": "husky install",
+    "lint-staged": "lint-staged"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.9"
   }
 }

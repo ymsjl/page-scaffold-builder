@@ -1,8 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { rootReducer } from "./rootReducer";
-import { baseApi } from "./api/baseApi";
-
-import storage from "redux-persist/lib/storage";
+import { configureStore } from '@reduxjs/toolkit';
 import {
   persistStore,
   persistReducer,
@@ -12,10 +8,14 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
-} from "redux-persist";
+} from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+
+import { baseApi } from './api/baseApi';
+import { rootReducer } from './rootReducer';
 
 const persistConfig = {
-  key: "root",
+  key: 'root',
   storage,
   blacklist: [baseApi.reducerPath], // componentTree uses its own nested persist
 };
