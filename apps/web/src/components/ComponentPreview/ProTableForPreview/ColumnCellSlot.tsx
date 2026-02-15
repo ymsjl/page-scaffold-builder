@@ -1,8 +1,9 @@
-import React from "react";
-import type { ComponentType, NodeRef } from "@/types";
-import { DropZone } from "@/components/DropZone/DropZone";
-import SlotItemWrapper from "@/components/SlotItemWrapper/SlotItemWrapper";
-import { useRenderNodeRefs } from "../ReactNodeRenderer";
+import React from 'react';
+import type { ComponentType, NodeRef } from '@/types';
+import { DropZone } from '@/components/DropZone/DropZone';
+import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
+import { useRenderNodeRefs } from '../ReactNodeRenderer';
+import * as ptStyles from './ProTableForPreview.css';
 
 export const ColumnCellSlot: React.FC<{
   targetNodeId: string | undefined;
@@ -13,11 +14,11 @@ export const ColumnCellSlot: React.FC<{
   const elements = useRenderNodeRefs(nodeRefs);
 
   if (!targetNodeId) {
-    return <>{elements}</>;
+    return elements;
   }
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <div className={ptStyles.slotWrapper}>
       {nodeRefs.map((ref, index) => {
         const element = elements[index];
         if (!element) return null;

@@ -1,11 +1,11 @@
-import React, { memo, useCallback, useMemo } from "react";
-import { Card, Space, Typography } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
-import { useAppDispatch } from "@/store/hooks";
-import { RuleNodeType } from "./RuleParamsDateSchema";
-import { type RuleNode } from "./RuleParamsDateSchema";
-import { ruleNodeContext } from "./strategies";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
+import React, { memo, useCallback, useMemo } from 'react';
+import { Card, Space, Typography } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
+import { useAppDispatch } from '@/store/hooks';
+import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { type RuleNodeType, type RuleNode } from './RuleParamsDateSchema';
+import { ruleNodeContext } from './strategies';
+import * as styles from './RuleBuilder.css';
 
 type RuleItemProps = {
   node: RuleNode;
@@ -17,7 +17,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(({ node }) => {
 
   const style = useMemo<React.CSSProperties>(
     () => ({
-      background: enabled ? undefined : "#fafafa",
+      background: enabled ? undefined : '#fafafa',
     }),
     [enabled],
   );
@@ -41,9 +41,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(({ node }) => {
     [dispatch, id],
   );
 
-  const Editor = ruleNodeContext.getStrategyOrThrow(
-    type as RuleNodeType,
-  ).Editor;
+  const { Editor } = ruleNodeContext.getStrategyOrThrow(type as RuleNodeType);
 
   return (
     <Card
@@ -54,32 +52,28 @@ const RuleItem: React.FC<RuleItemProps> = memo(({ node }) => {
         <Space wrap>
           <button
             aria-label="delete"
+            type="button"
             onClick={handleDelete}
-            style={{ background: "none", border: "none", cursor: "pointer" }}
+            className={styles.deleteButton}
           >
             <DeleteOutlined />
           </button>
         </Space>
       }
     >
-      <Space direction="vertical" style={{ width: "100%" }} size={6}>
-        <div onClick={(e) => e.stopPropagation()}>
-          <Typography.Text
-            type="secondary"
-            style={{ fontSize: 12, display: "block", marginBottom: 6 }}
-          >
-            {node.message || "未设置提示"}
+      <Space direction="vertical" className={styles.fullWidth} size={6}>
+        <button type="button" onClick={(e) => e.stopPropagation()}>
+          <Typography.Text type="secondary" className={styles.ruleMessage}>
+            {node.message || '未设置提示'}
           </Typography.Text>
 
-          {Editor ? (
-            <Editor params={params} updateParams={updateParams} />
-          ) : null}
-        </div>
+          {Editor ? <Editor params={params} updateParams={updateParams} /> : null}
+        </button>
       </Space>
     </Card>
   );
 });
 
-RuleItem.displayName = "RuleItem";
+RuleItem.displayName = 'RuleItem';
 
 export default RuleItem;

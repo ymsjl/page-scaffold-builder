@@ -13,19 +13,13 @@ import {
 } from './store/componentTree/componentTreeSelectors';
 import { componentTreeActions } from './store/componentTree/componentTreeSlice';
 import { getComponentPrototype } from './componentMetas';
-import EntityModelDesignerPanel from './components/EntityModelDesigner/EntityModelDesignerPanel';
+import { EntityModelDesignerPanel } from './components/EntityModelDesigner/EntityModelDesignerPanel';
 import ComponentPreview from './components/ComponentPreview/ComponentPreview';
 import PropertyPanel from './components/PropertyPanel/PropertyPanel';
 import { DragDropProvider } from './contexts/DragDropContext';
 import VariableDesignerPanel from './components/VariablesDesigner/VariableDesignerPanel';
 
-const styles: { [key: string]: React.CSSProperties } = {
-  builder: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-  },
-};
+import * as layoutStyles from './Layout.css';
 
 // 拖拽预览组件
 const DragOverlayContent: React.FC<{ nodeId: string | null }> = ({ nodeId }) => {
@@ -36,19 +30,8 @@ const DragOverlayContent: React.FC<{ nodeId: string | null }> = ({ nodeId }) => 
   if (!node) return null;
 
   return (
-    <div
-      style={{
-        padding: '8px 12px',
-        background: '#fff',
-        border: '1px solid #1890ff',
-        borderRadius: '4px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-      }}
-    >
-      <HolderOutlined style={{ color: '#1890ff' }} />
+    <div className={layoutStyles.dragPreview}>
+      <HolderOutlined className={layoutStyles.holderIcon} />
       <span>{node.name}</span>
     </div>
   );
@@ -137,12 +120,12 @@ export const PageScaffoldBuilderLayout = () => {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <Layout style={styles.builder}>
+        <Layout className={layoutStyles.builder}>
           <Layout>
             <Layout.Sider
               width={300}
               collapsedWidth={0}
-              style={{ background: 'none', padding: '16px 8px' }}
+              className={layoutStyles.sider}
               trigger={null}
               title="组件树"
             >
@@ -150,7 +133,7 @@ export const PageScaffoldBuilderLayout = () => {
                 bordered
                 headerBordered
                 collapsible
-                style={{ marginTop: 16, borderRadius: 8 }}
+                className={layoutStyles.card}
                 size="small"
                 title="组件树"
                 extra={
@@ -179,7 +162,7 @@ export const PageScaffoldBuilderLayout = () => {
               <ProCard
                 bordered
                 headerBordered
-                style={{ marginTop: 16, borderRadius: 8 }}
+                className={layoutStyles.card}
                 size="small"
                 collapsible
                 title="实体类"
@@ -192,17 +175,13 @@ export const PageScaffoldBuilderLayout = () => {
                   />
                 }
               >
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space direction="vertical" className={layoutStyles.fullWidth}>
                   {entityModels?.map((et) => (
                     <button
+                      className={layoutStyles.rowButton}
                       key={et.id}
                       type="button"
                       onClick={() => dispatch(componentTreeActions.startEditEntityModel(et.id))}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
                     >
                       <Typography.Text>{et.title}</Typography.Text>
                       <Button
@@ -222,7 +201,7 @@ export const PageScaffoldBuilderLayout = () => {
               <ProCard
                 bordered
                 headerBordered
-                style={{ marginTop: 16, borderRadius: 8 }}
+                className={layoutStyles.card}
                 size="small"
                 collapsible
                 title="变量管理"
@@ -235,17 +214,13 @@ export const PageScaffoldBuilderLayout = () => {
                   />
                 }
               >
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space direction="vertical" className={layoutStyles.fullWidth}>
                   {variables?.map((variable) => (
                     <button
                       type="button"
                       key={variable.id}
                       onClick={() => dispatch(componentTreeActions.startEditVariable(variable.id))}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
+                      className={layoutStyles.rowButton}
                     >
                       <Typography.Text>{variable.name}</Typography.Text>
                       <Button
@@ -264,21 +239,11 @@ export const PageScaffoldBuilderLayout = () => {
               </ProCard>
             </Layout.Sider>
 
-            <Layout.Content
-              style={{
-                height: '100%',
-                overflow: 'hidden',
-                padding: '16px 12px',
-              }}
-            >
+            <Layout.Content className={layoutStyles.content}>
               <ComponentPreview />
             </Layout.Content>
 
-            <Layout.Sider
-              width={300}
-              trigger={null}
-              style={{ background: 'none', padding: '16px 8px' }}
-            >
+            <Layout.Sider width={300} trigger={null} className={layoutStyles.sider}>
               <PropertyPanel />
             </Layout.Sider>
           </Layout>

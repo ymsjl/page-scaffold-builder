@@ -1,30 +1,25 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Button, Flex, message, Modal } from "antd";
-import type { ProColumns } from "@ant-design/pro-components";
-import {
-  ProForm,
-  ProFormItemRender,
-  ProFormText,
-} from "@ant-design/pro-components";
+import React, { useCallback, useMemo, useState } from 'react';
+import { Button, Flex, message, Modal } from 'antd';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProForm, ProFormItemRender, ProFormText } from '@ant-design/pro-components';
 
-import type { EntityModel } from "@/types";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
+import type { EntityModel } from '@/types';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
 import {
   selectEditingEntityModel,
   selectIsEntityModelModalOpen,
-} from "@/store/componentTree/componentTreeSelectors";
+} from '@/store/componentTree/componentTreeSelectors';
 
-import "./styles.css";
+import type { EnumOption } from './entityModelDesignerTypes';
+import { EntityModelDesignerSubModals } from './EntityModelDesignerSubModals';
+import { EntityModelFieldsTable } from './EntityModelFieldsTable';
+import { useEnumAdvancedModal } from './hooks/useEnumAdvancedModal';
+import { useSqlImportModal } from './hooks/useSqlImportModal';
+import { useSyncFormOnModalOpen } from './hooks/useSyncFormOnModalOpen';
+import * as styles from './styles.css';
 
-import type { EnumOption } from "./entityModelDesignerTypes";
-import { EntityModelDesignerSubModals } from "./EntityModelDesignerSubModals";
-import { EntityModelFieldsTable } from "./EntityModelFieldsTable";
-import { useEnumAdvancedModal } from "./hooks/useEnumAdvancedModal";
-import { useSqlImportModal } from "./hooks/useSqlImportModal";
-import { useSyncFormOnModalOpen } from "./hooks/useSyncFormOnModalOpen";
-
-export default function EntityModelDesignerPanel() {
+export const EntityModelDesignerPanel = React.memo(() => {
   const isOpen = useAppSelector(selectIsEntityModelModalOpen);
   const [fieldEditableKeys, setFieldEditableKeys] = useState<React.Key[]>([]);
   const dispatch = useAppDispatch();
@@ -43,21 +38,19 @@ export default function EntityModelDesignerPanel() {
   const closeEnumAdvancedModal = enumAdvancedModal.close;
   const closeSqlImportModal = sqlImportModal.close;
 
-  const currentTableEditingKey = fieldEditableKeys?.length
-    ? String(fieldEditableKeys[0])
-    : null;
+  const currentTableEditingKey = fieldEditableKeys?.length ? String(fieldEditableKeys[0]) : null;
   const isTableEditing = Boolean(currentTableEditingKey);
 
-  const primaryKey = ProForm.useWatch("primaryKey", form);
+  const primaryKey = ProForm.useWatch('primaryKey', form);
 
   const setAsPrimaryKey = useCallback(
     (key: string) => {
-      const nextKey = String(key || "").trim();
+      const nextKey = String(key || '').trim();
       if (!nextKey) {
-        message.warning("请先填写字段 key");
+        message.warning('请先填写字段 key');
         return;
       }
-      form.setFieldValue("primaryKey", nextKey);
+      form.setFieldValue('primaryKey', nextKey);
       message.success(`已设置主键：${nextKey}`);
     },
     [form],
@@ -73,38 +66,36 @@ export default function EntityModelDesignerPanel() {
 
   const handleSaveEntity = useCallback(() => {
     if (isTableEditing) {
-      message.warning("请先完成当前行编辑");
+      message.warning('请先完成当前行编辑');
       return;
     }
 
     if (enumAdvancedModal.isOpen) {
-      message.warning("请先完成字段高级编辑");
+      message.warning('请先完成字段高级编辑');
       return;
     }
 
-    dispatch(
-      componentTreeActions.applyEntityModelChange(form.getFieldsValue()),
-    );
-    message.success("已保存");
+    dispatch(componentTreeActions.applyEntityModelChange(form.getFieldsValue()));
+    message.success('已保存');
     onClose();
-  }, [enumAdvancedModal.isOpen, onClose, isTableEditing, form]);
+  }, [isTableEditing, enumAdvancedModal.isOpen, dispatch, form, onClose]);
 
   const enumTableColumns = useMemo<ProColumns<EnumOption>[]>(() => {
     return [
       {
-        title: "名称",
-        dataIndex: "label",
+        title: '名称',
+        dataIndex: 'label',
         width: 220,
         formItemProps: {
-          rules: [{ required: true, whitespace: true, message: "请输入名称" }],
+          rules: [{ required: true, whitespace: true, message: '请输入名称' }],
         },
       },
       {
-        title: "值",
-        dataIndex: "value",
+        title: '值',
+        dataIndex: 'value',
         width: 220,
         formItemProps: {
-          rules: [{ required: true, whitespace: true, message: "请输入值" }],
+          rules: [{ required: true, whitespace: true, message: '请输入值' }],
         },
       },
     ];
@@ -122,15 +113,10 @@ export default function EntityModelDesignerPanel() {
         onOk={handleSaveEntity}
         okText="保存"
       >
-        <Flex justify="flex-end" style={{ marginBottom: 12 }}>
+        <Flex justify="flex-end" className={styles.actionsRow}>
           <Button onClick={sqlImportModal.open}>从 SQL 导入</Button>
         </Flex>
-        <ProForm<EntityModel>
-          grid
-          labelAlign="left"
-          form={form}
-          submitter={false}
-        >
+        <ProForm<EntityModel> grid labelAlign="left" form={form} submitter={false}>
           <ProFormText
             label="title"
             name="title"
@@ -151,7 +137,7 @@ export default function EntityModelDesignerPanel() {
             label="字段列表"
             layout="vertical"
             tooltip="定义该实体类型包含的字段"
-            style={{ width: "100%" }}
+            className={styles.fullWidth}
           >
             {(props) => (
               <EntityModelFieldsTable
@@ -177,4 +163,4 @@ export default function EntityModelDesignerPanel() {
       />
     </>
   );
-}
+});

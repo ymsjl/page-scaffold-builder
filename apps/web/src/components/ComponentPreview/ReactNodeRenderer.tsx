@@ -1,27 +1,23 @@
-import React, { useMemo } from "react";
-import { useAppSelector } from "@/store/hooks";
+import React, { useMemo } from 'react';
+import { useAppSelector } from '@/store/hooks';
 import {
   componentNodesSelectors,
   selectVariableValues,
-} from "@/store/componentTree/componentTreeSelectors";
-import { getComponentPrototype } from "@/componentMetas";
+} from '@/store/componentTree/componentTreeSelectors';
+import { getComponentPrototype } from '@/componentMetas';
 import {
   type ComponentNode,
   type ComponentPrototype,
   type NodeRef,
   isNodeRef,
   isVariableRef,
-} from "@/types";
-import {
-  buildResolvedProps,
-  collectSlotRefs,
-  mapNodeRefsToItems,
-} from "./previewLogic";
-import { getValueByPath, setValueByPath } from "./slotPath";
-import { DropZone } from "@/components/DropZone/DropZone";
-import SlotItemWrapper from "@/components/SlotItemWrapper/SlotItemWrapper";
-import { usePreviewMode } from "./previewMode";
-import { useActionFlowHandler } from "@/services/actionFlows";
+} from '@/types';
+import { DropZone } from '@/components/DropZone/DropZone';
+import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
+import { useActionFlowHandler } from '@/services/actionFlows';
+import { buildResolvedProps, collectSlotRefs } from './previewLogic';
+import { getValueByPath, setValueByPath } from './slotPath';
+import { usePreviewMode } from './previewMode';
 
 interface ReactNodeRendererProps {
   /** 节点引用数组 */
@@ -29,7 +25,7 @@ interface ReactNodeRendererProps {
 }
 
 const buildChildrenRefs = (childrenIds: string[]): NodeRef[] =>
-  childrenIds.map((nodeId) => ({ type: "nodeRef", nodeId }));
+  childrenIds.map((nodeId) => ({ type: 'nodeRef', nodeId }));
 
 const resolveVariableRefsInValue = (
   value: unknown,
@@ -40,12 +36,10 @@ const resolveVariableRefsInValue = (
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) =>
-      resolveVariableRefsInValue(item, variableValues),
-    );
+    return value.map((item) => resolveVariableRefsInValue(item, variableValues));
   }
 
-  if (isNodeRef(value) || value === null || typeof value !== "object") {
+  if (isNodeRef(value) || value === null || typeof value !== 'object') {
     return value;
   }
 
@@ -58,51 +52,55 @@ const resolveVariableRefsInValue = (
   );
 };
 
-export const useResolvedProps = (
-  node: ComponentNode,
-  componentPrototype: ComponentPrototype,
-) => {
+/**
+ * 存储 RenderNodeRef 组件的引用，用于打破循环依赖
+ */
+let RenderNodeRefComponent: React.FC<{ nodeId: string }> | null = null;
+
+/**
+ * 获取渲染函数，用于在 useResolvedProps 中创建 renderNodeRef
+ */
+const getRenderNodeRefFunction = () => {
+  // eslint-disable-next-line react/no-unstable-nested-components
+  return function renderNodeRefFunction({ nodeId }: NodeRef) {
+    if (!RenderNodeRefComponent) {
+      throw new Error('RenderNodeRef not initialized');
+    }
+    const Component = RenderNodeRefComponent;
+    return <Component key={nodeId} nodeId={nodeId} />;
+  };
+};
+
+/**
+ * 解析组件 props，处理 slots、变量引用、action flows 等
+ */
+export const useResolvedProps = (node: ComponentNode, componentPrototype: ComponentPrototype) => {
   const previewMode = usePreviewMode();
   const variableValues = useAppSelector(selectVariableValues);
   const { createFlowHandler } = useActionFlowHandler();
-  const nodeProps = node.props || {};
-  const slots = componentPrototype.slots || [];
+
+  const nodeProps = useMemo(() => node.props || {}, [node.props]);
+  const slots = useMemo(() => componentPrototype.slots || [], [componentPrototype.slots]);
+
   const actionFlowPropPaths = useMemo(
     () =>
       Object.values(componentPrototype.propsTypes || {})
-        .filter((prop) => prop.type === "actionFlow")
+        .filter((prop) => prop.type === 'actionFlow')
         .map((prop) => prop.name),
     [componentPrototype.propsTypes],
   );
-  const slotRefsMap = useMemo(
-    () => collectSlotRefs(nodeProps, slots),
-    [nodeProps, slots],
-  );
-  const allRefs = useMemo(
-    () => Object.values(slotRefsMap).flat(),
-    [slotRefsMap],
-  );
-  const renderedNodes = useRenderNodeRefs(allRefs);
-  const nodeIdToElement = useMemo(
-    () => mapNodeRefsToItems(allRefs, renderedNodes),
-    [allRefs, renderedNodes],
-  );
+  const slotRefsMap = useMemo(() => collectSlotRefs(nodeProps, slots), [nodeProps, slots]);
+
+  // 使用间接引用创建 renderNodeRef 函数，避免循环依赖警告
+  const renderNodeRef = useMemo(() => getRenderNodeRefFunction(), []);
 
   const mergedProps = useMemo<Record<string, unknown>>(
     () => ({
-      ...(previewMode === "edit" && node.type === "Table"
-        ? { __previewNodeId: node.id }
-        : {}),
+      ...(previewMode === 'edit' && node.type === 'Table' ? { __previewNodeId: node.id } : {}),
       ...(componentPrototype.defaultProps || {}),
       ...nodeProps,
     }),
-    [
-      node.id,
-      node.type,
-      nodeProps,
-      componentPrototype.defaultProps,
-      previewMode,
-    ],
+    [node.id, node.type, nodeProps, componentPrototype.defaultProps, previewMode],
   );
 
   if (node.isContainer) {
@@ -110,18 +108,14 @@ export const useResolvedProps = (
   }
 
   const resolvedVariableProps = useMemo(
-    () =>
-      resolveVariableRefsInValue(mergedProps, variableValues) as Record<
-        string,
-        unknown
-      >,
+    () => resolveVariableRefsInValue(mergedProps, variableValues) as Record<string, unknown>,
     [mergedProps, variableValues],
   );
 
   const executableFlowProps = useMemo(() => {
     return actionFlowPropPaths.reduce((acc, propPath) => {
       const flowId = getValueByPath(acc, propPath);
-      if (typeof flowId !== "string" || !flowId) {
+      if (typeof flowId !== 'string' || !flowId) {
         return acc;
       }
 
@@ -135,13 +129,7 @@ export const useResolvedProps = (
         }),
       );
     }, resolvedVariableProps);
-  }, [
-    actionFlowPropPaths,
-    createFlowHandler,
-    node.id,
-    nodeProps,
-    resolvedVariableProps,
-  ]);
+  }, [actionFlowPropPaths, createFlowHandler, node.id, nodeProps, resolvedVariableProps]);
 
   return useMemo(
     () =>
@@ -149,9 +137,11 @@ export const useResolvedProps = (
         mergedProps: executableFlowProps,
         slots,
         slotRefsMap,
-        nodeIdToElement,
+        // 使用缓存的 renderNodeRef 函数
+        nodeIdToElement: {},
+        renderNodeRef,
         createDropZone: (slot) =>
-          previewMode === "edit" ? (
+          previewMode === 'edit' ? (
             <DropZone
               key={`${slot.id}:drop`}
               id={`${node.id}:${slot.path}`}
@@ -162,7 +152,7 @@ export const useResolvedProps = (
             />
           ) : null,
         wrapElement: (slot, ref, element) =>
-          previewMode === "edit" ? (
+          previewMode === 'edit' ? (
             <SlotItemWrapper
               key={`${slot.id}:${ref.nodeId}`}
               nodeId={ref.nodeId}
@@ -175,45 +165,20 @@ export const useResolvedProps = (
             element
           ),
       }),
-    [
-      executableFlowProps,
-      slots,
-      slotRefsMap,
-      nodeIdToElement,
-      node.id,
-      previewMode,
-    ],
+    [executableFlowProps, slots, slotRefsMap, node.id, previewMode, renderNodeRef],
   );
 };
 
 /**
- * 渲染单个引用的组件节点
+ * 渲染单个组件节点
  */
-const RenderSingleNodeOrNull: React.FC<{ nodeId: string }> = ({ nodeId }) => {
-  const previewMode = usePreviewMode();
-  const node = useAppSelector((state) =>
-    componentNodesSelectors.selectById(state, nodeId),
-  ) as ComponentNode | undefined;
-
-  if (!node) {
-    return null;
-  }
-
-  const prototype = getComponentPrototype(node.type, { previewMode });
-  if (!prototype) {
-    return null;
-  }
-
-  return <RenderSingleNode node={node} componentPrototype={prototype} />;
-};
-
 const RenderSingleNode: React.FC<{
   node: ComponentNode;
   componentPrototype: ComponentPrototype;
 }> = React.memo(({ node, componentPrototype }) => {
   const resolvedProps = useResolvedProps(node, componentPrototype);
   const Component = componentPrototype.component;
-  if (typeof Component === "string") {
+  if (typeof Component === 'string') {
     const { children, ...restProps } = resolvedProps;
     return React.createElement(
       Component as keyof JSX.IntrinsicElements,
@@ -227,13 +192,53 @@ const RenderSingleNode: React.FC<{
     </Component>
   );
 });
+
+RenderSingleNode.displayName = 'RenderSingleNode';
+
+/**
+ * 渲染单个引用的组件节点
+ */
+const RenderNodeRef: React.FC<{ nodeId: string }> = ({ nodeId }) => {
+  const previewMode = usePreviewMode();
+  const node = useAppSelector((state) => componentNodesSelectors.selectById(state, nodeId)) as
+    | ComponentNode
+    | undefined;
+
+  if (!node) {
+    return null;
+  }
+
+  const prototype = getComponentPrototype(node.type, { previewMode });
+  if (!prototype) {
+    return null;
+  }
+
+  return <RenderSingleNode node={node} componentPrototype={prototype} />;
+};
+
+// 设置全局引用，供 getRenderNodeRefFunction 使用
+RenderNodeRefComponent = RenderNodeRef;
+
+/**
+ * 将 NodeRef 数组转换为可渲染的 React 元素数组
+ * 用于直接传递给组件 props
+ *
+ * 注意：此 hook 已重构为延迟渲染模式，避免循环引用
+ */
+export const useRenderNodeRefs = (nodeRefs: unknown[]): React.ReactNode[] => {
+  const validRefs = React.useMemo(() => nodeRefs.filter(isNodeRef) as NodeRef[], [nodeRefs]);
+
+  return React.useMemo(
+    () => validRefs.map((ref) => <RenderNodeRef key={ref.nodeId} nodeId={ref.nodeId} />),
+    [validRefs],
+  );
+};
+
 /**
  * 渲染多个节点引用为 React 元素数组
  * 用于接收 ReactNode[] 的 props
  */
-export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
-  nodeRefs,
-}) => {
+export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({ nodeRefs }) => {
   const validRefs = useMemo(() => nodeRefs.filter(isNodeRef), [nodeRefs]);
 
   if (validRefs.length === 0) {
@@ -243,28 +248,9 @@ export const ReactNodeRenderer: React.FC<ReactNodeRendererProps> = ({
   return (
     <>
       {validRefs.map((ref) => (
-        <RenderSingleNodeOrNull key={ref.nodeId} nodeId={ref.nodeId} />
+        <RenderNodeRef key={ref.nodeId} nodeId={ref.nodeId} />
       ))}
     </>
-  );
-};
-
-/**
- * 将 NodeRef 数组转换为可渲染的 React 元素数组
- * 用于直接传递给组件 props
- */
-export const useRenderNodeRefs = (nodeRefs: unknown[]): React.ReactNode[] => {
-  const validRefs = React.useMemo(
-    () => nodeRefs.filter(isNodeRef) as NodeRef[],
-    [nodeRefs],
-  );
-
-  return React.useMemo(
-    () =>
-      validRefs.map((ref) => (
-        <RenderSingleNodeOrNull key={ref.nodeId} nodeId={ref.nodeId} />
-      )),
-    [validRefs],
   );
 };
 

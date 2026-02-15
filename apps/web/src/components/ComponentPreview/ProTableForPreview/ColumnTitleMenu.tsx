@@ -1,50 +1,51 @@
-import React, { PropsWithChildren } from "react";
-import { Button, Dropdown, Input } from "antd";
-import type { MenuProps } from "antd";
-import type { ProCommonColumn, SchemaField } from "@/types";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import { useAppDispatch } from "@/store/hooks";
-import { createProCommonColumnFromSchemeField } from "@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField";
+import React, { type PropsWithChildren } from 'react';
+import { Dropdown, Input } from 'antd';
+import type { MenuProps } from 'antd';
+import type { ProCommonColumn, SchemaField } from '@/types';
+import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { useAppDispatch } from '@/store/hooks';
+import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
 import {
   DeleteOutlined,
   EditOutlined,
-  EllipsisOutlined,
   EyeInvisibleOutlined,
   EyeOutlined,
-  MoreOutlined,
   NumberOutlined,
   PlusOutlined,
-} from "@ant-design/icons";
+} from '@ant-design/icons';
+import * as ptStyles from './ProTableForPreview.css';
 
 type ColumnTitleMenuProps = {
   column: ProCommonColumn;
   columnIndex: number;
-  columnsLength: number;
   tableNodeId?: string;
   entityFields: SchemaField[];
 };
 
-export const ColumnTitleMenu: React.FC<
-  PropsWithChildren<ColumnTitleMenuProps>
-> = ({
+export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> = ({
   column,
   columnIndex,
-  columnsLength,
   tableNodeId,
   entityFields,
   children,
 }) => {
   const dispatch = useAppDispatch();
   const [isRenaming, setIsRenaming] = React.useState(false);
-  const [draftTitle, setDraftTitle] = React.useState("");
+  const [draftTitle, setDraftTitle] = React.useState('');
   const canOperate = !!tableNodeId;
 
+  const getCursorStyle = React.useCallback((): React.CSSProperties['cursor'] => {
+    if (isRenaming) return 'text';
+    if (canOperate) return 'context-menu';
+    return 'default';
+  }, [isRenaming, canOperate]);
+
   const getTitleText = React.useCallback(() => {
-    if (typeof column.title === "string") return column.title;
-    if (typeof children === "string" || typeof children === "number") {
+    if (typeof column.title === 'string') return column.title;
+    if (typeof children === 'string' || typeof children === 'number') {
       return String(children);
     }
-    return "";
+    return '';
   }, [column.title, children]);
 
   const cancelRename = React.useCallback(() => {
@@ -76,17 +77,10 @@ export const ColumnTitleMenu: React.FC<
     }
 
     setIsRenaming(false);
-  }, [
-    cancelRename,
-    column.key,
-    dispatch,
-    draftTitle,
-    getTitleText,
-    tableNodeId,
-  ]);
+  }, [cancelRename, column.key, dispatch, draftTitle, getTitleText, tableNodeId]);
 
   const handleDoubleClick = React.useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
+    (event: React.MouseEvent<HTMLButtonElement>) => {
       if (!canOperate) return;
       event.stopPropagation();
       setDraftTitle(getTitleText());
@@ -95,10 +89,10 @@ export const ColumnTitleMenu: React.FC<
     [canOperate, getTitleText],
   );
 
-  const insertItems = React.useMemo<MenuProps["items"]>(() => {
+  const insertItems = React.useMemo<MenuProps['items']>(() => {
     return [
-      { key: "insert:empty", label: "空列" },
-      { type: "divider" },
+      { key: 'insert:empty', label: '空列' },
+      { type: 'divider' },
       ...entityFields.map((field) => ({
         key: `insert:${field.key}`,
         label: field.key,
@@ -106,53 +100,53 @@ export const ColumnTitleMenu: React.FC<
     ];
   }, [entityFields]);
 
-  const menuItems = React.useMemo<MenuProps["items"]>(
+  const menuItems = React.useMemo<MenuProps['items']>(
     () => [
       {
-        key: "title",
-        label: column.title || "未命名列",
+        key: 'title',
+        label: column.title || '未命名列',
         disabled: true,
       },
       {
-        key: "edit",
-        label: "编辑该列",
+        key: 'edit',
+        label: '编辑该列',
         disabled: !canOperate,
         icon: <EditOutlined />,
       },
       {
-        key: "delete",
-        label: "删除该列",
+        key: 'delete',
+        label: '删除该列',
         disabled: !canOperate,
         icon: <DeleteOutlined />,
       },
       {
-        key: "insert",
-        label: "在后方新增一列",
+        key: 'insert',
+        label: '在后方新增一列',
         disabled: !canOperate,
         children: insertItems,
         icon: <PlusOutlined />,
       },
       {
-        type: "divider",
+        type: 'divider',
       },
       {
-        key: "hideInSearch",
-        label: column?.hideInSearch ? "显示表单项" : "隐藏表单项",
+        key: 'hideInSearch',
+        label: column?.hideInSearch ? '显示表单项' : '隐藏表单项',
         disabled: !canOperate,
         icon: column?.hideInSearch ? <EyeOutlined /> : <EyeInvisibleOutlined />,
       },
       {
-        key: "hideInTable",
-        label: column?.hideInTable ? "显示表格列" : "隐藏表格列",
+        key: 'hideInTable',
+        label: column?.hideInTable ? '显示表格列' : '隐藏表格列',
         disabled: !canOperate,
         icon: column?.hideInTable ? <EyeOutlined /> : <EyeInvisibleOutlined />,
       },
       {
-        type: "divider",
+        type: 'divider',
       },
       {
-        key: "rules",
-        label: "数据校验规则",
+        key: 'rules',
+        label: '数据校验规则',
         disabled: !canOperate,
         icon: <NumberOutlined />,
       },
@@ -160,7 +154,7 @@ export const ColumnTitleMenu: React.FC<
     [canOperate, insertItems, column],
   );
 
-  const handleMenuClick = React.useCallback<NonNullable<MenuProps["onClick"]>>(
+  const handleMenuClick = React.useCallback<NonNullable<MenuProps['onClick']>>(
     ({ key, domEvent }) => {
       domEvent.stopPropagation();
       if (!tableNodeId) return;
@@ -168,29 +162,29 @@ export const ColumnTitleMenu: React.FC<
 
       dispatch(componentTreeActions.selectNode(tableNodeId));
 
-      if (key === "edit" || key === "rules") {
+      if (key === 'edit' || key === 'rules') {
         dispatch(componentTreeActions.startEditingColumn(column));
-      } else if (key === "delete") {
+      } else if (key === 'delete') {
         dispatch(componentTreeActions.deleteColumnForSelectedNode(column.key));
-      } else if (typeof key === "string" && key.startsWith("insert:")) {
-        const fieldKey = key.replace("insert:", "");
+      } else if (typeof key === 'string' && key.startsWith('insert:')) {
+        const fieldKey = key.replace('insert:', '');
         const field = entityFields.find((item) => item.key === fieldKey);
         const newColumn = createProCommonColumnFromSchemeField(field);
-        newColumn.title = "新列";
+        newColumn.title = '新列';
         dispatch(
           componentTreeActions.upsertColumnOfSelectedNode({
             insertPos: columnIndex + 1,
             changes: newColumn,
           }),
         );
-      } else if (key === "hideInSearch") {
+      } else if (key === 'hideInSearch') {
         dispatch(
           componentTreeActions.upsertColumnOfSelectedNode({
             key: column.key,
             hideInSearch: !column.hideInSearch,
           }),
         );
-      } else if (key === "hideInTable") {
+      } else if (key === 'hideInTable') {
         dispatch(
           componentTreeActions.upsertColumnOfSelectedNode({
             key: column.key,
@@ -199,26 +193,19 @@ export const ColumnTitleMenu: React.FC<
         );
       }
     },
-    [column, columnIndex, columnsLength, dispatch, entityFields, tableNodeId],
+    [column, columnIndex, dispatch, entityFields, tableNodeId],
   );
 
   return (
     <Dropdown
-      trigger={isRenaming ? [] : ["contextMenu"]}
+      trigger={isRenaming ? [] : ['contextMenu']}
       menu={{ items: menuItems, onClick: handleMenuClick }}
-      overlayStyle={{ minWidth: "160px" }}
+      overlayClassName={ptStyles.dropdownOverlay}
     >
-      <div
-        style={{
-          cursor: isRenaming ? "text" : canOperate ? "context-menu" : "default",
-          display: "flex",
-          alignItems: "center",
-          width: "100%",
-          height: "100%",
-          padding: "4px 6px",
-          borderRadius: 4,
-          transition: "border-color 0.15s ease, background-color 0.15s ease",
-        }}
+      <button
+        type="button"
+        className={ptStyles.titleContainer}
+        style={{ cursor: getCursorStyle() }}
         onClick={(event) => event.stopPropagation()}
         onDoubleClick={handleDoubleClick}
       >
@@ -227,14 +214,14 @@ export const ColumnTitleMenu: React.FC<
             size="small"
             value={draftTitle}
             autoFocus
-            style={{ width: "auto" }}
+            className={ptStyles.inputAutoWidth}
             onChange={(event) => setDraftTitle(event.target.value)}
             onBlur={applyRename}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
+              if (event.key === 'Enter') {
                 event.currentTarget.blur();
               }
-              if (event.key === "Escape") {
+              if (event.key === 'Escape') {
                 cancelRename();
               }
             }}
@@ -243,7 +230,7 @@ export const ColumnTitleMenu: React.FC<
         ) : (
           children
         )}
-      </div>
+      </button>
     </Dropdown>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef } from "react";
+import React, { useCallback, useMemo, useState, useRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -8,36 +8,27 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  Connection,
-  Node,
-  Edge,
-  NodeChange,
-  EdgeChange,
+  type Connection,
+  type Node,
+  type Edge,
+  type NodeChange,
+  type EdgeChange,
   applyNodeChanges,
   applyEdgeChanges,
   ConnectionMode,
   ReactFlowProvider,
   useReactFlow,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { Button, Space, message, Layout } from "antd";
-import {
-  PlayCircleOutlined,
-  SaveOutlined,
-  UndoOutlined,
-} from "@ant-design/icons";
-import { CustomNode } from "./CustomNode";
-import { NodeLibrary } from "./NodeLibrary";
-import { NodeProperties } from "./NodeProperties";
-import { useActionFlow } from "@/services/actionFlows/hooks/useActionFlow";
-import { useFlowExecutor } from "@/services/actionFlows/hooks/useFlowExecutor";
-import type {
-  ActionNode,
-  ActionEdge,
-  ActionFlow,
-  ActionNodeType,
-} from "@/types/actions";
-import "./FlowEditor.css";
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { Button, Space, message, Layout } from 'antd';
+import { PlayCircleOutlined, SaveOutlined, UndoOutlined } from '@ant-design/icons';
+import { useActionFlow } from '@/services/actionFlows/hooks/useActionFlow';
+import { useFlowExecutor } from '@/services/actionFlows/hooks/useFlowExecutor';
+import type { ActionNode, ActionEdge, ActionFlow, ActionNodeType } from '@/types/actions';
+import { CustomNode } from './CustomNode';
+import { NodeLibrary } from './NodeLibrary';
+import { NodeProperties } from './NodeProperties';
+import * as styles from './FlowEditor.css';
 
 const { Sider, Content } = Layout;
 
@@ -56,7 +47,7 @@ interface FlowEditorProps {
 function toReactFlowNode(node: ActionNode): Node {
   return {
     id: node.id,
-    type: "custom",
+    type: 'custom',
     position: node.position || { x: 0, y: 0 },
     data: node,
     style: node.style,
@@ -74,10 +65,10 @@ function toReactFlowEdge(edge: ActionEdge): Edge {
     sourceHandle: edge.sourceHandle,
     targetHandle: edge.targetHandle,
     label: edge.label,
-    type: edge.animated ? "smoothstep" : "default",
+    type: edge.animated ? 'smoothstep' : 'default',
     animated: edge.animated,
     style: {
-      stroke: edge.sourceHandle?.includes("exec") ? "#1890ff" : "#52c41a",
+      stroke: edge.sourceHandle?.includes('exec') ? '#1890ff' : '#52c41a',
       strokeWidth: 2,
     },
   };
@@ -100,14 +91,8 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // 转换为 ReactFlow 格式
-  const initialNodes = useMemo(
-    () => flow.nodes.map(toReactFlowNode),
-    [flow.nodes],
-  );
-  const initialEdges = useMemo(
-    () => flow.edges.map(toReactFlowEdge),
-    [flow.edges],
-  );
+  const initialNodes = useMemo(() => flow.nodes.map(toReactFlowNode), [flow.nodes]);
+  const initialEdges = useMemo(() => flow.edges.map(toReactFlowEdge), [flow.edges]);
 
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
@@ -129,10 +114,10 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
 
       // 同步位置变化到 Redux
       changes.forEach((change) => {
-        if (change.type === "position" && change.position && !change.dragging) {
+        if (change.type === 'position' && change.position && !change.dragging) {
           updateNode(flowId, change.id, { position: change.position });
         }
-        if (change.type === "select" && change.selected) {
+        if (change.type === 'select' && change.selected) {
           const node = flow.nodes.find((n) => n.id === change.id);
           setSelectedNode(node || null);
         }
@@ -157,7 +142,7 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
 
       // 处理删除边
       changes.forEach((change) => {
-        if (change.type === "remove") {
+        if (change.type === 'remove') {
           deleteEdges(flowId, [change.id]);
         }
       });
@@ -170,7 +155,7 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
     (connection: Connection) => {
       if (!connection.source || !connection.target) return;
 
-      const newEdge: Omit<ActionEdge, "id"> = {
+      const newEdge: Omit<ActionEdge, 'id'> = {
         source: connection.source,
         target: connection.target,
         sourceHandle: connection.sourceHandle ?? undefined,
@@ -196,20 +181,20 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
   const handleExecute = useCallback(async () => {
     try {
       await executeFlow(flowId);
-      message.success("流程执行成功");
+      message.success('流程执行成功');
     } catch (error) {
-      message.error("流程执行失败: " + (error as Error).message);
+      message.error(`流程执行失败: ${(error as Error).message}`);
     }
   }, [flowId, executeFlow]);
 
   // 保存流程（当前已自动保存到 Redux）
   const handleSave = useCallback(() => {
-    message.success("流程已保存");
+    message.success('流程已保存');
   }, []);
 
   // 撤销（简化版）
   const handleUndo = useCallback(() => {
-    message.info("撤销功能开发中");
+    message.info('撤销功能开发中');
   }, []);
 
   // 处理拖放到画布
@@ -217,9 +202,7 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData(
-        "application/reactflow",
-      ) as ActionNodeType;
+      const type = event.dataTransfer.getData('application/reactflow') as ActionNodeType;
       if (!type) return;
 
       const position = screenToFlowPosition({
@@ -233,9 +216,9 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
     [flowId, addNode, screenToFlowPosition],
   );
 
-  const onDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   }, []);
 
   // 处理从节点库选择节点（点击添加）
@@ -245,21 +228,21 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
       addNode(flowId, nodeType, {
         position: { x: 250, y: 200 },
       });
-      message.success("节点已添加");
+      message.success('节点已添加');
     },
     [flowId, addNode],
   );
 
   return (
-    <Layout className="flow-editor-layout">
+    <Layout className={styles.flowEditorLayout}>
       {/* 左侧节点库 */}
-      <Sider width={280} theme="light" className="flow-editor-sider">
+      <Sider width={280} theme="light" className={styles.flowEditorSider}>
         <NodeLibrary onNodeSelect={handleNodeSelect} />
       </Sider>
 
       {/* 中间画布 */}
-      <Content className="flow-editor-content">
-        <div className="flow-editor-container" ref={reactFlowWrapper}>
+      <Content className={styles.flowEditorContent}>
+        <div className={styles.flowEditorContainer} ref={reactFlowWrapper}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -279,12 +262,12 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
             <Controls />
             <MiniMap
               nodeColor={(node) => {
-                const typePrefix = (node.data as ActionNode).type.split(".")[0];
+                const typePrefix = (node.data as ActionNode).type.split('.')[0];
                 const colors: Record<string, string> = {
-                  control: "#1890ff",
-                  data: "#52c41a",
-                  action: "#fa8c16",
-                  component: "#722ed1",
+                  control: '#1890ff',
+                  data: '#52c41a',
+                  action: '#fa8c16',
+                  component: '#722ed1',
                 };
                 return colors[typePrefix] || colors.action;
               }}
@@ -312,9 +295,9 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
 
             {/* 信息面板 */}
             <Panel position="top-left">
-              <div className="flow-info-panel">
+              <div className={styles.flowInfoPanel}>
                 <h3>{flow.name}</h3>
-                <div className="flow-stats">
+                <div className={styles.flowStats}>
                   <span>节点: {flow.nodes.length}</span>
                   <span>连接: {flow.edges.length}</span>
                 </div>
@@ -325,12 +308,8 @@ const FlowEditorInner: React.FC<FlowEditorProps> = ({ flowId, flow }) => {
       </Content>
 
       {/* 右侧属性面板 */}
-      <Sider width={320} theme="light" className="flow-editor-sider">
-        <NodeProperties
-          flowId={flowId}
-          node={selectedNode}
-          onClose={() => setSelectedNode(null)}
-        />
+      <Sider width={320} theme="light" className={styles.flowEditorSider}>
+        <NodeProperties flowId={flowId} node={selectedNode} onClose={() => setSelectedNode(null)} />
       </Sider>
     </Layout>
   );

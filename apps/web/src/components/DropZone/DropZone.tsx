@@ -5,7 +5,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
 import type { ComponentType } from '@/types';
 import { COMPONENT_TYPES } from '@/types/Component';
-import './DropZone.css';
+import * as dropZoneStyles from './DropZone.css';
 
 const componentLabelMap: Record<ComponentType, string> = {
   Page: '页面组件',
@@ -90,27 +90,12 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
   const popoverContent =
     filteredComponents.length > 0 ? (
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, overflowY: 'auto' }}>
+      <ul className={dropZoneStyles.menuList}>
         {filteredComponents.map((item) => (
-          <li
-            key={item.type}
-            style={{
-              padding: '0',
-              margin: '0',
-              listStyle: 'none',
-            }}
-          >
+          <li key={item.type} className={dropZoneStyles.menuItem}>
             <button
               type="button"
-              style={{
-                cursor: 'pointer',
-                padding: '4px 12px',
-                fontSize: '14px',
-                border: 'none',
-                background: 'transparent',
-                textAlign: 'left',
-                width: '100%',
-              }}
+              className={dropZoneStyles.menuButton}
               onClick={() => handleSelectComponent(item.type)}
             >
               {item.label}
@@ -136,15 +121,13 @@ export const DropZone: React.FC<DropZoneProps> = ({
     >
       <div
         ref={setNodeRef}
-        className={`drop-zone ${isActive ? 'drop-zone--active' : ''} ${
-          isInvalid ? 'drop-zone--invalid' : ''
-        } ${active ? 'drop-zone--dragging' : ''}`}
+        className={`${dropZoneStyles.dropZone} ${isActive ? dropZoneStyles.dropZoneActive : ''} ${isInvalid ? dropZoneStyles.dropZoneInvalid : ''} ${active ? dropZoneStyles.dropZoneDragging : ''}`}
         title={label}
       >
-        <div className="drop-zone__icon" aria-hidden>
+        <div className={dropZoneStyles.dropZoneIcon} aria-hidden>
           +
         </div>
-        {label ? <div className="drop-zone__label">{label}</div> : null}
+        {label ? <div className={dropZoneStyles.dropZoneLabel}>{label}</div> : null}
       </div>
     </Popover>
   );

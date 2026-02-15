@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from "react";
-import { Space } from "antd";
-import { useAppDispatch } from "@/store/hooks";
-import RulePreview from "./RulePreview";
-import RuleLibrary from "./RuleLibrary";
-import RuleCanvas from "./RuleCanvas";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
+import React, { useEffect, useRef } from 'react';
+import { Space } from 'antd';
+import { useAppDispatch } from '@/store/hooks';
+import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import RulePreview from './RulePreview';
+import RuleLibrary from './RuleLibrary';
+import RuleCanvas from './RuleCanvas';
+import * as styles from './RuleBuilder.css';
 
 interface RuleBuilderProps {
   name: string;
@@ -12,34 +13,30 @@ interface RuleBuilderProps {
   valueType?: string;
 }
 
-const RuleBuilder: React.FC<RuleBuilderProps> = React.memo(
-  ({ name, label, valueType }) => {
-    const dispatch = useAppDispatch();
-    const lastValueTypeRef = useRef(valueType);
+const RuleBuilder: React.FC<RuleBuilderProps> = React.memo(({ name, label, valueType }) => {
+  const dispatch = useAppDispatch();
+  const lastValueTypeRef = useRef(valueType);
 
-    // 在打开该弹窗时，会初始化表单值，此时不触发规则节点重置，以免 ruleNodes 刚被初始化就被清空
-    useEffect(() => {
-      if (lastValueTypeRef.current !== valueType) {
-        // 只有在不是第一次打开弹窗时，才重置规则节点
-        if (
-          !(lastValueTypeRef.current === undefined && valueType !== undefined)
-        ) {
-          dispatch(componentTreeActions.updateEditingColumn({ ruleNodes: [] }));
-        }
-        lastValueTypeRef.current = valueType;
+  // 在打开该弹窗时，会初始化表单值，此时不触发规则节点重置，以免 ruleNodes 刚被初始化就被清空
+  useEffect(() => {
+    if (lastValueTypeRef.current !== valueType) {
+      // 只有在不是第一次打开弹窗时，才重置规则节点
+      if (!(lastValueTypeRef.current === undefined && valueType !== undefined)) {
+        dispatch(componentTreeActions.updateEditingColumn({ ruleNodes: [] }));
       }
-    }, [valueType, dispatch]);
+      lastValueTypeRef.current = valueType;
+    }
+  }, [valueType, dispatch]);
 
-    return (
-      <Space direction="vertical" style={{ width: "100%" }} size="middle">
-        <RulePreview name={name} label={label} valueType={valueType} />
-        <RuleLibrary valueType={valueType} />
-        <RuleCanvas />
-      </Space>
-    );
-  },
-);
+  return (
+    <Space direction="vertical" className={styles.fullWidth} size="middle">
+      <RulePreview name={name} label={label} valueType={valueType} />
+      <RuleLibrary valueType={valueType} />
+      <RuleCanvas />
+    </Space>
+  );
+});
 
-RuleBuilder.displayName = "RuleBuilder";
+RuleBuilder.displayName = 'RuleBuilder';
 
 export default RuleBuilder;

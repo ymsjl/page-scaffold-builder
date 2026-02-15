@@ -1,7 +1,8 @@
-import type { NodeRef, SlotDefinition } from "@/types";
-import { isNodeRef } from "@/types";
-import { getValueByPath, setValueByPath } from "./slotPath";
-import { compact } from "lodash-es";
+import type { NodeRef, SlotDefinition } from '@/types';
+import { isNodeRef } from '@/types';
+import { compact } from 'lodash-es';
+import { getValueByPath, setValueByPath } from './slotPath';
+
 type NodeRefMap = Record<string, NodeRef[]>;
 
 type BuildResolvedPropsArgs<T> = {
@@ -9,6 +10,7 @@ type BuildResolvedPropsArgs<T> = {
   slots: SlotDefinition[];
   slotRefsMap: NodeRefMap;
   nodeIdToElement: Record<string, T>;
+  renderNodeRef?: (ref: NodeRef) => T;
   createDropZone: (slot: SlotDefinition) => T;
   wrapElement: (slot: SlotDefinition, ref: NodeRef, element: T) => T | null;
 };
@@ -19,11 +21,11 @@ const isPresent = <T>(value: T | null | undefined): value is T =>
 export const getNodeRefArray = (value: unknown): NodeRef[] => {
   if (Array.isArray(value)) {
     return value.filter(isNodeRef) as NodeRef[];
-  } else if (isNodeRef(value)) {
-    return [value];
-  } else {
-    return [];
   }
+  if (isNodeRef(value)) {
+    return [value];
+  }
+  return [];
 };
 
 /**
@@ -32,13 +34,10 @@ export const getNodeRefArray = (value: unknown): NodeRef[] => {
  * @param slots 组件原型的 slot 定义数组
  * @returns 一个对象，键是 slot 的 id，值是一个 NodeRef 数组，包含了所有属于该 slot 的 NodeRef 对象
  */
-export const collectSlotRefs = (
-  props: Record<string, unknown>,
-  slots: SlotDefinition[],
-) =>
-  slots.reduce((map, slot) => {
-    map[slot.id] = getNodeRefArray(getValueByPath(props, slot.path));
-    return map;
+export const collectSlotRefs = (props: Record<string, unknown>, slots: SlotDefinition[]) =>
+  slots.reduce((acc, slot) => {
+    acc[slot.id] = getNodeRefArray(getValueByPath(props, slot.path));
+    return acc;
   }, {} as NodeRefMap);
 
 /**
@@ -48,10 +47,7 @@ export const collectSlotRefs = (
  * @returns 一个对象，键是 nodeId，值是对应的渲染结果
  *
  */
-export const mapNodeRefsToItems = <T>(
-  allRefs: NodeRef[],
-  items: T[],
-): Record<string, T> =>
+export const mapNodeRefsToItems = <T>(allRefs: NodeRef[], items: T[]): Record<string, T> =>
   Object.fromEntries(allRefs.map((ref, index) => [ref.nodeId, items[index]]));
 
 export const buildResolvedProps = <T>({
@@ -59,19 +55,25 @@ export const buildResolvedProps = <T>({
   slots,
   slotRefsMap,
   nodeIdToElement,
+  renderNodeRef,
   createDropZone,
   wrapElement,
 }: BuildResolvedPropsArgs<T>): Record<string, unknown> => {
   let newProps: Record<string, unknown> = { ...mergedProps };
 
-  for (const slot of slots) {
+  for (let i = 0; i < slots.length; i += 1) {
+    const slot = slots[i];
     const refs = slotRefsMap[slot.id] || [];
-    const elements = compact(refs.map((ref) => nodeIdToElement[ref.nodeId]));
+
+    // 使用 renderNodeRef 或从映射中获取元素
+    const elements = renderNodeRef
+      ? refs.map(renderNodeRef)
+      : compact(refs.map((ref) => nodeIdToElement[ref.nodeId]));
 
     const wrappedElements = slot.wrap
       ? compact(
-          refs.map((ref) => {
-            const element = nodeIdToElement[ref.nodeId];
+          refs.map((ref, index) => {
+            const element = elements[index];
             if (!isPresent(element)) return null;
             return wrapElement(slot, ref, element);
           }),
@@ -80,21 +82,17 @@ export const buildResolvedProps = <T>({
 
     const dropZone = createDropZone(slot);
 
-    if (slot.renderMode === "inline") {
-      if (slot.kind === "reactNodeArray") {
+    if (slot.renderMode === 'inline') {
+      if (slot.kind === 'reactNodeArray') {
         newProps = setValueByPath(
           newProps,
           slot.path,
           dropZone ? [...wrappedElements, dropZone] : wrappedElements,
         );
       } else {
-        newProps = setValueByPath(
-          newProps,
-          slot.path,
-          wrappedElements[0] ?? dropZone,
-        );
+        newProps = setValueByPath(newProps, slot.path, wrappedElements[0] ?? dropZone);
       }
-    } else if (slot.kind === "reactNodeArray") {
+    } else if (slot.kind === 'reactNodeArray') {
       newProps = setValueByPath(newProps, slot.path, wrappedElements);
     } else {
       newProps = setValueByPath(newProps, slot.path, wrappedElements[0]);
@@ -104,5 +102,4 @@ export const buildResolvedProps = <T>({
   return newProps;
 };
 
-export const isInlineRender = ({ renderMode }: SlotDefinition) =>
-  renderMode !== "inline";
+export const isInlineRender = ({ renderMode }: SlotDefinition) => renderMode !== 'inline';

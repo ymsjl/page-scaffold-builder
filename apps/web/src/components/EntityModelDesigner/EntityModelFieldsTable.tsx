@@ -1,24 +1,22 @@
-import React, { useMemo } from "react";
-import { Button, Flex, message, Modal, Tag } from "antd";
-import type { ProColumns } from "@ant-design/pro-components";
-import { EditableProTable } from "@ant-design/pro-components";
+import React, { useMemo } from 'react';
+import { Button, Flex, message, Modal, Tag } from 'antd';
+import type { ProColumns } from '@ant-design/pro-components';
+import { EditableProTable } from '@ant-design/pro-components';
 import {
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
   SaveOutlined,
   SettingOutlined,
-} from "@ant-design/icons";
+} from '@ant-design/icons';
 
-import type { SchemaField } from "@/types";
-import { SchemaFieldSchema } from "@/validation";
+import type { SchemaField } from '@/types';
+import { SchemaFieldSchema } from '@/validation';
 
-import {
-  createNewFieldDraft,
-  FIELD_VALUE_TYPE_ENUM,
-} from "./entityModelDesignerUtils";
+import * as styles from './styles.css';
+import { createNewFieldDraft, FIELD_VALUE_TYPE_ENUM } from './entityModelDesignerUtils';
 
-export function EntityModelFieldsTable(props: {
+export const EntityModelFieldsTable = (props: {
   value: SchemaField[];
   onChange?: (next: SchemaField[]) => void;
 
@@ -31,7 +29,7 @@ export function EntityModelFieldsTable(props: {
   setFieldEditableKeys: (keys: React.Key[]) => void;
 
   onOpenEnumAdvanced: (field: SchemaField) => void;
-}) {
+}) => {
   const {
     value,
     onChange,
@@ -47,35 +45,33 @@ export function EntityModelFieldsTable(props: {
   const columns = useMemo<ProColumns<SchemaField>[]>(() => {
     return [
       {
-        title: "字段名",
-        dataIndex: "title",
+        title: '字段名',
+        dataIndex: 'title',
         width: 200,
         ellipsis: true,
-        fieldProps: { style: { width: "100%" } },
+        fieldProps: { style: { width: '100%' } },
         formItemProps: {
-          rules: [
-            { required: true, whitespace: true, message: "请输入字段名" },
-          ],
+          rules: [{ required: true, whitespace: true, message: '请输入字段名' }],
         },
-        render: (_, item) => `${item.title || "(未命名)"}`,
+        render: (_, item) => `${item.title || '(未命名)'}`,
       },
       {
-        title: "key",
-        dataIndex: "key",
+        title: 'key',
+        dataIndex: 'key',
         width: 180,
         ellipsis: true,
-        fieldProps: { style: { width: "100%" } },
+        fieldProps: { style: { width: '100%' } },
         formItemProps: {
-          rules: [{ required: true, whitespace: true, message: "请输入 key" }],
+          rules: [{ required: true, whitespace: true, message: '请输入 key' }],
         },
-        renderText: (val) => val || "-",
+        renderText: (val) => val || '-',
         render: (node, item) => {
           return (
-            <Flex style={{ width: "100%" }}>
+            <Flex style={{ width: '100%' }}>
               {node}
               {primaryKey !== item.key ? (
                 <Button
-                  className="set-as-pk-button"
+                  className={styles.setAsPkButton}
                   size="small"
                   type="link"
                   onClick={(e) => {
@@ -93,48 +89,47 @@ export function EntityModelFieldsTable(props: {
         },
       },
       {
-        title: "valueType",
-        dataIndex: "valueType",
-        valueType: "select",
+        title: 'valueType',
+        dataIndex: 'valueType',
+        valueType: 'select',
         width: 120,
         ellipsis: true,
-        fieldProps: { style: { width: "100%" } },
+        fieldProps: { style: { width: '100%' } },
         formItemProps: {
-          rules: [{ required: true, whitespace: true, message: "请选择 type" }],
+          rules: [{ required: true, whitespace: true, message: '请选择 type' }],
         },
         valueEnum: FIELD_VALUE_TYPE_ENUM,
-        render: (_, item) => String(item.valueType || "text"),
+        render: (_, item) => String(item.valueType || 'text'),
       },
       {
-        title: "可为 null",
-        dataIndex: "isNullable",
-        valueType: "switch",
+        title: '可为 null',
+        dataIndex: 'isNullable',
+        valueType: 'switch',
         width: 72,
-        align: "center",
+        align: 'center',
         fieldProps: {
-          checkedChildren: "是",
-          unCheckedChildren: "否",
+          checkedChildren: '是',
+          unCheckedChildren: '否',
         },
       },
       {
-        title: "可筛选",
-        dataIndex: "isFilterable",
-        valueType: "switch",
+        title: '可筛选',
+        dataIndex: 'isFilterable',
+        valueType: 'switch',
         width: 72,
-        align: "center",
+        align: 'center',
         fieldProps: {
-          checkedChildren: "是",
-          unCheckedChildren: "否",
+          checkedChildren: '是',
+          unCheckedChildren: '否',
         },
       },
       {
-        title: "操作",
-        valueType: "option",
+        title: '操作',
+        valueType: 'option',
         width: 280,
         render: (_, item, _index, action) => {
           const itemId = String(item.id);
-          const disableEditBtn =
-            isTableEditing && String(currentTableEditingKey) !== itemId;
+          const disableEditBtn = isTableEditing && String(currentTableEditingKey) !== itemId;
 
           return [
             <Button
@@ -170,11 +165,11 @@ export function EntityModelFieldsTable(props: {
               onClick={(e) => {
                 e.stopPropagation();
                 Modal.confirm({
-                  title: "确认删除？",
-                  content: "删除后不可恢复",
-                  okText: "删除",
+                  title: '确认删除？',
+                  content: '删除后不可恢复',
+                  okText: '删除',
                   okButtonProps: { danger: true },
-                  cancelText: "取消",
+                  cancelText: '取消',
                   onOk: () => {
                     const next = (value || []).filter((r) => r.id !== itemId);
                     onChange?.(next);
@@ -216,16 +211,16 @@ export function EntityModelFieldsTable(props: {
         isTableEditing
           ? false
           : {
-              position: "bottom",
-              newRecordType: "dataSource",
-              creatorButtonText: "添加一行数据",
+              position: 'bottom',
+              newRecordType: 'dataSource',
+              creatorButtonText: '添加一行数据',
               record: () => createNewFieldDraft(),
             }
       }
       pagination={false}
-      locale={{ emptyText: "暂无字段，请点击“添加字段”" }}
+      locale={{ emptyText: '暂无字段，请点击“添加字段”' }}
       editable={{
-        type: "single",
+        type: 'single',
         editableKeys: fieldEditableKeys,
         onChange: (keys) => setFieldEditableKeys((keys || []).slice(0, 1)),
         actionRender: (row, _config, defaultDom) => {
@@ -253,8 +248,7 @@ export function EntityModelFieldsTable(props: {
 
           const cancelDom = React.isValidElement(defaultDom.cancel)
             ? (() => {
-                const originalCancel =
-                  defaultDom.cancel as React.ReactElement<any>;
+                const originalCancel = defaultDom.cancel as React.ReactElement<any>;
                 const originalOnClick = originalCancel.props?.onClick;
                 return React.cloneElement(originalCancel, {
                   children: (
@@ -262,7 +256,7 @@ export function EntityModelFieldsTable(props: {
                       size="small"
                       type="default"
                       onClick={(e) => {
-                        if (typeof originalOnClick === "function") {
+                        if (typeof originalOnClick === 'function') {
                           originalOnClick(e);
                         }
                       }}
@@ -280,4 +274,4 @@ export function EntityModelFieldsTable(props: {
       }}
     />
   );
-}
+};

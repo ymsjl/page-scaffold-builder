@@ -25,7 +25,7 @@ import { VALUE_TYPE_ENUM_MAP } from '../SchemaBuilderModal/constants';
 import { ActionFlowSelector } from './ActionFlowSelector';
 import { getValueByPath } from '../ComponentPreview/slotPath';
 
-import './styles.css';
+import * as panelStyles from './styles.css';
 import { generateDataSource } from '../ComponentPreview/ProTableForPreview/mapValueTypeToValue';
 
 interface FlattenedPropAttribute extends Omit<PropAttribute, 'name'> {
@@ -49,30 +49,6 @@ function flattenPropAttributes(attrs: PropAttribute[]): FlattenedPropAttribute[]
     return [attr] as FlattenedPropAttribute[];
   });
 }
-
-const EMPTY_STATE_STYLE: React.CSSProperties = {
-  border: '1px solid #e8e8e8',
-  borderRadius: '4px',
-  background: 'white',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  height: '100%',
-  color: '#999',
-};
-
-const NO_CONFIG_STYLE: React.CSSProperties = {
-  borderRadius: '4px',
-  background: 'white',
-  padding: '24px',
-  textAlign: 'center',
-  color: '#999',
-};
-
-const FORM_STYLES: React.CSSProperties = {
-  height: '100%',
-  overflowY: 'auto',
-};
 
 const normalizePropPath = (name: string | string[]) =>
   Array.isArray(name) ? name.join('.') : name;
@@ -158,7 +134,7 @@ const VariableBindingEditor: React.FC<VariableBindingEditorProps> = ({
       {!isVariable && item.type === 'number' && (
         <InputNumber
           value={typeof currentValue === 'number' ? currentValue : undefined}
-          style={{ width: '100%' }}
+          className={panelStyles.fullWidthInput}
           onChange={(nextValue) => {
             if (typeof nextValue === 'number') {
               onSetValue(item.name, nextValue);
@@ -309,17 +285,17 @@ const PropertyPanel: React.FC = () => {
           size="small"
           dataSource={items}
           renderItem={(node) => (
-            <List.Item key={node.id} style={{ padding: '4px 0' }}>
+            <List.Item key={node.id} className={panelStyles.listItem}>
               <Button
                 type="text"
                 size="middle"
                 icon={<AppstoreOutlined />}
                 onClick={() => dispatch(componentTreeActions.pushNodeToPropertyPanel(node.id))}
                 block
-                style={{ justifyContent: 'flex-start' }}
+                className={panelStyles.justifyStart}
               >
                 <Typography.Text ellipsis>{node.name}</Typography.Text>
-                <div style={{ flex: 1 }} />
+                <div className={panelStyles.flex1} />
                 <RightOutlined />
               </Button>
             </List.Item>
@@ -355,8 +331,8 @@ const PropertyPanel: React.FC = () => {
         result.formItemProps = {
           className: 'schema-list-form-item',
           label: (
-            <Flex align="center" justify="space-between" gap={8} style={{ width: '100%' }}>
-              <Typography.Text style={{ flex: 1 }}>{item.label}</Typography.Text>
+            <Flex align="center" justify="space-between" gap={8} className={panelStyles.fullWidth}>
+              <Typography.Text className={panelStyles.flex1}>{item.label}</Typography.Text>
 
               <Button
                 size="small"
@@ -376,10 +352,10 @@ const PropertyPanel: React.FC = () => {
       } else if (itemName === 'rowActions') {
         result.renderFormItem = () => renderComponentPropList(item);
         result.formItemProps = {
-          className: 'schema-list-form-item',
+          className: panelStyles.schemaListFormItem,
           label: (
-            <Flex align="center" justify="space-between" gap={8} style={{ width: '100%' }}>
-              <Typography.Text style={{ flex: 1 }}>{item.label}</Typography.Text>
+            <Flex align="center" justify="space-between" gap={8} className={panelStyles.fullWidth}>
+              <Typography.Text className={panelStyles.flex1}>{item.label}</Typography.Text>
 
               <Button
                 size="small"
@@ -449,7 +425,7 @@ const PropertyPanel: React.FC = () => {
   );
 
   if (!selectedNode) {
-    return <ProCard style={EMPTY_STATE_STYLE}>请选择一个组件实例</ProCard>;
+    return <ProCard className={panelStyles.emptyState}>请选择一个组件实例</ProCard>;
   }
 
   const cardTitleElem = (
@@ -467,8 +443,8 @@ const PropertyPanel: React.FC = () => {
 
   if (propAttrs.length === 0) {
     return (
-      <ProCard bordered style={{ borderRadius: '8px' }} title={cardTitleElem} size="small">
-        <div style={NO_CONFIG_STYLE}>组件 {selectedNode.type} 暂无可配置属性</div>
+      <ProCard bordered className={panelStyles.cardRounded} title={cardTitleElem} size="small">
+        <div className={panelStyles.noConfig}>组件 {selectedNode.type} 暂无可配置属性</div>
       </ProCard>
     );
   }
@@ -482,7 +458,7 @@ const PropertyPanel: React.FC = () => {
         headerBordered
         bordered
         size="small"
-        style={{ borderRadius: '8px' }}
+        className={panelStyles.cardRounded}
         bodyStyle={{ padding: '16px' }}
       >
         <BetaSchemaForm
@@ -510,7 +486,7 @@ const PropertyPanel: React.FC = () => {
   );
 
   return (
-    <div style={FORM_STYLES}>
+    <div className={panelStyles.formContainer}>
       <ProCard
         key="快捷操作"
         size="small"
@@ -519,7 +495,7 @@ const PropertyPanel: React.FC = () => {
         collapsible
         defaultCollapsed={false}
         bordered
-        style={{ borderRadius: '8px' }}
+        className={panelStyles.cardRounded}
         bodyStyle={{ padding: '16px' }}
       >
         <Button
@@ -547,7 +523,7 @@ const PropertyPanel: React.FC = () => {
           collapsible
           defaultCollapsed={index > 2}
           bordered
-          style={{ borderRadius: '8px', marginTop: '12px' }}
+          className={panelStyles.cardRoundedWithMargin}
           bodyStyle={{ padding: '16px' }}
         >
           <BetaSchemaForm

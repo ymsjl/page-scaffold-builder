@@ -1,9 +1,9 @@
-import React from "react";
-import { Button, Tooltip } from "antd";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { useAppDispatch } from "@/store/hooks";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
-import "./SlotItemWrapper.css";
+import React from 'react';
+import { Button, Tooltip } from 'antd';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { useAppDispatch } from '@/store/hooks';
+import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import * as styles from './SlotItemWrapper.css';
 
 interface SlotItemWrapperProps {
   nodeId: string;
@@ -37,16 +37,11 @@ const SlotItemWrapper: React.FC<SlotItemWrapperProps> = ({
   };
 
   return (
-    <div className="slot-item-wrapper" onClick={handleSelect}>
-      <div className="slot-item-wrapper__content">{children}</div>
-      <div className="slot-item-wrapper__actions">
+    <button type="button" className={styles.wrapper} onClick={handleSelect}>
+      <div className={styles.content}>{children}</div>
+      <div className={styles.actions}>
         <Tooltip title="选中组件">
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={handleSelect}
-          />
+          <Button size="small" type="text" icon={<EditOutlined />} onClick={handleSelect} />
         </Tooltip>
         <Tooltip title="移除组件">
           <Button
@@ -58,7 +53,7 @@ const SlotItemWrapper: React.FC<SlotItemWrapperProps> = ({
           />
         </Tooltip>
       </div>
-    </div>
+    </button>
   );
 };
 

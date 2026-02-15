@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Form, Input, Select, InputNumber, Button, Space, Divider } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
-import type { ActionNode } from "@/types/actions";
-import { useActionFlow } from "@/services/actionFlows/hooks/useActionFlow";
-import { useAppSelector } from "@/store/hooks";
-import { variableSelectors } from "@/store/componentTree/componentTreeSelectors";
-import "./NodeProperties.css";
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Select, InputNumber, Button, Space, Divider } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
+import type { ActionNode } from '@/types/actions';
+import { useActionFlow } from '@/services/actionFlows/hooks/useActionFlow';
+import { useAppSelector } from '@/store/hooks';
+import { variableSelectors } from '@/store/componentTree/componentTreeSelectors';
+import * as styles from './NodeProperties.css';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -19,15 +19,11 @@ interface NodePropertiesProps {
 /**
  * 节点属性编辑面板
  */
-export const NodeProperties: React.FC<NodePropertiesProps> = ({
-  flowId,
-  node,
-  onClose,
-}) => {
+export const NodeProperties: React.FC<NodePropertiesProps> = ({ flowId, node, onClose }) => {
   const { updateNode, deleteNodes } = useActionFlow();
   const variables = useAppSelector(variableSelectors.selectAll);
   const [form] = Form.useForm();
-  const [localParams, setLocalParams] = useState<Record<string, any>>({});
+  const [, setLocalParams] = useState<Record<string, any>>({});
 
   // 当节点变化时，更新表单
   useEffect(() => {
@@ -42,7 +38,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
 
   if (!node) {
     return (
-      <div className="node-properties-empty">
+      <div className={styles.nodePropertiesEmpty}>
         <p>请选择一个节点</p>
       </div>
     );
@@ -71,7 +67,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
 
     // 根据节点类型渲染不同的表单字段
     switch (nodeType) {
-      case "action.httpRequest":
+      case 'action.httpRequest':
         return (
           <>
             <Form.Item label="URL" name="url" rules={[{ required: true }]}>
@@ -87,10 +83,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
               </Select>
             </Form.Item>
             <Form.Item label="请求头" name="headers">
-              <TextArea
-                rows={3}
-                placeholder='{"Content-Type": "application/json"}'
-              />
+              <TextArea rows={3} placeholder='{"Content-Type": "application/json"}' />
             </Form.Item>
             <Form.Item label="请求体" name="body">
               <TextArea rows={4} placeholder='{"key": "value"}' />
@@ -98,32 +91,28 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case "action.navigate":
+      case 'action.navigate':
         return (
           <>
-            <Form.Item
-              label="目标路径"
-              name="path"
-              rules={[{ required: true }]}
-            >
+            <Form.Item label="目标路径" name="path" rules={[{ required: true }]}>
               <Input placeholder="/dashboard" />
             </Form.Item>
             <Form.Item label="在新标签页打开" name="newTab">
               <Select defaultValue={false}>
                 <Option value={false}>否</Option>
-                <Option value={true}>是</Option>
+                <Option value>是</Option>
               </Select>
             </Form.Item>
           </>
         );
 
-      case "action.setVariable":
+      case 'action.setVariable':
         return (
           <>
             <Form.Item
               label="变量"
               name="variableName"
-              rules={[{ required: true, message: "请选择变量" }]}
+              rules={[{ required: true, message: '请选择变量' }]}
             >
               <Select
                 placeholder="选择变量"
@@ -136,21 +125,17 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
             <Form.Item
               label="设置值"
               name="value"
-              rules={[{ required: true, message: "请输入设置值" }]}
+              rules={[{ required: true, message: '请输入设置值' }]}
             >
               <Input placeholder="支持 boolean/string/number，例如 false" />
             </Form.Item>
           </>
         );
 
-      case "action.showMessage":
+      case 'action.showMessage':
         return (
           <>
-            <Form.Item
-              label="消息内容"
-              name="content"
-              rules={[{ required: true }]}
-            >
+            <Form.Item label="消息内容" name="content" rules={[{ required: true }]}>
               <TextArea rows={3} placeholder="操作成功" />
             </Form.Item>
             <Form.Item label="消息类型" name="type">
@@ -167,29 +152,17 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case "control.delay":
+      case 'control.delay':
         return (
-          <Form.Item
-            label="延迟时间(毫秒)"
-            name="duration"
-            rules={[{ required: true }]}
-          >
-            <InputNumber
-              min={0}
-              defaultValue={1000}
-              style={{ width: "100%" }}
-            />
+          <Form.Item label="延迟时间(毫秒)" name="duration" rules={[{ required: true }]}>
+            <InputNumber min={0} defaultValue={1000} style={{ width: '100%' }} />
           </Form.Item>
         );
 
-      case "control.condition":
+      case 'control.condition':
         return (
           <>
-            <Form.Item
-              label="条件表达式"
-              name="condition"
-              rules={[{ required: true }]}
-            >
+            <Form.Item label="条件表达式" name="condition" rules={[{ required: true }]}>
               <TextArea rows={3} placeholder="input.value > 100" />
             </Form.Item>
             <Form.Item label="条件说明" name="description">
@@ -198,7 +171,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case "control.loop":
+      case 'control.loop':
         return (
           <>
             <Form.Item label="循环类型" name="loopType">
@@ -214,26 +187,21 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
           </>
         );
 
-      case "data.transform":
+      case 'data.transform':
         return (
-          <>
-            <Form.Item label="转换函数" name="transformer">
-              <TextArea
-                rows={5}
-                placeholder="(input) => ({ ...input, transformed: true })"
-              />
-            </Form.Item>
-          </>
+          <Form.Item label="转换函数" name="transformer">
+            <TextArea rows={5} placeholder="(input) => ({ ...input, transformed: true })" />
+          </Form.Item>
         );
 
-      case "component.table.refresh":
+      case 'component.table.refresh':
         return (
           <Form.Item label="表格组件ID" name="componentId">
             <Input placeholder="table_1" />
           </Form.Item>
         );
 
-      case "component.form.submit":
+      case 'component.form.submit':
         return (
           <Form.Item label="表单组件ID" name="componentId">
             <Input placeholder="form_1" />
@@ -250,15 +218,10 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
   };
 
   return (
-    <div className="node-properties">
-      <div className="node-properties-header">
+    <div className={styles.nodeProperties}>
+      <div className={styles.nodePropertiesHeader}>
         <h3>节点属性</h3>
-        <Button
-          type="text"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={handleDelete}
-        >
+        <Button type="text" danger icon={<DeleteOutlined />} onClick={handleDelete}>
           删除
         </Button>
       </div>
@@ -269,7 +232,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
         form={form}
         layout="vertical"
         onValuesChange={handleSave}
-        className="node-properties-form"
+        className={styles.nodePropertiesForm}
       >
         <Form.Item label="节点名称" name="label" rules={[{ required: true }]}>
           <Input placeholder="输入节点名称" />
@@ -284,7 +247,7 @@ export const NodeProperties: React.FC<NodePropertiesProps> = ({
         {renderParamFields()}
       </Form>
 
-      <div className="node-properties-footer">
+      <div className={styles.nodePropertiesFooter}>
         <Space>
           <Button onClick={onClose}>关闭</Button>
         </Space>

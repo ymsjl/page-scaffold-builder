@@ -1,0 +1,28 @@
+{
+  "summary": {
+    "cssFiles": 0,
+    "inlineStyleFiles": 12,
+    "cssImports": 2
+  },
+  "examples": {
+    "cssFiles": [],
+    "inlineStyleFiles": [
+      "apps\\web\\src\\components\\ComponentPreview\\ProTableForPreview\\ColumnTitleMenu.tsx",
+      "apps\\web\\src\\components\\ComponentTree\\TreeNodeItem.tsx",
+      "apps\\web\\src\\components\\EntityModelDesigner\\EntityModelFieldsTable.tsx",
+      "apps\\web\\src\\components\\FlowEditor\\CustomNode.tsx",
+      "apps\\web\\src\\components\\FlowEditor\\NodeProperties.tsx",
+      "apps\\web\\src\\components\\RuleBuilder\\ruleEditors\\DateControl.tsx",
+      "apps\\web\\src\\components\\RuleBuilder\\ruleEditors\\DecimalRuleEditor.tsx",
+      "apps\\web\\src\\components\\RuleBuilder\\ruleEditors\\OperatorSelect.tsx",
+      "apps\\web\\src\\components\\RuleBuilder\\ruleEditors\\PatternRuleEditor.tsx",
+      "apps\\web\\src\\components\\RuleBuilder\\RuleLibrary.tsx",
+      "apps\\web\\src\\main.tsx",
+      "apps\\web\\src\\services\\actionFlows\\examples\\ActionFlowExamples.tsx"
+    ],
+    "cssImports": [
+      "apps\\web\\src\\components\\FlowEditor\\FlowEditor.tsx",
+      "apps\\web\\src\\main.tsx"
+    ]
+  }
+}

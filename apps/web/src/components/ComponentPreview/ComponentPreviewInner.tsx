@@ -1,25 +1,21 @@
-import React, { useMemo } from "react";
-import type { ComponentNode } from "@/types";
-import type { getComponentPrototype } from "../../componentMetas";
-import { useResolvedProps } from "./ReactNodeRenderer";
-import { CONTAINER_STYLE, FINAL_CONTAINER_STYLE } from "./previewStyles";
+import React, { useMemo } from 'react';
+import type { ComponentNode } from '@/types';
+import type { getComponentPrototype } from '../../componentMetas';
+import { useResolvedProps } from './ReactNodeRenderer';
+import * as previewStyles from './previewStyles.css';
 
 type ComponentPreviewInnerProps = {
   node: ComponentNode;
   componentPrototype: NonNullable<ReturnType<typeof getComponentPrototype>>;
-  containerVariant?: "builder" | "final";
+  containerVariant?: 'builder' | 'final';
 };
 
 const ComponentPreviewInner = React.memo(
-  ({
-    node,
-    componentPrototype,
-    containerVariant = "builder",
-  }: ComponentPreviewInnerProps) => {
+  ({ node, componentPrototype, containerVariant = 'builder' }: ComponentPreviewInnerProps) => {
     const resolvedProps = useResolvedProps(node, componentPrototype);
     const componentElem = useMemo(() => {
       const Component = componentPrototype.component;
-      if (typeof Component === "string") {
+      if (typeof Component === 'string') {
         const { children, ...props } = resolvedProps;
         return React.createElement(
           Component as keyof JSX.IntrinsicElements,
@@ -34,15 +30,11 @@ const ComponentPreviewInner = React.memo(
       );
     }, [resolvedProps, componentPrototype.component, node.id]);
 
-    const containerStyle =
-      containerVariant === "final" ? FINAL_CONTAINER_STYLE : CONTAINER_STYLE;
+    const containerClass =
+      containerVariant === 'final' ? previewStyles.finalContainer : previewStyles.container;
 
     return (
-      <div
-        id="modal-preview-root"
-        style={{ ...containerStyle, position: "relative" }}
-      >
-        {" "}
+      <div id="modal-preview-root" className={containerClass}>
         {componentElem}
       </div>
     );

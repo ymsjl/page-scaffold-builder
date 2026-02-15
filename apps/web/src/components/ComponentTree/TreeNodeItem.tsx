@@ -7,6 +7,8 @@ import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
 import { availableComponents, getComponentPrototype } from '@/componentMetas';
 import { Button, Input, Space, Dropdown, Typography } from 'antd';
 
+import * as styles from './TreeNodeItem.css';
+
 interface TreeNodeItemProps {
   node: ComponentInstance;
   level: number;
@@ -113,25 +115,22 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   return (
     <div
       ref={setNodeRef}
-      style={{ padding: '4px', paddingLeft: `${level * 8}px`, ...style }}
+      className={styles.root}
+      style={{ paddingLeft: `${level * 8}px`, ...style }}
       {...attributes}
     >
-      <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+      <div className={styles.row}>
         {/* 拖拽手柄 - 仅非容器组件显示 */}
         {isDraggable && (
           <div
             {...listeners}
-            style={{
-              cursor: isDragging ? 'grabbing' : 'grab',
-              padding: '0 4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
+            className={`${styles.handle} ${isDragging ? styles.handleGrabbing : ''}`}
           >
-            <HolderOutlined style={{ color: '#999', fontSize: 12 }} />
+            <HolderOutlined className={styles.handleIcon} />
           </div>
         )}
-        <div style={{ flex: 1 }}>
+
+        <div className={styles.nameContainer}>
           {isEditing ? (
             <Input
               size="small"
@@ -154,7 +153,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
           )}
         </div>
 
-        <Space size={4}>
+        <Space size={4} className={styles.actionsSpace}>
           {isEditing ? (
             <Button size="small" icon={<CheckOutlined />} onClick={handleSaveEdit} />
           ) : (
