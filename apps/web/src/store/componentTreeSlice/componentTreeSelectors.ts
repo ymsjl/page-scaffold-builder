@@ -50,15 +50,21 @@ export const selectComponentTreeState = (state: RootState) => state.componentTre
  * @description 获取组件树的 normalizedTree
  */
 export const getNormalizedTree = (state: MaybeWritable<ComponentTreeState>) => state.normalizedTree;
+export const selectNormalizedTree = createSelector(selectComponentTreeState, getNormalizedTree);
 
 /**
  * @description 获取组件节点实体表
  */
+const getComponentNodesEntitiesResult = (
+  normalizedTree: MaybeWritable<ReturnType<typeof getNormalizedTree>>,
+) => normalizedTree.entities.nodes;
+
 const getComponentNodesEntities = (state: MaybeWritable<ComponentTreeState>) =>
-  getNormalizedTree(state).entities.nodes;
+  getComponentNodesEntitiesResult(getNormalizedTree(state));
+
 export const selectComponentNodesEntities = createSelector(
-  selectComponentTreeState,
-  getComponentNodesEntities,
+  selectNormalizedTree,
+  getComponentNodesEntitiesResult,
 );
 /**
  * @description 获取根节点ID列表
@@ -79,8 +85,9 @@ const getComponentNodesStateResult = (entities: Record<string, ComponentNode>) =
   ids: Object.keys(entities),
   entities,
 });
-export const selectComponentNodesState = createSelector(selectComponentTreeState, (state) =>
-  getComponentNodesStateResult(getComponentNodesEntities(state)),
+const selectComponentNodesState = createSelector(
+  selectComponentNodesEntities,
+  getComponentNodesStateResult,
 );
 export const componentNodesSelectors = componentTreeAdapter.getSelectors(selectComponentNodesState);
 
@@ -91,7 +98,14 @@ const getSelectedNode = (state: MaybeWritable<ComponentTreeState>) => {
   const selectedId = getSelectedNodeId(state);
   return selectedId ? getComponentNodesEntities(state)[selectedId] : null;
 };
-export const selectSelectedNode = createSelector(selectComponentTreeState, getSelectedNode);
+const getSelectedNodeResult = (nodeId: string | null, entities: Record<string, ComponentNode>) => {
+  return nodeId ? entities[nodeId] : null;
+};
+const selectSelectedNode = createSelector(
+  selectSelectedNodeId,
+  selectComponentNodesEntities,
+  getSelectedNodeResult,
+);
 
 const getNodeInPropertyPanelResult = (
   components: Record<string, ComponentNode>,
@@ -137,6 +151,14 @@ export const selectSelectedNodeEntityModelId = createSelector(
 const getColumnsOfSelectedNodeResult = (
   node: ComponentNode | null | undefined,
 ): ProCommonColumn[] => (node ? (node.props?.columns ?? []) : []);
+export const getColumnsOfSelectedNode = (state: MaybeWritable<ComponentTreeState>) => {
+  const node = getSelectedNodeWithColumns(state);
+  if (!node) return null;
+  if (node.props.columns === undefined) {
+    node.props.columns = [];
+  }
+  return node.props.columns;
+};
 export const selectColumnsOfSelectedNode = createSelector(
   selectSelectedNode,
   getColumnsOfSelectedNodeResult,
@@ -196,4 +218,11 @@ const getEntityModelInUseResult = (
 export const selectEntityModelInUse = createSelector(
   [selectSelectedNodeEntityModelId, selectEntityModel],
   getEntityModelInUseResult,
+);
+
+const getFieldsOfEntityModelInUseResult = (entityModel: EntityModel | null | undefined) =>
+  entityModel?.fields ?? [];
+export const selectFieldsOfEntityModelInUse = createSelector(
+  selectEntityModelInUse,
+  getFieldsOfEntityModelInUseResult,
 );

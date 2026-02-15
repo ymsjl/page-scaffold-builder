@@ -1,10 +1,7 @@
 import React from 'react';
 import { Button, Space, message } from 'antd';
 import { EyeOutlined, EditOutlined, ExportOutlined } from '@ant-design/icons';
-import {
-  selectFirstParentPageNode,
-  selectComponentTreeState,
-} from '@/store/componentTreeSlice/componentTreeSelectors';
+import { selectFirstParentPageNode } from '@/store/componentTreeSlice/componentTreeSelectors';
 import { getComponentPrototype } from '../../componentMetas';
 import { useAppSelector } from '../../store/hooks';
 import ComponentPreviewInner from './ComponentPreviewInner';
@@ -24,7 +21,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
 }) => {
   const [mode, setMode] = React.useState<PreviewMode>(initialMode);
   const rootNode = useAppSelector(selectFirstParentPageNode);
-  const componentTreeState = useAppSelector(selectComponentTreeState);
   if (!rootNode)
     return <div className={previewStyles.emptyState}>请选择一个组件实例以查看预览</div>;
 
@@ -44,13 +40,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       const snapshot = {
         version: 1,
         createdAt: Date.now(),
-        componentTree: {
-          selectedNodeId: componentTreeState.selectedNodeId,
-          normalizedTree: componentTreeState.normalizedTree,
-          entityModel: componentTreeState.entityModel,
-          variables: componentTreeState.variables,
-          variableValues: componentTreeState.variableValues,
-        },
       };
 
       localStorage.setItem(storageKey, JSON.stringify(snapshot));

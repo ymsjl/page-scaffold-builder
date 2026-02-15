@@ -40,8 +40,12 @@ export const selectEditingColumnProps = createSelector(
 const getRuleNodesOfEditingColumnResult = (
   editingColumn: Partial<ProCommonColumn> | null,
 ): RuleNode[] => editingColumn?.ruleNodes || [];
-export const getRuleNodesOfEditingColumn = (state: MaybeWritable<ColumnEditorState>) =>
-  getRuleNodesOfEditingColumnResult(getEditingColumn(state));
+export const getRuleNodesOfEditingColumn = (state: MaybeWritable<ColumnEditorState>) => {
+  const editingColumn = getEditingColumn(state);
+  if (!editingColumn) return null;
+  editingColumn.ruleNodes = editingColumn.ruleNodes || [];
+  return editingColumn.ruleNodes;
+};
 export const selectRuleNodesOfEditingColumn = createSelector(
   selectEditingColumn,
   getRuleNodesOfEditingColumnResult,

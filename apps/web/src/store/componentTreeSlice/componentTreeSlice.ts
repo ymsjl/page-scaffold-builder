@@ -3,12 +3,12 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { ComponentNode, NormalizedComponentTree } from '@/types/Component';
 import type { PrimitiveVariableValue, ProCommonColumn } from '@/types';
 import { merge } from 'lodash-es';
-import { makeNodeId } from '@/utils/makeIdCreator';
-import { getSelectedNodeWithColumns } from './componentTreeSelectors';
+import { makeNodeId, makeColumnId } from '@/utils/makeIdCreator';
+import { ProCommonColumnSchema } from '@/types/tableColumsTypes';
+import { getColumnsOfSelectedNode } from './componentTreeSelectors';
 import { createNodeRefReducers } from './nodeReducers/nodeRefReducers';
 import { createEmptyNormalizedTree } from './componentTreeNormalization';
 import { variableAdapter } from '../variablesSlice/variableAdapter';
-import { upsertColumnOnNode } from './helper';
 
 export interface ComponentTreeState {
   selectedNodeId: string | null;
@@ -171,12 +171,9 @@ const slice = createSlice({
     },
 
     addColumns: (state, { payload }: PayloadAction<ProCommonColumn[]>) => {
-      const node = getSelectedNodeWithColumns(state);
-      if (!node) return;
-
-      const { props } = node;
-      props.columns = props?.columns ?? [];
-      props.columns.push(...payload);
+      const columns = getColumnsOfSelectedNode(state);
+      if (!columns) return;
+      columns.push(...payload);
     },
 
     /**
@@ -197,12 +194,26 @@ const slice = createSlice({
           }
       >,
     ) => {
-      const node = getSelectedNodeWithColumns(state);
-      if (!node) return;
+      const columns = getColumnsOfSelectedNode(state);
+      if (!columns) return;
 
       const changes = 'changes' in payload ? payload.changes : payload;
       const insertPos = 'insertPos' in payload ? payload.insertPos : undefined;
-      upsertColumnOnNode(node.props, changes, insertPos);
+
+      const idx = columns.findIndex((c) => c.key === changes.key);
+      if (idx >= 0) {
+        Object.assign(columns[idx], changes);
+      } else {
+        const validatedChanges = ProCommonColumnSchema.parse({
+          ...changes,
+          key: changes.key ?? makeColumnId(),
+        });
+        if (typeof insertPos === 'number' && insertPos >= 0 && insertPos <= columns.length) {
+          columns.splice(insertPos, 0, validatedChanges);
+        } else {
+          columns.push(validatedChanges);
+        }
+      }
     },
 
     /**
@@ -210,13 +221,11 @@ const slice = createSlice({
      * @param payload 列的 key;
      */
     deleteColumnForSelectedNode: (state, action: PayloadAction<string>) => {
-      const node = getSelectedNodeWithColumns(state);
-      if (!node) return;
-
-      const { props } = node;
-      const idx = props.columns.findIndex((c) => c.key === action.payload);
+      const columns = getColumnsOfSelectedNode(state);
+      if (!columns) return;
+      const idx = columns.findIndex((c) => c.key === action.payload);
       if (idx >= 0) {
-        props.columns.splice(idx, 1);
+        columns.splice(idx, 1);
       }
     },
 
@@ -229,13 +238,9 @@ const slice = createSlice({
      */
     moveColumnForSelectedNode: (state, action: PayloadAction<{ from: number; to: number }>) => {
       const { from, to } = action.payload;
-      const node = getSelectedNodeWithColumns(state);
-      if (!node) return;
-
-      const { props } = node;
-      const { columns } = props;
+      const columns = getColumnsOfSelectedNode(state);
+      if (!columns) return;
       if (from < 0 || from >= columns.length || to < 0 || to >= columns.length) return;
-
       const [movedItem] = columns.splice(from, 1);
       columns.splice(to, 0, movedItem);
     },

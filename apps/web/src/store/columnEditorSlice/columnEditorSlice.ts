@@ -8,6 +8,7 @@ import type {
 } from '@/components/RuleBuilder/RuleParamsDateSchema';
 import { ruleNodeContext } from '@/components/RuleBuilder/strategies';
 import { makeRuleId } from '@/utils/makeIdCreator';
+import { getRuleNodesOfEditingColumn } from './selectors';
 
 export type ColumnEditorState = {
   editingColumn: Partial<ProCommonColumn> | null;
@@ -71,6 +72,9 @@ const slice = createSlice({
      */
     addRuleNodeToEditingColumn: (state, action: PayloadAction<RuleTemplate>) => {
       if (!state.editingColumn) return;
+      const ruleNodes = getRuleNodesOfEditingColumn(state);
+      if (!ruleNodes) return;
+
       const { type, defaultParams, name } = action.payload;
       const newRuleNode = {
         id: makeRuleId(),
@@ -82,8 +86,7 @@ const slice = createSlice({
       newRuleNode.message = ruleNodeContext
         .getStrategyForNodeOrThrow({ ...newRuleNode })
         .buildDefaultMessage({ ...newRuleNode });
-      state.editingColumn.ruleNodes = state.editingColumn.ruleNodes || [];
-      state.editingColumn.ruleNodes.push(newRuleNode);
+      ruleNodes.push(newRuleNode);
     },
 
     /**
@@ -95,9 +98,10 @@ const slice = createSlice({
       state,
       action: PayloadAction<{ id: string; params: RuleNodeParams }>,
     ) => {
-      if (!state.editingColumn?.ruleNodes) return;
+      const ruleNodes = getRuleNodesOfEditingColumn(state);
+      if (!ruleNodes) return;
       const { id, params } = action.payload;
-      const targetNode = state.editingColumn?.ruleNodes.find((n) => n.id === id);
+      const targetNode = ruleNodes.find((n) => n.id === id);
       if (!targetNode) return;
       Object.assign(targetNode.params, params);
       targetNode.message =
@@ -110,10 +114,11 @@ const slice = createSlice({
      * @param action.payload 规则节点ID
      */
     deleteRuleNodeOfEditingColumn: (state, action: PayloadAction<string>) => {
-      if (!state.editingColumn?.ruleNodes) return;
-      state.editingColumn.ruleNodes = state.editingColumn.ruleNodes.filter(
-        (n) => n.id !== action.payload,
-      );
+      const ruleNodes = getRuleNodesOfEditingColumn(state);
+      if (!ruleNodes) return;
+      const idx = ruleNodes.findIndex((n) => n.id === action.payload);
+      if (idx < 0) return;
+      ruleNodes.splice(idx, 1);
     },
   },
 });
