@@ -3,7 +3,7 @@ import { useAppSelector } from '@/store/hooks';
 import {
   componentNodesSelectors,
   selectVariableValues,
-} from '@/store/componentTree/componentTreeSelectors';
+} from '@/store/componentTreeSlice/componentTreeSelectors';
 import { getComponentPrototype } from '@/componentMetas';
 import {
   type ComponentNode,

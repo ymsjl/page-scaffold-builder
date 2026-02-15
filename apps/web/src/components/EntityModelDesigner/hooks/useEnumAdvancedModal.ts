@@ -1,15 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
-import type { FormInstance } from "antd";
-import { message } from "antd";
+import { useCallback, useMemo, useState } from 'react';
+import type { FormInstance } from 'antd';
+import { message } from 'antd';
 
-import type { EntityModel, SchemaField } from "@/types";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
+import type { EntityModel, SchemaField } from '@/types';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 
-import type { EnumOption } from "../entityModelDesignerTypes";
-import {
-  buildEnumExtraFromOptions,
-  parseEnumOptionsFromExtra,
-} from "../entityModelDesignerUtils";
+import type { EnumOption } from '../entityModelDesignerTypes';
+import { buildEnumExtraFromOptions, parseEnumOptionsFromExtra } from '../entityModelDesignerUtils';
 
 export function useEnumAdvancedModal(params: {
   form: FormInstance<EntityModel>;
@@ -21,10 +18,7 @@ export function useEnumAdvancedModal(params: {
   const [fieldId, setFieldId] = useState<string | null>(null);
   const [enumOptions, setEnumOptions] = useState<EnumOption[]>([]);
 
-  const editableKeys = useMemo<React.Key[]>(
-    () => enumOptions.map((opt) => opt.id),
-    [enumOptions],
-  );
+  const editableKeys = useMemo<React.Key[]>(() => enumOptions.map((opt) => opt.id), [enumOptions]);
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -33,14 +27,11 @@ export function useEnumAdvancedModal(params: {
   }, []);
 
   const openForField = useCallback((field: SchemaField) => {
-    if (String(field.valueType) !== "enum") {
-      message.info("当前仅支持 enum 类型的高级设置");
+    if (String(field.valueType) !== 'enum') {
+      message.info('当前仅支持 enum 类型的高级设置');
       return;
     }
-    const initialOptions = parseEnumOptionsFromExtra(
-      field.extra?.options,
-      String(field.id),
-    );
+    const initialOptions = parseEnumOptionsFromExtra(field.extra?.options, String(field.id));
     setEnumOptions(initialOptions);
     setFieldId(String(field.id));
     setIsOpen(true);
@@ -48,7 +39,7 @@ export function useEnumAdvancedModal(params: {
 
   const save = useCallback(() => {
     if (!fieldId) return;
-    const fields = (form.getFieldValue("fields") as SchemaField[]) || [];
+    const fields = (form.getFieldValue('fields') as SchemaField[]) || [];
     const nextExtra = buildEnumExtraFromOptions(enumOptions);
     const nextFields = fields.map((field) =>
       field.id === String(fieldId)
@@ -59,7 +50,7 @@ export function useEnumAdvancedModal(params: {
         : field,
     );
 
-    form.setFieldValue("fields", nextFields);
+    form.setFieldValue('fields', nextFields);
 
     if (entityModelId) {
       dispatch(
@@ -71,7 +62,7 @@ export function useEnumAdvancedModal(params: {
       );
     }
 
-    message.success("已更新枚举配置");
+    message.success('已更新枚举配置');
     close();
   }, [close, dispatch, entityModelId, enumOptions, fieldId, form]);
 

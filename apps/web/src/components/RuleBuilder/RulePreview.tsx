@@ -1,8 +1,8 @@
-import React, { useMemo } from "react";
-import { Card } from "antd";
-import { BetaSchemaForm } from "@ant-design/pro-components";
-import { useAppSelector } from "@/store/hooks";
-import { selectEditingColumnProps } from "@/store/componentTree/componentTreeSelectors";
+import React, { useMemo } from 'react';
+import { Card } from 'antd';
+import { BetaSchemaForm } from '@ant-design/pro-components';
+import { useAppSelector } from '@/store/hooks';
+import { selectEditingColumnProps } from '@/store/componentTreeSlice/componentTreeSelectors';
 
 const RulePreview: React.FC<{
   name: string;
@@ -23,7 +23,7 @@ const RulePreview: React.FC<{
       },
       fieldProps: {
         ...(columnProps?.fieldProps ?? {}),
-        style: { width: "100%" },
+        style: { width: '100%' },
       },
     };
   }, [columnProps, name, label, valueType]);
@@ -37,6 +37,6 @@ const RulePreview: React.FC<{
   );
 });
 
-RulePreview.displayName = "RulePreview";
+RulePreview.displayName = 'RulePreview';
 
 export default RulePreview;

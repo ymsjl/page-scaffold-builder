@@ -2,7 +2,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { Card, Space, Typography } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import { type RuleNodeType, type RuleNode } from './RuleParamsDateSchema';
 import { ruleNodeContext } from './strategies';
 import * as styles from './RuleBuilder.css';

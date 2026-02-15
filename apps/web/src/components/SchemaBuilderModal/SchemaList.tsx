@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Modal, List, Button, Space, Empty, Tag, message, Flex } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -12,7 +12,7 @@ import type { ProCommonColumn } from '@/types';
 import {
   selectColumnsOfSelectedNode,
   selectEntityModelInUse,
-} from '@/store/componentTree/componentTreeSelectors';
+} from '@/store/componentTreeSlice/componentTreeSelectors';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';

@@ -7,7 +7,7 @@ import type {
 } from '@/components/RuleBuilder/RuleParamsDateSchema';
 import { ruleNodeContext } from '@/components/RuleBuilder/strategies';
 import { makeRuleId } from '@/utils/makeIdCreator';
-import type { ComponentTreeState } from '../componentTreeSlice';
+import type { ComponentTreeState } from './componentTreeSlice';
 
 /**
  * 规则节点相关的 Reducers

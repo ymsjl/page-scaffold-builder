@@ -1,6 +1,6 @@
-import type { ComponentType } from "react";
-import type { ComponentNode, NodeRef } from "@/types";
-import { mapProCommonColumnToProps } from "@/store/componentTree/mapProCommonColumnToProps";
+import type { ComponentType } from 'react';
+import type { ComponentNode, NodeRef } from '@/types';
+import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
 
 type PrototypeLike = {
   component: ComponentType<Record<string, unknown>> | string;
@@ -9,7 +9,7 @@ type PrototypeLike = {
 
 export type ResolvedNode = {
   nodeId: string;
-  component: PrototypeLike["component"];
+  component: PrototypeLike['component'];
   mergedProps: Record<string, unknown>;
 };
 
@@ -22,7 +22,7 @@ export const mergeNodeProps = (
 });
 
 const buildChildrenRefs = (childrenIds: string[]): NodeRef[] =>
-  childrenIds.map((nodeId) => ({ type: "nodeRef", nodeId }));
+  childrenIds.map((nodeId) => ({ type: 'nodeRef', nodeId }));
 
 const normalizeNodePropsForPreview = (
   node: ComponentNode,
@@ -53,15 +53,15 @@ export const resolveNodeFromPrototype = (
 export const resolveRenderableNodes = (
   nodeRefs: NodeRef[],
   nodes: Record<string, ComponentNode | undefined>,
-  getPrototype: (type: ComponentNode["type"]) => PrototypeLike | undefined,
+  getPrototype: (type: ComponentNode['type']) => PrototypeLike | undefined,
 ): ResolvedNode[] => {
-  const resolved: ResolvedNode[] = [];
-  for (const ref of nodeRefs) {
-    const node = nodes[ref.nodeId];
-    if (!node) continue;
-    const prototype = getPrototype(node.type);
-    if (!prototype) continue;
-    resolved.push(resolveNodeFromPrototype(node, prototype));
-  }
-  return resolved;
+  return nodeRefs
+    .map((ref) => {
+      const node = nodes[ref.nodeId];
+      if (!node) return null;
+      const prototype = getPrototype(node.type);
+      if (!prototype) return null;
+      return resolveNodeFromPrototype(node, prototype);
+    })
+    .filter(Boolean) as ResolvedNode[];
 };

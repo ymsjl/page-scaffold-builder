@@ -2,7 +2,7 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Popover, Typography } from 'antd';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import type { ComponentType } from '@/types';
 import { COMPONENT_TYPES } from '@/types/Component';
 import * as dropZoneStyles from './DropZone.css';

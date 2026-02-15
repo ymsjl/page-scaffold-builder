@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 import { PageScaffoldBuilderLayout } from './Layout';
 import { store } from './store/store';
 import ComponentPreview from './components/ComponentPreview/ComponentPreview';
-import { componentTreeActions } from './store/componentTree/componentTreeSlice';
+import { componentTreeActions } from './store/componentTreeSlice/componentTreeSlice';
 import { preloadComponents } from './preloadComponents';
 
 const getPreviewOnlyParams = () => {

@@ -7,10 +7,9 @@ import {
   createColumnReducers,
   createColumnEditingReducers,
   createRuleNodeReducers,
-  createEntityModelReducers,
   createNodeRefReducers,
   createVariablesReducers,
-} from './reducers';
+} from '.';
 import { createEmptyNormalizedTree } from './componentTreeNormalization';
 import { entityModelAdapter, variableAdapter } from './componentTreeAdapters';
 
@@ -36,9 +35,11 @@ const initialState: ComponentTreeState = {
   editingColumn: null,
   normalizedTree: createEmptyNormalizedTree(),
   isSchemaBuilderModalOpen: false,
+
   entityModel: entityModelAdapter.getInitialState({}),
   isEntityModelModalOpen: false,
   editingEntityModelId: null,
+
   variables: variableAdapter.getInitialState({}),
   variableValues: {},
   isVariableModalOpen: false,
@@ -65,7 +66,6 @@ const slice = createSlice({
     ...createColumnReducers(),
     ...createColumnEditingReducers(),
     ...createRuleNodeReducers(),
-    ...createEntityModelReducers(),
     ...createVariablesReducers(),
     hydrateFromSnapshot: (state, action: PayloadAction<Partial<ComponentTreeSnapshot>>) => {
       const next = action.payload;
@@ -79,9 +79,6 @@ const slice = createSlice({
       if (next.normalizedTree) {
         state.normalizedTree = next.normalizedTree;
       }
-      if (next.entityModel) {
-        state.entityModel = next.entityModel;
-      }
       if (next.variables) {
         state.variables = next.variables;
       }
@@ -91,8 +88,6 @@ const slice = createSlice({
 
       state.editingColumn = null;
       state.isSchemaBuilderModalOpen = false;
-      state.isEntityModelModalOpen = false;
-      state.editingEntityModelId = null;
       state.isVariableModalOpen = false;
       state.editingVariableId = null;
       state.propertyPanelNodeIds = [];

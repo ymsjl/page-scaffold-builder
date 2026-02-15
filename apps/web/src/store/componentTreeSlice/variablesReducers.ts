@@ -2,8 +2,8 @@ import { type PayloadAction } from '@reduxjs/toolkit';
 import { type WritableDraft } from 'immer';
 import type { PrimitiveVariableValue } from '@/types';
 import { makeVariableId } from '@/utils/makeIdCreator';
-import type { ComponentTreeState } from '../componentTreeSlice';
-import { variableAdapter } from '../componentTreeAdapters';
+import type { ComponentTreeState } from './componentTreeSlice';
+import { variableAdapter } from './componentTreeAdapters';
 
 type VariableChangePayload = {
   name: string;

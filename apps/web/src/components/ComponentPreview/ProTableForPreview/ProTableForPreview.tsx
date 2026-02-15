@@ -14,12 +14,12 @@ import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { HolderOutlined } from '@ant-design/icons';
 import type { NodeRef, ProCommonColumn } from '@/types';
-import { mapProCommonColumnToProps } from '@/store/componentTree/mapProCommonColumnToProps';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import {
   componentNodesSelectors,
   entityModelSelectors,
-} from '@/store/componentTree/componentTreeSelectors';
+} from '@/store/componentTreeSlice/componentTreeSelectors';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnTitleMenu } from './ColumnTitleMenu';
 import { ColumnCellSlot } from './ColumnCellSlot';

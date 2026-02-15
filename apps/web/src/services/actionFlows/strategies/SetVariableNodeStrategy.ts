@@ -1,6 +1,6 @@
 import type { ActionNodeBase, FlowExecutionContext, Port } from '@/types/actions';
 import { SetVariableNodeParamsSchema } from '@/types/actions';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import type { PrimitiveVariableValue } from '@/types';
 import { BaseNodeStrategy } from './BaseNodeStrategy';
 

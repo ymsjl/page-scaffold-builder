@@ -2,7 +2,7 @@ import React, { type PropsWithChildren } from 'react';
 import { Dropdown, Input } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ProCommonColumn, SchemaField } from '@/types';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import { useAppDispatch } from '@/store/hooks';
 import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
 import {

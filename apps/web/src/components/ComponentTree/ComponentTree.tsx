@@ -1,29 +1,25 @@
-import React, { useMemo } from "react";
-import { Tree } from "antd";
-import type { TreeProps } from "antd";
-import type { ComponentNode } from "@/types";
-import TreeNodeItem from "./TreeNodeItem";
-import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { componentTreeActions } from "@/store/componentTree/componentTreeSlice";
+import React, { useMemo } from 'react';
+import { Tree } from 'antd';
+import type { TreeProps } from 'antd';
+import type { ComponentNode } from '@/types';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import {
   componentNodesSelectors,
   selectRootIds,
   selectSelectedNodeId,
-} from "@/store/componentTree/componentTreeSelectors";
+} from '@/store/componentTreeSlice/componentTreeSelectors';
+import TreeNodeItem from './TreeNodeItem';
 
-type TreeDataNode = NonNullable<TreeProps["treeData"]>[number];
+type TreeDataNode = NonNullable<TreeProps['treeData']>[number];
 
 const ComponentTree: React.FC = () => {
   const dispatch = useAppDispatch();
   const selectedNodeId = useAppSelector(selectSelectedNodeId);
   const nodesById = useAppSelector(componentNodesSelectors.selectEntities);
   const rootIds = useAppSelector(selectRootIds);
-  const expandedKeys = useAppSelector(
-    (s) => s.componentTree.expandedKeys ?? [],
-  );
-  const [showAddDropdownNodeId, setShowAddDropdownNodeId] = React.useState<
-    string | null
-  >(null);
+  const expandedKeys = useAppSelector((s) => s.componentTree.expandedKeys ?? []);
+  const [showAddDropdownNodeId, setShowAddDropdownNodeId] = React.useState<string | null>(null);
   const hasInitializedExpandedKeys = React.useRef(false);
 
   const allNodeKeys = useMemo(() => Object.keys(nodesById || {}), [nodesById]);
@@ -53,23 +49,18 @@ const ComponentTree: React.FC = () => {
           />
         ),
         children:
-          node.childrenIds?.map((childId) =>
-            buildNode(nodesById?.[childId] as ComponentNode),
-          ) || [],
+          node.childrenIds?.map((childId) => buildNode(nodesById?.[childId] as ComponentNode)) ||
+          [],
       };
     };
-    return (rootIds || []).map((id) =>
-      buildNode(nodesById[id] as ComponentNode),
-    );
+    return (rootIds || []).map((id) => buildNode(nodesById[id] as ComponentNode));
   }, [nodesById, rootIds, showAddDropdownNodeId]);
 
   return (
     <Tree
       blockNode
       expandedKeys={expandedKeys}
-      onExpand={(keys) =>
-        dispatch(componentTreeActions.setExpandedKeys(keys.map(String)))
-      }
+      onExpand={(keys) => dispatch(componentTreeActions.setExpandedKeys(keys.map(String)))}
       selectedKeys={selectedNodeId ? [selectedNodeId] : []}
       autoExpandParent
       treeData={treeNodes}

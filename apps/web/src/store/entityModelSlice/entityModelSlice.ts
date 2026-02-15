@@ -1,9 +1,8 @@
 import { type PayloadAction } from '@reduxjs/toolkit';
-import { type WritableDraft } from 'immer';
+import { createSlice } from '@reduxjs/toolkit';
 import type { EntityModel } from '@/types';
 import { makeEntityModelId } from '@/utils/makeIdCreator';
-import type { ComponentTreeState } from '../componentTreeSlice';
-import { entityModelAdapter } from '../componentTreeAdapters';
+import { entityModelAdapter } from '../componentTreeSlice/componentTreeAdapters';
 
 type UpdateFieldExtraPayload = {
   entityModelId: string;
@@ -11,25 +10,33 @@ type UpdateFieldExtraPayload = {
   extra: Record<string, any> | undefined;
 };
 
-/**
- * 实体模型相关的 Reducers
- * 负责实体模型的增删改查操作
- */
-export const createEntityModelReducers = () => {
-  type State = WritableDraft<ComponentTreeState>;
+type EntityModelState = {
+  entityModel: ReturnType<typeof entityModelAdapter.getInitialState>;
+  isEntityModelModalOpen: boolean;
+  editingEntityModelId: string | null;
+};
 
-  return {
+const initialState: EntityModelState = {
+  entityModel: entityModelAdapter.getInitialState({}),
+  isEntityModelModalOpen: false,
+  editingEntityModelId: null,
+};
+
+const slice = createSlice({
+  name: 'entityModel',
+  initialState,
+  reducers: {
     /**
      * @description 关闭实体模型弹窗
      */
-    closeEntityModelModal: (state: State) => {
+    closeEntityModelModal: (state) => {
       state.isEntityModelModalOpen = false;
     },
 
     /**
      * @description 开始创建新的实体模型
      */
-    startCreateEntityModel: (state: State) => {
+    startCreateEntityModel: (state) => {
       state.isEntityModelModalOpen = true;
       state.editingEntityModelId = null;
     },
@@ -38,7 +45,7 @@ export const createEntityModelReducers = () => {
      * @description 开始编辑已有实体模型
      * @param action.payload 实体模型ID
      */
-    startEditEntityModel: (state: State, action: PayloadAction<string>) => {
+    startEditEntityModel: (state, action: PayloadAction<string>) => {
       state.isEntityModelModalOpen = true;
       state.editingEntityModelId = action.payload;
     },
@@ -47,7 +54,7 @@ export const createEntityModelReducers = () => {
      * @description 应用实体模型的变更（创建或更新）
      * @param action.payload 实体模型数据（不含ID）
      */
-    applyEntityModelChange: (state: State, action: PayloadAction<Omit<EntityModel, 'id'>>) => {
+    applyEntityModelChange: (state, action: PayloadAction<Omit<EntityModel, 'id'>>) => {
       entityModelAdapter.upsertOne(state.entityModel, {
         ...action.payload,
         id: state.editingEntityModelId ?? makeEntityModelId(),
@@ -60,7 +67,7 @@ export const createEntityModelReducers = () => {
      * @description 删除实体模型
      * @param action.payload 实体模型ID
      */
-    deleteEntityModel: (state: State, action: PayloadAction<string>) => {
+    deleteEntityModel: (state, action: PayloadAction<string>) => {
       entityModelAdapter.removeOne(state.entityModel, action.payload);
     },
 
@@ -70,7 +77,7 @@ export const createEntityModelReducers = () => {
      * @param action.payload.fieldId 字段ID
      * @param action.payload.extra 字段扩展配置
      */
-    updateEntityFieldExtra: (state: State, action: PayloadAction<UpdateFieldExtraPayload>) => {
+    updateEntityFieldExtra: (state, action: PayloadAction<UpdateFieldExtraPayload>) => {
       const { entityModelId, fieldId, extra } = action.payload;
       const entity = state.entityModel.entities[entityModelId];
       if (!entity || !entity.fields) {
@@ -90,5 +97,8 @@ export const createEntityModelReducers = () => {
         },
       });
     },
-  };
-};
+  },
+});
+
+export const entityModelActions = slice.actions;
+export default slice.reducer;

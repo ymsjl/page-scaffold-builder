@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Space } from 'antd';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import RulePreview from './RulePreview';
 import RuleLibrary from './RuleLibrary';
 import RuleCanvas from './RuleCanvas';

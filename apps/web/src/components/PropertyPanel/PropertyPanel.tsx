@@ -10,8 +10,8 @@ import {
   selectNodeInPropertyPanel,
   selectShowBackInPropertyPanel,
   variableSelectors,
-} from '@/store/componentTree/componentTreeSelectors';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+} from '@/store/componentTreeSlice/componentTreeSelectors';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import { getComponentPrototype } from '@/componentMetas';
 import {
   type ComponentNode,

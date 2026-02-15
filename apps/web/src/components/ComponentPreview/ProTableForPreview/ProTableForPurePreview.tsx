@@ -2,7 +2,7 @@ import React from 'react';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { NodeRef, ProCommonColumn } from '@/types';
-import { mapProCommonColumnToProps } from '@/store/componentTree/mapProCommonColumnToProps';
+import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
 import { generateDataSource } from './mapValueTypeToValue';
 import { useRenderNodeRefs } from '../ReactNodeRenderer';
 

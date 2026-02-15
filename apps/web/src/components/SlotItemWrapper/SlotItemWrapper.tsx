@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import * as styles from './SlotItemWrapper.css';
 
 interface SlotItemWrapperProps {

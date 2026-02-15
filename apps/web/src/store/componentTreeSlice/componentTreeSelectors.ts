@@ -32,7 +32,7 @@ import type { EntityModel } from '@/validation';
 import type { RootState } from '../rootReducer';
 import type { ComponentTreeState } from './componentTreeSlice';
 import { componentTreeAdapter, entityModelAdapter, variableAdapter } from './componentTreeAdapters';
-import { mapProCommonColumnToProps } from './mapProCommonColumnToProps';
+import { mapProCommonColumnToProps } from '../mapProCommonColumnToProps';
 
 /**
  * 通用类型：支持普通状态和 Immer Draft 状态

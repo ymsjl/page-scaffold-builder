@@ -3,7 +3,7 @@ import type { ComponentInstance, ComponentType } from '@/types';
 import { PlusOutlined, DeleteOutlined, CheckOutlined, HolderOutlined } from '@ant-design/icons';
 import { useDraggable } from '@dnd-kit/core';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import { availableComponents, getComponentPrototype } from '@/componentMetas';
 import { Button, Input, Space, Dropdown, Typography } from 'antd';
 

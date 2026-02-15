@@ -51,13 +51,11 @@ module.exports = {
     {
       files: [
         "src/store/**/*Slice.ts",
-        "src/store/**/reducers/**/*.{ts,tsx,js,jsx}",
-        "**/src/store/**/*Slice.ts",
-        "**/src/store/**/reducers/**/*.{ts,tsx,js,jsx}",
+        "src/store/**/*Reducers.ts",
+        "src/store/**/reducers/**/*.{ts,tsx,js,jsx}"
       ],
       rules: {
-        "no-param-reassign": "off",
-        "import/no-cycle": "off",
+        "no-param-reassign": "off"
       },
     },
     {

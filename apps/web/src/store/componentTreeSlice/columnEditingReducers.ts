@@ -1,7 +1,7 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { WritableDraft } from 'immer';
 import type { ProCommonColumn } from '@/types';
-import type { ComponentTreeState } from '../componentTreeSlice';
+import type { ComponentTreeState } from './componentTreeSlice';
 
 /**
  * 列编辑状态相关的 Reducers

@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useAppSelector } from '@/store/hooks';
 import type { FlowExecutionContext, NodeExecutionResult } from '@/types/actions';
 import { message } from 'antd';
-import { selectVariableValues } from '@/store/componentTree/componentTreeSelectors';
+import { selectVariableValues } from '@/store/componentTreeSlice/componentTreeSelectors';
 import { FlowExecutor } from '../core/FlowExecutor';
 import { nodeStrategyRegistry } from '../strategies/NodeStrategyRegistry';
 

@@ -4,7 +4,7 @@ import { EyeOutlined, EditOutlined, ExportOutlined } from '@ant-design/icons';
 import {
   selectFirstParentPageNode,
   selectComponentTreeState,
-} from '@/store/componentTree/componentTreeSelectors';
+} from '@/store/componentTreeSlice/componentTreeSelectors';
 import { getComponentPrototype } from '../../componentMetas';
 import { useAppSelector } from '../../store/hooks';
 import ComponentPreviewInner from './ComponentPreviewInner';

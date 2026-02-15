@@ -19,11 +19,11 @@ import {
   selectEditingColumn,
   selectEntityModelInUse,
   selectTypeOfSelectedNode,
-} from '@/store/componentTree/componentTreeSelectors';
+} from '@/store/componentTreeSlice/componentTreeSelectors';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { LeftOutlined } from '@ant-design/icons';
 import type { ProCommonColumn } from '@/types';
-import { componentTreeActions } from '@/store/componentTree/componentTreeSlice';
+import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import { valueTypeOptions } from './getRecommendedWidth';
 import { useAutoFillByDataIndex } from './useAutoFillByDataIndex';
 import RuleBuilder from '../RuleBuilder/RuleBuilder';

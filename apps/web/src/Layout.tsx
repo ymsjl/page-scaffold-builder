@@ -10,8 +10,9 @@ import {
   entityModelSelectors,
   componentNodesSelectors,
   variableSelectors,
-} from './store/componentTree/componentTreeSelectors';
-import { componentTreeActions } from './store/componentTree/componentTreeSlice';
+} from './store/componentTreeSlice/componentTreeSelectors';
+import { componentTreeActions } from './store/componentTreeSlice/componentTreeSlice';
+import { entityModelActions } from './store/entityModelSlice/entityModelSlice';
 import { getComponentPrototype } from './componentMetas';
 import { EntityModelDesignerPanel } from './components/EntityModelDesigner/EntityModelDesignerPanel';
 import ComponentPreview from './components/ComponentPreview/ComponentPreview';
@@ -170,7 +171,7 @@ export const PageScaffoldBuilderLayout = () => {
                   <Button
                     icon={<PlusOutlined />}
                     size="small"
-                    onClick={() => dispatch(componentTreeActions.startCreateEntityModel())}
+                    onClick={() => dispatch(entityModelActions.startCreateEntityModel())}
                     type="text"
                   />
                 }
@@ -181,7 +182,7 @@ export const PageScaffoldBuilderLayout = () => {
                       className={layoutStyles.rowButton}
                       key={et.id}
                       type="button"
-                      onClick={() => dispatch(componentTreeActions.startEditEntityModel(et.id))}
+                      onClick={() => dispatch(entityModelActions.startEditEntityModel(et.id))}
                     >
                       <Typography.Text>{et.title}</Typography.Text>
                       <Button
@@ -191,7 +192,7 @@ export const PageScaffoldBuilderLayout = () => {
                         danger
                         onClick={(e) => {
                           e.stopPropagation();
-                          dispatch(componentTreeActions.deleteEntityModel(et.id));
+                          dispatch(entityModelActions.deleteEntityModel(et.id));
                         }}
                       />
                     </button>
