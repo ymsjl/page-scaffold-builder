@@ -40,7 +40,6 @@ export const addColumnsFromEntityModelToSelectedNode = createAsyncThunk<
       })) ?? [];
 
   dispatch(addColumns(newColumns));
-  dispatch(setEditingColumn(null));
 });
 
 /**
