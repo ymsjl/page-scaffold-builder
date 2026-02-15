@@ -24,12 +24,10 @@ export const addColumnsFromEntityModelToSelectedNode = createAsyncThunk<
   const state = getState();
   const node = getSelectedNodeWithColumns(selectComponentTreeState(state));
   if (!node) return;
-
   const { props } = node;
   const entityModelId = props?.entityModelId;
   if (!entityModelId) return;
 
-  props.columns = props?.columns ?? [];
   const existingKeys = new Set(props.columns?.map((c) => c.key) ?? []);
   const newColumns =
     entityModelAdapter
@@ -40,6 +38,7 @@ export const addColumnsFromEntityModelToSelectedNode = createAsyncThunk<
         key: makeColumnId(),
         ...createProCommonColumnFromSchemeField(field),
       })) ?? [];
+
   dispatch(addColumns(newColumns));
   dispatch(setEditingColumn(null));
 });

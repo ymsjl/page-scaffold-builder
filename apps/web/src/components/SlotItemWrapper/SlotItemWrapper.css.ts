@@ -9,6 +9,8 @@ import {
 } from '@/styles/tokens.css';
 
 export const wrapper = style({
+  all: 'unset',
+  display: 'block',
   position: 'relative',
   padding: 2,
   borderRadius: radiusSmall,
@@ -40,7 +42,4 @@ export const actions = style({
   },
 });
 
-export const content = style({
-  display: 'inline-flex',
-  gap: 4,
-});
+export const content = style({});

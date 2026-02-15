@@ -127,7 +127,6 @@ export const DropZone: React.FC<DropZoneProps> = ({
         <div className={dropZoneStyles.dropZoneIcon} aria-hidden>
           +
         </div>
-        {label ? <div className={dropZoneStyles.dropZoneLabel}>{label}</div> : null}
       </div>
     </Popover>
   );

@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css';
+import { style, globalStyle } from '@vanilla-extract/css';
 
 export const emptyState = style({
   border: '1px solid #e8e8e8',
@@ -40,11 +40,9 @@ export const flex1 = style({
   flex: 1,
 });
 
-export const schemaListFormItem = style({
-  selectors: {
-    '& label': { width: '100%' },
-  },
-});
+export const schemaListFormItem = style({});
+
+globalStyle(`${schemaListFormItem} label`, { width: '100%' });
 
 export const fullWidthInput = style({
   width: '100%',

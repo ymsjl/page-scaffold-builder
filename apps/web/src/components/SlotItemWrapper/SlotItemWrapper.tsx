@@ -20,7 +20,7 @@ const SlotItemWrapper: React.FC<SlotItemWrapperProps> = ({
 }) => {
   const dispatch = useAppDispatch();
 
-  const handleSelect = (e: React.MouseEvent) => {
+  const handleSelect = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     dispatch(selectNode(nodeId));
   };
@@ -37,7 +37,17 @@ const SlotItemWrapper: React.FC<SlotItemWrapperProps> = ({
   };
 
   return (
-    <button type="button" className={styles.wrapper} onClick={handleSelect}>
+    <div
+      className={styles.wrapper}
+      onClick={handleSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleSelect(e);
+        }
+      }}
+    >
       <div className={styles.content}>{children}</div>
       <div className={styles.actions}>
         <Tooltip title="选中组件">
@@ -53,7 +63,7 @@ const SlotItemWrapper: React.FC<SlotItemWrapperProps> = ({
           />
         </Tooltip>
       </div>
-    </button>
+    </div>
   );
 };
 
