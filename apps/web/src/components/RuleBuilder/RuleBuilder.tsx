@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Space } from 'antd';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { updateEditingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
 import RulePreview from './RulePreview';
 import RuleLibrary from './RuleLibrary';
 import RuleCanvas from './RuleCanvas';
@@ -22,7 +22,7 @@ const RuleBuilder: React.FC<RuleBuilderProps> = React.memo(({ name, label, value
     if (lastValueTypeRef.current !== valueType) {
       // 只有在不是第一次打开弹窗时，才重置规则节点
       if (!(lastValueTypeRef.current === undefined && valueType !== undefined)) {
-        dispatch(componentTreeActions.updateEditingColumn({ ruleNodes: [] }));
+        dispatch(updateEditingColumn({ ruleNodes: [] }));
       }
       lastValueTypeRef.current = valueType;
     }

@@ -1,16 +1,13 @@
-import { useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  actionFlowsActions,
-  makeFlowId,
-} from "@/store/actionFlows/actionFlowsSlice";
+import { useCallback } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { actionFlowsActions, makeFlowId } from '@/store/actionFlows/actionFlowsSlice';
 import {
   selectActiveFlow,
   selectActiveFlowNodes,
   selectActiveFlowEdges,
-} from "@/store/actionFlows/actionFlowsSelectors";
-import type { ActionNodeBase, ActionEdge } from "@/types/actions";
-import { nodeStrategyRegistry } from "../strategies/NodeStrategyRegistry";
+} from '@/store/actionFlows/actionFlowsSelectors';
+import type { ActionNodeBase, ActionEdge } from '@/types/actions';
+import { nodeStrategyRegistry } from '../strategies/NodeStrategyRegistry';
 
 /**
  * 管理 Action Flow 的 Hook
@@ -20,9 +17,6 @@ import { nodeStrategyRegistry } from "../strategies/NodeStrategyRegistry";
 export function useActionFlow() {
   const dispatch = useAppDispatch();
   const activeFlow = useAppSelector(selectActiveFlow);
-  const activeFlowId = useAppSelector(
-    (state) => state.actionFlows.activeFlowId,
-  );
   const nodes = useAppSelector(selectActiveFlowNodes);
   const edges = useAppSelector(selectActiveFlowEdges);
 
@@ -33,9 +27,7 @@ export function useActionFlow() {
   const createFlow = useCallback(
     (name: string, description?: string): string => {
       const flowId = makeFlowId();
-      dispatch(
-        actionFlowsActions.createFlow({ name, description, id: flowId }),
-      );
+      dispatch(actionFlowsActions.createFlow({ name, description, id: flowId }));
       return flowId;
     },
     [dispatch],
@@ -136,7 +128,7 @@ export function useActionFlow() {
    * 添加边
    */
   const addEdge = useCallback(
-    (flowId: string, edge: Omit<ActionEdge, "id">) => {
+    (flowId: string, edge: Omit<ActionEdge, 'id'>) => {
       // 设置为活动流程
       dispatch(actionFlowsActions.setActiveFlow(flowId));
       dispatch(actionFlowsActions.addEdge(edge));

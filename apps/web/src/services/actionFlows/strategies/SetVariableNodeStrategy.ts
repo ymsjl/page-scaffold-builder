@@ -1,6 +1,6 @@
 import type { ActionNodeBase, FlowExecutionContext, Port } from '@/types/actions';
 import { SetVariableNodeParamsSchema } from '@/types/actions';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { setVariableValue } from '@/store/variablesSlice/variablesSlice';
 import type { PrimitiveVariableValue } from '@/types';
 import { BaseNodeStrategy } from './BaseNodeStrategy';
 
@@ -53,7 +53,7 @@ export class SetVariableNodeStrategy extends BaseNodeStrategy {
       context.services?.dispatch ||
       (context.services?.store as { dispatch?: (action: unknown) => void } | undefined)?.dispatch;
     dispatch?.(
-      componentTreeActions.setVariableValue({
+      setVariableValue({
         name: variableName,
         value,
       }),

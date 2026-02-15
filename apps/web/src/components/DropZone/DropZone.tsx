@@ -2,7 +2,7 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Popover, Typography } from 'antd';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { addNodeToSlot } from '@/store/componentTreeSlice/componentTreeSlice';
 import type { ComponentType } from '@/types';
 import { COMPONENT_TYPES } from '@/types/Component';
 import * as dropZoneStyles from './DropZone.css';
@@ -78,7 +78,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
   const handleSelectComponent = (type: ComponentType) => {
     dispatch(
-      componentTreeActions.addNodeToSlot({
+      addNodeToSlot({
         targetNodeId,
         propPath,
         type,

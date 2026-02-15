@@ -7,7 +7,7 @@ import 'swiper/css/free-mode';
 import 'swiper/css/scrollbar';
 import { useAppDispatch } from '@/store/hooks';
 import { PlusOutlined } from '@ant-design/icons';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { addRuleNodeToEditingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
 import { type RuleTemplate } from './RuleParamsDateSchema';
 import { RULE_LIBRARY } from './RULE_LIBRARY';
 
@@ -28,7 +28,7 @@ const RuleCard: React.FC<{ ruleTemplate: RuleTemplate }> = React.memo(({ ruleTem
             size="small"
             type="text"
             icon={<PlusOutlined />}
-            onClick={() => dispatch(componentTreeActions.addRuleNodeToEditingColumn(ruleTemplate))}
+            onClick={() => dispatch(addRuleNodeToEditingColumn(ruleTemplate))}
           />
         </div>
         <Typography.Text type="secondary">{ruleTemplate.description}</Typography.Text>

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { entityModelActions } from '@/store/entityModelSlice/entityModelSlice';
+import { applyEntityModelChange } from '@/store/entityModelSlice/entityModelSlice';
 import { mapParsedSqlToEntityModel } from '@/components/EntityModelDesigner/sqlMapping';
 import { parseSqlToEntityModel } from '@/utils/sqlParser';
 
@@ -29,7 +29,7 @@ export function useSqlImportModal(params: { dispatch: (action: any) => void }) {
       setIsParsing(true);
       const response = await parseSqlToEntityModel(trimmed);
       const entity = mapParsedSqlToEntityModel(response.model);
-      dispatch(entityModelActions.applyEntityModelChange(entity));
+      dispatch(applyEntityModelChange(entity));
       if (response.warnings?.length) {
         message.warning(response.warnings.join('\n'));
       } else {

@@ -323,6 +323,22 @@ const slice = createSlice({
 });
 
 export const actionFlowsActions = slice.actions;
+export const {
+  createFlow,
+  updateFlow,
+  deleteFlow,
+  setActiveFlow,
+  addNode,
+  updateNode,
+  updateNodePositions,
+  deleteNode,
+  addEdge,
+  updateEdge,
+  deleteEdge,
+  selectNodes,
+  clearSelection,
+  setEntryNode,
+} = slice.actions;
 export default slice.reducer;
 
 // ============================================

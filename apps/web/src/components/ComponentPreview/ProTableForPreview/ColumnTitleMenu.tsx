@@ -2,7 +2,12 @@ import React, { type PropsWithChildren } from 'react';
 import { Dropdown, Input } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ProCommonColumn, SchemaField } from '@/types';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import {
+  selectNode,
+  upsertColumnOfSelectedNode,
+  deleteColumnForSelectedNode,
+} from '@/store/componentTreeSlice/componentTreeSlice';
+import { startEditingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
 import { useAppDispatch } from '@/store/hooks';
 import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
 import {
@@ -67,9 +72,9 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
 
     const currentTitle = getTitleText();
     if (nextTitle !== currentTitle) {
-      dispatch(componentTreeActions.selectNode(tableNodeId));
+      dispatch(selectNode(tableNodeId));
       dispatch(
-        componentTreeActions.upsertColumnOfSelectedNode({
+        upsertColumnOfSelectedNode({
           key: column.key,
           title: nextTitle,
         }),
@@ -160,33 +165,33 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
       if (!tableNodeId) return;
       if (!column.key) return;
 
-      dispatch(componentTreeActions.selectNode(tableNodeId));
+      dispatch(selectNode(tableNodeId));
 
       if (key === 'edit' || key === 'rules') {
-        dispatch(componentTreeActions.startEditingColumn(column));
+        dispatch(startEditingColumn(column));
       } else if (key === 'delete') {
-        dispatch(componentTreeActions.deleteColumnForSelectedNode(column.key));
+        dispatch(deleteColumnForSelectedNode(column.key));
       } else if (typeof key === 'string' && key.startsWith('insert:')) {
         const fieldKey = key.replace('insert:', '');
         const field = entityFields.find((item) => item.key === fieldKey);
         const newColumn = createProCommonColumnFromSchemeField(field);
         newColumn.title = '新列';
         dispatch(
-          componentTreeActions.upsertColumnOfSelectedNode({
+          upsertColumnOfSelectedNode({
             insertPos: columnIndex + 1,
             changes: newColumn,
           }),
         );
       } else if (key === 'hideInSearch') {
         dispatch(
-          componentTreeActions.upsertColumnOfSelectedNode({
+          upsertColumnOfSelectedNode({
             key: column.key,
             hideInSearch: !column.hideInSearch,
           }),
         );
       } else if (key === 'hideInTable') {
         dispatch(
-          componentTreeActions.upsertColumnOfSelectedNode({
+          upsertColumnOfSelectedNode({
             key: column.key,
             hideInTable: !column.hideInTable,
           }),

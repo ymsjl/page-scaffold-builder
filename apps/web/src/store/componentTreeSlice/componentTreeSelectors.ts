@@ -14,25 +14,19 @@
  * - 所有 Selector 函数均导出以供外部模块使用
  */
 
-import type { ProSchema } from '@ant-design/pro-components';
 import type { WritableDraft } from 'immer';
 import { createSelector } from 'reselect';
 
-import type { RuleNode } from '@/components/RuleBuilder/RuleParamsDateSchema';
 import type { ComponentNodeWithColumns } from '@/types/Component';
-import type {
-  ComponentNode,
-  ProCommonColumn,
-  ComponentType,
-  PrimitiveVariableValue,
-  VariableDefinition,
-} from '@/types';
+import type { ComponentNode, ProCommonColumn, ComponentType } from '@/types';
 import type { EntityModel } from '@/validation';
 
 import type { RootState } from '../rootReducer';
 import type { ComponentTreeState } from './componentTreeSlice';
-import { componentTreeAdapter, entityModelAdapter, variableAdapter } from './componentTreeAdapters';
-import { mapProCommonColumnToProps } from '../mapProCommonColumnToProps';
+import { componentTreeAdapter } from './componentTreeAdapters';
+import { type entityModelAdapter } from '../entityModelSlice/entityModelAdapter';
+import { selectEntityModel } from '../entityModelSlice/selectors';
+import { selectNodeIdsInPropertyPanel } from '../propertyPanelSlice/selectors';
 
 /**
  * 通用类型：支持普通状态和 Immer Draft 状态
@@ -60,7 +54,7 @@ export const getNormalizedTree = (state: MaybeWritable<ComponentTreeState>) => s
 /**
  * @description 获取组件节点实体表
  */
-export const getComponentNodesEntities = (state: MaybeWritable<ComponentTreeState>) =>
+const getComponentNodesEntities = (state: MaybeWritable<ComponentTreeState>) =>
   getNormalizedTree(state).entities.nodes;
 export const selectComponentNodesEntities = createSelector(
   selectComponentTreeState,
@@ -69,55 +63,19 @@ export const selectComponentNodesEntities = createSelector(
 /**
  * @description 获取根节点ID列表
  */
-export const getRootIds = (state: MaybeWritable<ComponentTreeState>) =>
-  getNormalizedTree(state).result;
+const getRootIds = (state: MaybeWritable<ComponentTreeState>) => getNormalizedTree(state).result;
 export const selectRootIds = createSelector(selectComponentTreeState, getRootIds);
 
 /**
  * @description 获取当前选中的节点ID
  */
-export const getSelectedNodeId = (state: MaybeWritable<ComponentTreeState>) => state.selectedNodeId;
+const getSelectedNodeId = (state: MaybeWritable<ComponentTreeState>) => state.selectedNodeId;
 export const selectSelectedNodeId = createSelector(selectComponentTreeState, getSelectedNodeId);
-
-/**
- * @description 获取正在编辑的列配置
- */
-export const getEditingColumn = (state: MaybeWritable<ComponentTreeState>) =>
-  state.editingColumn || null;
-export const selectEditingColumn = createSelector(selectComponentTreeState, getEditingColumn);
-
-/**
- * @description 获取实体模型状态
- */
-export const getEntityModel = (state: MaybeWritable<ComponentTreeState>) => state.entityModel;
-export const selectEntityModel = createSelector(selectComponentTreeState, getEntityModel);
-
-export const entityModelSelectors = entityModelAdapter.getSelectors(selectEntityModel);
-
-/**
- * @description 获取是否打开实体模型弹窗
- */
-export const getIsEntityModelModalOpen = (state: MaybeWritable<ComponentTreeState>) =>
-  state.isEntityModelModalOpen;
-export const selectIsEntityModelModalOpen = createSelector(
-  selectComponentTreeState,
-  getIsEntityModelModalOpen,
-);
-
-/**
- * @description 获取正在编辑的实体模型ID
- */
-export const getEditingEntityModelId = (state: MaybeWritable<ComponentTreeState>) =>
-  state.editingEntityModelId;
-export const selectEditingEntityModelId = createSelector(
-  selectComponentTreeState,
-  getEditingEntityModelId,
-);
 
 /**
  * @description 获取适配器格式的组件节点状态
  */
-export const getComponentNodesStateResult = (entities: Record<string, ComponentNode>) => ({
+const getComponentNodesStateResult = (entities: Record<string, ComponentNode>) => ({
   ids: Object.keys(entities),
   entities,
 });
@@ -129,26 +87,13 @@ export const componentNodesSelectors = componentTreeAdapter.getSelectors(selectC
 /**
  * @description 获取当前选中的节点
  */
-export const getSelectedNode = (state: MaybeWritable<ComponentTreeState>) => {
+const getSelectedNode = (state: MaybeWritable<ComponentTreeState>) => {
   const selectedId = getSelectedNodeId(state);
   return selectedId ? getComponentNodesEntities(state)[selectedId] : null;
 };
 export const selectSelectedNode = createSelector(selectComponentTreeState, getSelectedNode);
 
-export const getNodeIdsInPropertyPanel = (state: MaybeWritable<ComponentTreeState>) => {
-  return state.propertyPanelNodeIds || [];
-};
-export const selectNodeIdsInPropertyPanel = createSelector(
-  selectComponentTreeState,
-  getNodeIdsInPropertyPanel,
-);
-
-export const selectShowBackInPropertyPanel = createSelector(
-  selectNodeIdsInPropertyPanel,
-  (nodeIds) => !!nodeIds && nodeIds.length > 0,
-);
-
-export const getNodeInPropertyPanelResult = (
+const getNodeInPropertyPanelResult = (
   components: Record<string, ComponentNode>,
   selectedNode: ComponentNode | null | undefined,
   nodeIds: string[],
@@ -166,11 +111,6 @@ export const selectNodeInPropertyPanel = createSelector(
   getNodeInPropertyPanelResult,
 );
 
-export const getSelectedNodeProps = (state: MaybeWritable<ComponentTreeState>) => {
-  const node = getSelectedNode(state);
-  return node ? node.props : null;
-};
-
 /**
  * @description 获取当前选中的节点（带列配置验证）
  */
@@ -180,17 +120,10 @@ export const getSelectedNodeWithColumns = (state: MaybeWritable<ComponentTreeSta
 };
 
 /**
- * @description 获取选中节点的属性（带列配置验证）
- */
-export const getPropsOfSelectedNodeWithColumns = (
-  state: MaybeWritable<ComponentTreeState>,
-): { columns: ProCommonColumn[] } => getSelectedNodeWithColumns(state)?.props ?? { columns: [] };
-
-/**
  * @description 获取选中节点关联的实体模型ID
  * @return string | null
  */
-export const getSelectedNodeEntityModelIdResult = (
+const getSelectedNodeEntityModelIdResult = (
   node: ComponentNode | null | undefined,
 ): string | null => node?.props?.entityModelId || null;
 export const selectSelectedNodeEntityModelId = createSelector(
@@ -201,7 +134,7 @@ export const selectSelectedNodeEntityModelId = createSelector(
 /**
  * @description 获取选中节点的列配置
  */
-export const getColumnsOfSelectedNodeResult = (
+const getColumnsOfSelectedNodeResult = (
   node: ComponentNode | null | undefined,
 ): ProCommonColumn[] => (node ? (node.props?.columns ?? []) : []);
 export const selectColumnsOfSelectedNode = createSelector(
@@ -213,7 +146,7 @@ export const selectColumnsOfSelectedNode = createSelector(
  * @description 获取选中节点的类型
  * @returns ComponentType | null
  */
-export const getTypeOfSelectedNodeResult = (
+const getTypeOfSelectedNodeResult = (
   node: ComponentNode | null | undefined,
 ): ComponentType | null => (node ? node.type : null);
 export const selectTypeOfSelectedNode = createSelector(
@@ -225,7 +158,7 @@ export const selectTypeOfSelectedNode = createSelector(
  * @description 获取选中节点的第一个父级 Page 节点
  * @returns ComponentNode | null
  */
-export const getFirstParentPageNodeResult = (
+const getFirstParentPageNodeResult = (
   node: ComponentNode | null | undefined,
   components: ReturnType<typeof componentTreeAdapter.getInitialState>,
 ): ComponentNode | null => {
@@ -254,7 +187,7 @@ export const selectFirstParentPageNode = createSelector(
  * @description 获取正在使用的实体模型
  * @return EntityModel | null | undefined
  */
-export const getEntityModelInUseResult = (
+const getEntityModelInUseResult = (
   entityModelId: string | null,
   entityModelState: ReturnType<typeof entityModelAdapter.getInitialState>,
 ): EntityModel | null | undefined => {
@@ -264,85 +197,3 @@ export const selectEntityModelInUse = createSelector(
   [selectSelectedNodeEntityModelId, selectEntityModel],
   getEntityModelInUseResult,
 );
-
-/**
- * @description 获取正在编辑的列配置的属性
- * @return Omit<ProCommonColumn, "ruleNodes">
- */
-export const getEditingColumnPropsResult = (
-  editingColumn: Partial<ProCommonColumn> | null,
-): ProSchema<Record<string, any>> => {
-  if (!editingColumn) return {};
-  return mapProCommonColumnToProps(editingColumn);
-};
-export const selectEditingColumnProps = createSelector(
-  selectEditingColumn,
-  getEditingColumnPropsResult,
-);
-
-/**
- * @description 获取正在编辑的列配置的规则节点列表
- * @return RuleNode[]
- */
-export const getRuleNodesOfEditingColumnResult = (
-  editingColumn: Partial<ProCommonColumn> | null,
-): RuleNode[] => editingColumn?.ruleNodes || [];
-export const selectRuleNodesOfEditingColumn = createSelector(
-  selectEditingColumn,
-  getRuleNodesOfEditingColumnResult,
-);
-
-/**
- * @description 获取正在编辑的实体模型
- * @return EntityModel | null | undefined
- */
-export const getEditingEntityModelResult = (
-  editingEntityModelId: string | null,
-  entityModelState: ReturnType<typeof entityModelAdapter.getInitialState>,
-): EntityModel | null | undefined => {
-  if (!editingEntityModelId) return null;
-  return entityModelState.entities[editingEntityModelId] || null;
-};
-export const selectEditingEntityModel = createSelector(
-  [selectEditingEntityModelId, selectEntityModel],
-  getEditingEntityModelResult,
-);
-
-export const getVariables = (state: MaybeWritable<ComponentTreeState>) => state.variables;
-export const selectVariables = createSelector(selectComponentTreeState, getVariables);
-
-export const variableSelectors = variableAdapter.getSelectors(selectVariables);
-
-export const getIsVariableModalOpen = (state: MaybeWritable<ComponentTreeState>) =>
-  state.isVariableModalOpen;
-export const selectIsVariableModalOpen = createSelector(
-  selectComponentTreeState,
-  getIsVariableModalOpen,
-);
-
-export const getEditingVariableId = (state: MaybeWritable<ComponentTreeState>) =>
-  state.editingVariableId;
-export const selectEditingVariableId = createSelector(
-  selectComponentTreeState,
-  getEditingVariableId,
-);
-
-export const getEditingVariableResult = (
-  editingVariableId: string | null,
-  variablesState: ReturnType<typeof variableAdapter.getInitialState>,
-): VariableDefinition | null => {
-  if (!editingVariableId) return null;
-  return variablesState.entities[editingVariableId] || null;
-};
-export const selectEditingVariable = createSelector(
-  [selectEditingVariableId, selectVariables],
-  getEditingVariableResult,
-);
-
-export const getVariableValues = (state: MaybeWritable<ComponentTreeState>) => state.variableValues;
-export const selectVariableValues = createSelector(selectComponentTreeState, getVariableValues);
-
-export const selectVariableValueByName = (name: string) =>
-  createSelector(selectVariableValues, (values): PrimitiveVariableValue | undefined => {
-    return values[name];
-  });

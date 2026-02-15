@@ -1,9 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAppSelector } from '@/store/hooks';
-import {
-  componentNodesSelectors,
-  selectVariableValues,
-} from '@/store/componentTreeSlice/componentTreeSelectors';
+import { componentNodesSelectors } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { selectVariableValues } from '@/store/variablesSlice/selectors';
 import { getComponentPrototype } from '@/componentMetas';
 import {
   type ComponentNode,

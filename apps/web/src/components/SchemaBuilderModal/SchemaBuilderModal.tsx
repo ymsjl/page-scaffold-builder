@@ -15,15 +15,18 @@ import {
   Checkbox,
 } from 'antd';
 import {
-  selectComponentTreeState,
-  selectEditingColumn,
   selectEntityModelInUse,
   selectTypeOfSelectedNode,
 } from '@/store/componentTreeSlice/componentTreeSelectors';
+import {
+  selectIsSchemaBuilderModalOpen,
+  selectEditingColumn,
+} from '@/store/columnEditorSlice/selectors';
+import { applyChangesToColumnOfSelectedNode } from '@/store/componentTreeSlice/thunks';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { LeftOutlined } from '@ant-design/icons';
 import type { ProCommonColumn } from '@/types';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { setIsSchemaBuilderModalOpen } from '@/store/columnEditorSlice/columnEditorSlice';
 import { valueTypeOptions } from './getRecommendedWidth';
 import { useAutoFillByDataIndex } from './useAutoFillByDataIndex';
 import RuleBuilder from '../RuleBuilder/RuleBuilder';
@@ -38,20 +41,14 @@ interface SchemaBuilderModalProps {}
 
 export const SchemaBuilderModal: React.FC<SchemaBuilderModalProps> = React.memo(() => {
   const dispatch = useAppDispatch();
-  const isOpen = useAppSelector(
-    (state) => selectComponentTreeState(state).isSchemaBuilderModalOpen,
-  );
+  const isOpen = useAppSelector(selectIsSchemaBuilderModalOpen);
   const editingColumn = useAppSelector(selectEditingColumn);
   const componentType = useAppSelector(selectTypeOfSelectedNode);
 
-  const onClose = useCallback(
-    () => dispatch(componentTreeActions.setIsSchemaBuilderModalOpen(false)),
-    [dispatch],
-  );
+  const onClose = useCallback(() => dispatch(setIsSchemaBuilderModalOpen(false)), [dispatch]);
 
   const onFinish = (values: FormValues) => {
-    dispatch(componentTreeActions.applyChangesToColumnOfSelectedNode(values));
-    dispatch(componentTreeActions.setEditingColumn(null));
+    dispatch(applyChangesToColumnOfSelectedNode(values));
   };
 
   const [form] = Form.useForm<FormValues>();

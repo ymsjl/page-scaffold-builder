@@ -3,7 +3,7 @@ import type { FormInstance } from 'antd';
 import { message } from 'antd';
 
 import type { EntityModel, SchemaField } from '@/types';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { updateEntityFieldExtra } from '@/store/entityModelSlice/entityModelSlice';
 
 import type { EnumOption } from '../entityModelDesignerTypes';
 import { buildEnumExtraFromOptions, parseEnumOptionsFromExtra } from '../entityModelDesignerUtils';
@@ -54,7 +54,7 @@ export function useEnumAdvancedModal(params: {
 
     if (entityModelId) {
       dispatch(
-        componentTreeActions.updateEntityFieldExtra({
+        updateEntityFieldExtra({
           entityModelId,
           fieldId: String(fieldId),
           extra: nextExtra,

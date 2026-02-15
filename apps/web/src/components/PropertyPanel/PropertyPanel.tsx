@@ -5,13 +5,22 @@ import { AppstoreOutlined, LeftOutlined, PlusOutlined, RightOutlined } from '@an
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   componentNodesSelectors,
-  entityModelSelectors,
   selectColumnsOfSelectedNode,
   selectNodeInPropertyPanel,
-  selectShowBackInPropertyPanel,
-  variableSelectors,
 } from '@/store/componentTreeSlice/componentTreeSelectors';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { variableSelectors } from '@/store/variablesSlice/selectors';
+import { entityModelSelectors } from '@/store/entityModelSlice/selectors';
+import { selectShowBackInPropertyPanel } from '@/store/propertyPanelSlice/selectors';
+import {
+  pushNodeToPropertyPanel,
+  popNodeFromPropertyPanel,
+} from '@/store/propertyPanelSlice/propertyPanelSlice';
+import {
+  updateNodeProps,
+  addNodeToSlot,
+  upsertColumnOfSelectedNode,
+} from '@/store/componentTreeSlice/componentTreeSlice';
+import { startAddingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
 import { getComponentPrototype } from '@/componentMetas';
 import {
   type ComponentNode,
@@ -195,7 +204,7 @@ const PropertyPanel: React.FC = () => {
     (changedValues: Record<string, any>) => {
       if (!selectedNodeId) return;
       dispatch(
-        componentTreeActions.updateNodeProps({
+        updateNodeProps({
           id: selectedNodeId,
           props: changedValues,
         }),
@@ -233,7 +242,7 @@ const PropertyPanel: React.FC = () => {
       if (!selectedNodeId) return;
       form.setFieldValue(name as any, value);
       dispatch(
-        componentTreeActions.updateNodeProps({
+        updateNodeProps({
           id: selectedNodeId,
           props: buildNestedPropValue(name, value),
         }),
@@ -257,7 +266,7 @@ const PropertyPanel: React.FC = () => {
   }, [componentPrototype, entityModelOptions]);
 
   const handleStartAddingColumn = useCallback(() => {
-    dispatch(componentTreeActions.startAddingColumn());
+    dispatch(startAddingColumn());
   }, [dispatch]);
 
   const renderSchemaList = useCallback(() => <SchemaList />, []);
@@ -290,7 +299,7 @@ const PropertyPanel: React.FC = () => {
                 type="text"
                 size="middle"
                 icon={<AppstoreOutlined />}
-                onClick={() => dispatch(componentTreeActions.pushNodeToPropertyPanel(node.id))}
+                onClick={() => dispatch(pushNodeToPropertyPanel(node.id))}
                 block
                 className={panelStyles.justifyStart}
               >
@@ -365,7 +374,7 @@ const PropertyPanel: React.FC = () => {
                   e.stopPropagation();
                   if (!columns?.some((col) => col.valueType === 'option')) {
                     dispatch(
-                      componentTreeActions.upsertColumnOfSelectedNode({
+                      upsertColumnOfSelectedNode({
                         title: '操作',
                         valueType: 'option',
                         dataIndex: '',
@@ -375,7 +384,7 @@ const PropertyPanel: React.FC = () => {
                   }
                   const prototype = getComponentPrototype('Button');
                   dispatch(
-                    componentTreeActions.addNodeToSlot({
+                    addNodeToSlot({
                       targetNodeId: selectedNodeId!,
                       propPath: 'rowActions',
                       type: 'Button',
@@ -434,7 +443,7 @@ const PropertyPanel: React.FC = () => {
         <Button
           icon={<LeftOutlined />}
           size="small"
-          onClick={() => dispatch(componentTreeActions.popNodeFromPropertyPanel())}
+          onClick={() => dispatch(popNodeFromPropertyPanel())}
         />
       )}
       <Typography.Text>{`属性面板：${selectedNode.name}`}</Typography.Text>
@@ -501,7 +510,7 @@ const PropertyPanel: React.FC = () => {
         <Button
           onClick={() => {
             dispatch(
-              componentTreeActions.updateNodeProps({
+              updateNodeProps({
                 id: selectedNodeId!,
                 props: {
                   dataSource: generateDataSource(columns),

@@ -15,11 +15,12 @@ import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dn
 import { HolderOutlined } from '@ant-design/icons';
 import type { NodeRef, ProCommonColumn } from '@/types';
 import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
 import {
-  componentNodesSelectors,
-  entityModelSelectors,
-} from '@/store/componentTreeSlice/componentTreeSelectors';
+  selectNode,
+  moveColumnForSelectedNode,
+} from '@/store/componentTreeSlice/componentTreeSlice';
+import { componentNodesSelectors } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { entityModelSelectors } from '@/store/entityModelSlice/selectors';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnTitleMenu } from './ColumnTitleMenu';
 import { ColumnCellSlot } from './ColumnCellSlot';
@@ -401,8 +402,8 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
         return;
       }
 
-      dispatch(componentTreeActions.selectNode(__previewNodeId));
-      dispatch(componentTreeActions.moveColumnForSelectedNode({ from, to }));
+      dispatch(selectNode(__previewNodeId));
+      dispatch(moveColumnForSelectedNode({ from, to }));
       setDragState({ active: null, over: null });
       setPlaceholder({ id: null, index: null });
     },

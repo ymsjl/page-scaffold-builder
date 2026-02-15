@@ -6,7 +6,7 @@ import type {
   NormalizedComponentTree,
 } from '@/types/Component';
 
-export const componentNodeSchema = new schema.Entity(
+const componentNodeSchema = new schema.Entity(
   'nodes',
   {},
   {

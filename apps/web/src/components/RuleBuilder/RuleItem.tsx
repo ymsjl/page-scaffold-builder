@@ -2,7 +2,10 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { Card, Space, Typography } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import {
+  updateRuleNodeParamsOfEditingColumn,
+  deleteRuleNodeOfEditingColumn,
+} from '@/store/columnEditorSlice/columnEditorSlice';
 import { type RuleNodeType, type RuleNode } from './RuleParamsDateSchema';
 import { ruleNodeContext } from './strategies';
 import * as styles from './RuleBuilder.css';
@@ -25,7 +28,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(({ node }) => {
   const updateParams = useCallback(
     (next: Record<string, any>) =>
       dispatch(
-        componentTreeActions.updateRuleNodeParamsOfEditingColumn({
+        updateRuleNodeParamsOfEditingColumn({
           id,
           params: next,
         }),
@@ -36,7 +39,7 @@ const RuleItem: React.FC<RuleItemProps> = memo(({ node }) => {
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      dispatch(componentTreeActions.deleteRuleNodeOfEditingColumn(id));
+      dispatch(deleteRuleNodeOfEditingColumn(id));
     },
     [dispatch, id],
   );

@@ -3,14 +3,14 @@ import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { rootReducer } from '@/store/rootReducer';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { addNode } from '@/store/componentTreeSlice/componentTreeSlice';
 import { ReactNodeRenderer } from './ReactNodeRenderer';
 
 const buildStoreWithNestedPage = () => {
   const store = configureStore({ reducer: rootReducer });
-  store.dispatch(componentTreeActions.addNode({ parentId: null, type: 'Page' }));
+  store.dispatch(addNode({ parentId: null, type: 'Page' }));
   const rootId = store.getState().componentTree.normalizedTree.result[0];
-  store.dispatch(componentTreeActions.addNode({ parentId: rootId, type: 'Page' }));
+  store.dispatch(addNode({ parentId: rootId, type: 'Page' }));
   const childId =
     store.getState().componentTree.normalizedTree.entities.nodes[rootId]?.childrenIds[0];
   if (!childId) {

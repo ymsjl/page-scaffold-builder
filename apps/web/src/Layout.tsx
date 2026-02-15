@@ -6,13 +6,21 @@ import { DeleteOutlined, FileAddOutlined, PlusOutlined, HolderOutlined } from '@
 import { ProCard } from '@ant-design/pro-components';
 import ComponentTree from './components/ComponentTree/ComponentTree';
 import { useAppDispatch, useAppSelector } from './store/hooks';
+import { componentNodesSelectors } from './store/componentTreeSlice/componentTreeSelectors';
+import { variableSelectors } from './store/variablesSlice/selectors';
+import { entityModelSelectors } from './store/entityModelSlice/selectors';
+import { addNode, addNodeRefToProps } from './store/componentTreeSlice/componentTreeSlice';
 import {
-  entityModelSelectors,
-  componentNodesSelectors,
-  variableSelectors,
-} from './store/componentTreeSlice/componentTreeSelectors';
-import { componentTreeActions } from './store/componentTreeSlice/componentTreeSlice';
-import { entityModelActions } from './store/entityModelSlice/entityModelSlice';
+  startCreateEntityModel,
+  startEditEntityModel,
+  deleteEntityModel,
+} from './store/entityModelSlice/entityModelSlice';
+import {
+  startCreateVariable,
+  startEditVariable,
+  deleteVariable,
+  resetVariableValues,
+} from './store/variablesSlice/variablesSlice';
 import { getComponentPrototype } from './componentMetas';
 import { EntityModelDesignerPanel } from './components/EntityModelDesigner/EntityModelDesignerPanel';
 import ComponentPreview from './components/ComponentPreview/ComponentPreview';
@@ -45,7 +53,7 @@ export const PageScaffoldBuilderLayout = () => {
   const [activeNodeId, setActiveNodeId] = React.useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(componentTreeActions.resetVariableValues());
+    dispatch(resetVariableValues());
   }, [dispatch]);
 
   const sensors = useSensors(
@@ -98,7 +106,7 @@ export const PageScaffoldBuilderLayout = () => {
 
       // 添加节点引用到 props
       dispatch(
-        componentTreeActions.addNodeRefToProps({
+        addNodeRefToProps({
           targetNodeId: dropData.targetNodeId,
           propPath: dropData.propPath,
           refNodeId: dragData.nodeId,
@@ -145,7 +153,7 @@ export const PageScaffoldBuilderLayout = () => {
                     onClick={() => {
                       const prototype = getComponentPrototype('Page');
                       dispatch(
-                        componentTreeActions.addNode({
+                        addNode({
                           parentId: null,
                           type: 'Page',
                           label: prototype?.label,
@@ -171,7 +179,7 @@ export const PageScaffoldBuilderLayout = () => {
                   <Button
                     icon={<PlusOutlined />}
                     size="small"
-                    onClick={() => dispatch(entityModelActions.startCreateEntityModel())}
+                    onClick={() => dispatch(startCreateEntityModel())}
                     type="text"
                   />
                 }
@@ -182,7 +190,7 @@ export const PageScaffoldBuilderLayout = () => {
                       className={layoutStyles.rowButton}
                       key={et.id}
                       type="button"
-                      onClick={() => dispatch(entityModelActions.startEditEntityModel(et.id))}
+                      onClick={() => dispatch(startEditEntityModel(et.id))}
                     >
                       <Typography.Text>{et.title}</Typography.Text>
                       <Button
@@ -192,7 +200,7 @@ export const PageScaffoldBuilderLayout = () => {
                         danger
                         onClick={(e) => {
                           e.stopPropagation();
-                          dispatch(entityModelActions.deleteEntityModel(et.id));
+                          dispatch(deleteEntityModel(et.id));
                         }}
                       />
                     </button>
@@ -210,7 +218,7 @@ export const PageScaffoldBuilderLayout = () => {
                   <Button
                     icon={<PlusOutlined />}
                     size="small"
-                    onClick={() => dispatch(componentTreeActions.startCreateVariable())}
+                    onClick={() => dispatch(startCreateVariable())}
                     type="text"
                   />
                 }
@@ -220,7 +228,7 @@ export const PageScaffoldBuilderLayout = () => {
                     <button
                       type="button"
                       key={variable.id}
-                      onClick={() => dispatch(componentTreeActions.startEditVariable(variable.id))}
+                      onClick={() => dispatch(startEditVariable(variable.id))}
                       className={layoutStyles.rowButton}
                     >
                       <Typography.Text>{variable.name}</Typography.Text>
@@ -231,7 +239,7 @@ export const PageScaffoldBuilderLayout = () => {
                         danger
                         onClick={(e) => {
                           e.stopPropagation();
-                          dispatch(componentTreeActions.deleteVariable(variable.id));
+                          dispatch(deleteVariable(variable.id));
                         }}
                       />
                     </button>

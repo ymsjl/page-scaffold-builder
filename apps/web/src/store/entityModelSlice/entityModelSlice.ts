@@ -2,7 +2,7 @@ import { type PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import type { EntityModel } from '@/types';
 import { makeEntityModelId } from '@/utils/makeIdCreator';
-import { entityModelAdapter } from '../componentTreeSlice/componentTreeAdapters';
+import { entityModelAdapter } from './entityModelAdapter';
 
 type UpdateFieldExtraPayload = {
   entityModelId: string;
@@ -10,7 +10,7 @@ type UpdateFieldExtraPayload = {
   extra: Record<string, any> | undefined;
 };
 
-type EntityModelState = {
+export type EntityModelState = {
   entityModel: ReturnType<typeof entityModelAdapter.getInitialState>;
   isEntityModelModalOpen: boolean;
   editingEntityModelId: string | null;
@@ -101,4 +101,12 @@ const slice = createSlice({
 });
 
 export const entityModelActions = slice.actions;
+export const {
+  closeEntityModelModal,
+  startCreateEntityModel,
+  startEditEntityModel,
+  applyEntityModelChange,
+  deleteEntityModel,
+  updateEntityFieldExtra,
+} = slice.actions;
 export default slice.reducer;

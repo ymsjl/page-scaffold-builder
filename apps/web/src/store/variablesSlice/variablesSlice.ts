@@ -1,9 +1,9 @@
-import { type PayloadAction } from '@reduxjs/toolkit';
-import { type WritableDraft } from 'immer';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import type { PrimitiveVariableValue } from '@/types';
+import { type WritableDraft } from 'immer';
 import { makeVariableId } from '@/utils/makeIdCreator';
-import type { ComponentTreeState } from './componentTreeSlice';
-import { variableAdapter } from './componentTreeAdapters';
+import { variableAdapter } from './variableAdapter';
 
 type VariableChangePayload = {
   name: string;
@@ -15,7 +15,21 @@ type SetVariableValuePayload = {
   value: PrimitiveVariableValue;
 };
 
-const buildVariableValuesFromDefinitions = (state: WritableDraft<ComponentTreeState>) => {
+export interface VariablesState {
+  variables: ReturnType<typeof variableAdapter.getInitialState>;
+  variableValues: Record<string, PrimitiveVariableValue>;
+  isVariableModalOpen: boolean;
+  editingVariableId: string | null;
+}
+
+const initialState: VariablesState = {
+  variables: variableAdapter.getInitialState({}),
+  variableValues: {},
+  isVariableModalOpen: false,
+  editingVariableId: null,
+};
+
+const buildVariableValuesFromDefinitions = (state: WritableDraft<VariablesState>) => {
   const nextValues = Object.values(state.variables.entities).reduce(
     (acc, variable) => {
       if (variable) {
@@ -28,26 +42,26 @@ const buildVariableValuesFromDefinitions = (state: WritableDraft<ComponentTreeSt
   state.variableValues = nextValues;
 };
 
-export const createVariablesReducers = () => {
-  type State = WritableDraft<ComponentTreeState>;
-
-  return {
-    startCreateVariable: (state: State) => {
+const slice = createSlice({
+  name: 'variables',
+  initialState,
+  reducers: {
+    startCreateVariable: (state) => {
       state.isVariableModalOpen = true;
       state.editingVariableId = null;
     },
 
-    startEditVariable: (state: State, action: PayloadAction<string>) => {
+    startEditVariable: (state, action: PayloadAction<string>) => {
       state.isVariableModalOpen = true;
       state.editingVariableId = action.payload;
     },
 
-    closeVariableModal: (state: State) => {
+    closeVariableModal: (state) => {
       state.isVariableModalOpen = false;
       state.editingVariableId = null;
     },
 
-    applyVariableChange: (state: State, action: PayloadAction<VariableChangePayload>) => {
+    applyVariableChange: (state, action: PayloadAction<VariableChangePayload>) => {
       const editingVariable = state.editingVariableId
         ? state.variables.entities[state.editingVariableId]
         : null;
@@ -71,7 +85,7 @@ export const createVariablesReducers = () => {
       state.editingVariableId = null;
     },
 
-    deleteVariable: (state: State, action: PayloadAction<string>) => {
+    deleteVariable: (state, action: PayloadAction<string>) => {
       const variable = state.variables.entities[action.payload];
       if (!variable) return;
 
@@ -83,7 +97,7 @@ export const createVariablesReducers = () => {
       }
     },
 
-    setVariableValue: (state: State, action: PayloadAction<SetVariableValuePayload>) => {
+    setVariableValue: (state, action: PayloadAction<SetVariableValuePayload>) => {
       const variable = Object.values(state.variables.entities).find(
         (item) => item?.name === action.payload.name,
       );
@@ -91,8 +105,20 @@ export const createVariablesReducers = () => {
       state.variableValues[action.payload.name] = action.payload.value;
     },
 
-    resetVariableValues: (state: State) => {
+    resetVariableValues: (state) => {
       buildVariableValuesFromDefinitions(state);
     },
-  };
-};
+  },
+});
+
+export const variablesActions = slice.actions;
+export const {
+  startCreateVariable,
+  startEditVariable,
+  closeVariableModal,
+  applyVariableChange,
+  deleteVariable,
+  setVariableValue,
+  resetVariableValues,
+} = variablesActions;
+export const variablesReducer = slice.reducer;

@@ -3,7 +3,7 @@ import { Tree } from 'antd';
 import type { TreeProps } from 'antd';
 import type { ComponentNode } from '@/types';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { selectNode, setExpandedKeys } from '@/store/componentTreeSlice/componentTreeSlice';
 import {
   componentNodesSelectors,
   selectRootIds,
@@ -31,7 +31,7 @@ const ComponentTree: React.FC = () => {
       return;
     }
     if (allNodeKeys.length > 0) {
-      dispatch(componentTreeActions.setExpandedKeys(allNodeKeys));
+      dispatch(setExpandedKeys(allNodeKeys));
       hasInitializedExpandedKeys.current = true;
     }
   }, [allNodeKeys, expandedKeys.length, dispatch]);
@@ -60,13 +60,13 @@ const ComponentTree: React.FC = () => {
     <Tree
       blockNode
       expandedKeys={expandedKeys}
-      onExpand={(keys) => dispatch(componentTreeActions.setExpandedKeys(keys.map(String)))}
+      onExpand={(keys) => dispatch(setExpandedKeys(keys.map(String)))}
       selectedKeys={selectedNodeId ? [selectedNodeId] : []}
       autoExpandParent
       treeData={treeNodes}
       onSelect={(keys) => {
         const key = keys?.[0];
-        if (key) dispatch(componentTreeActions.selectNode(String(key)));
+        if (key) dispatch(selectNode(String(key)));
       }}
     />
   );

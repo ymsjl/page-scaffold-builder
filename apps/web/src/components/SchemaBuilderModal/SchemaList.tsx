@@ -1,7 +1,11 @@
 import React, { useCallback } from 'react';
 import { Modal, List, Button, Space, Empty, Tag, message, Flex } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import {
+  deleteColumnForSelectedNode,
+  moveColumnForSelectedNode,
+} from '@/store/componentTreeSlice/componentTreeSlice';
+import { startEditingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -13,6 +17,8 @@ import {
   selectColumnsOfSelectedNode,
   selectEntityModelInUse,
 } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { addColumnsFromEntityModelToSelectedNode } from '@/store/componentTreeSlice/thunks';
+
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -94,7 +100,7 @@ const AddColumnsFromEntityModelButton: React.FC = React.memo(() => {
   const entityFields = useAppSelector(selectEntityModelInUse)?.fields || [];
 
   const handleAddColumnsFromEntityModel = useCallback(() => {
-    dispatch(componentTreeActions.addColumnsFromEntityModelToSelectedNode());
+    dispatch(addColumnsFromEntityModelToSelectedNode());
   }, [dispatch]);
 
   return (
@@ -124,7 +130,7 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(() => {
   );
 
   const handleStartEdit = useCallback(
-    (field: ProCommonColumn) => dispatch(componentTreeActions.startEditingColumn(field)),
+    (field: ProCommonColumn) => dispatch(startEditingColumn(field)),
     [dispatch],
   );
 
@@ -134,7 +140,7 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(() => {
         title: '确认删除',
         content: '确定要删除这个字段吗？',
         onOk: () => {
-          dispatch(componentTreeActions.deleteColumnForSelectedNode(key));
+          dispatch(deleteColumnForSelectedNode(key));
           message.success('字段已删除');
         },
       });
@@ -155,7 +161,7 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(() => {
 
       if (oldIndex !== -1 && newIndex !== -1) {
         dispatch(
-          componentTreeActions.moveColumnForSelectedNode({
+          moveColumnForSelectedNode({
             from: oldIndex,
             to: newIndex,
           }),

@@ -1,5 +1,5 @@
-import { RuleNodeSchema } from "@/components/RuleBuilder/RuleParamsDateSchema";
-import { z } from "zod";
+import { RuleNodeSchema } from '@/components/RuleBuilder/RuleParamsDateSchema';
+import { z } from 'zod';
 
 export const ProValueEnumSchema = z.object({
   text: z.string(),

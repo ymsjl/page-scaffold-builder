@@ -5,11 +5,14 @@ import { ProForm, ProFormItemRender, ProFormText } from '@ant-design/pro-compone
 
 import type { EntityModel } from '@/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { entityModelActions } from '@/store/entityModelSlice/entityModelSlice';
 import {
-  selectEditingEntityModel,
+  closeEntityModelModal,
+  applyEntityModelChange,
+} from '@/store/entityModelSlice/entityModelSlice';
+import {
   selectIsEntityModelModalOpen,
-} from '@/store/componentTreeSlice/componentTreeSelectors';
+  selectEditingEntityModel,
+} from '@/store/entityModelSlice/selectors';
 
 import type { EnumOption } from './entityModelDesignerTypes';
 import { EntityModelDesignerSubModals } from './EntityModelDesignerSubModals';
@@ -58,7 +61,7 @@ export const EntityModelDesignerPanel = React.memo(() => {
 
   const onClose = useCallback(() => {
     // Close main modal
-    dispatch(entityModelActions.closeEntityModelModal());
+    dispatch(closeEntityModelModal());
     // Also reset sub-modals state to avoid stale or dangling UI
     closeEnumAdvancedModal();
     closeSqlImportModal();
@@ -75,7 +78,7 @@ export const EntityModelDesignerPanel = React.memo(() => {
       return;
     }
 
-    dispatch(entityModelActions.applyEntityModelChange(form.getFieldsValue()));
+    dispatch(applyEntityModelChange(form.getFieldsValue()));
     message.success('已保存');
     onClose();
   }, [isTableEditing, enumAdvancedModal.isOpen, dispatch, form, onClose]);

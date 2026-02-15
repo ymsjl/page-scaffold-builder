@@ -3,7 +3,12 @@ import type { ComponentInstance, ComponentType } from '@/types';
 import { PlusOutlined, DeleteOutlined, CheckOutlined, HolderOutlined } from '@ant-design/icons';
 import { useDraggable } from '@dnd-kit/core';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import {
+  updateNode,
+  removeNode,
+  expandNode,
+  addNodeToSlot,
+} from '@/store/componentTreeSlice/componentTreeSlice';
 import { availableComponents, getComponentPrototype } from '@/componentMetas';
 import { Button, Input, Space, Dropdown, Typography } from 'antd';
 
@@ -55,14 +60,14 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(componentTreeActions.removeNode(node.id));
+    dispatch(removeNode(node.id));
   };
 
   const handleSaveEdit = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (editingName && editingName.trim()) {
       dispatch(
-        componentTreeActions.updateNode({
+        updateNode({
           id: node.id,
           updates: { name: editingName.trim() },
         }),
@@ -94,7 +99,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
     const prototype = getComponentPrototype(type);
     dispatch(
-      componentTreeActions.addNodeToSlot({
+      addNodeToSlot({
         targetNodeId: node.id,
         propPath: 'children',
         type,
@@ -103,7 +108,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
         defaultProps: prototype?.defaultProps,
       }),
     );
-    dispatch(componentTreeActions.expandNode(node.id));
+    dispatch(expandNode(node.id));
     setShowAddDropdownNodeId(null);
   };
 

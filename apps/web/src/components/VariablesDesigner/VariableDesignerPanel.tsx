@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect } from 'react';
 import { Form, Input, Modal, message } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+
 import {
   selectEditingVariable,
   selectIsVariableModalOpen,
   variableSelectors,
-} from '@/store/componentTreeSlice/componentTreeSelectors';
+} from '@/store/variablesSlice/selectors';
+import { closeVariableModal, applyVariableChange } from '@/store/variablesSlice/variablesSlice';
 import type { PrimitiveVariableValue } from '@/types';
 
 type VariableFormValues = {
@@ -46,7 +47,7 @@ const VariableDesignerPanel: React.FC = () => {
   }, [editingVariable, form, isOpen]);
 
   const handleClose = useCallback(() => {
-    dispatch(componentTreeActions.closeVariableModal());
+    dispatch(closeVariableModal());
     form.resetFields();
   }, [dispatch, form]);
 
@@ -63,7 +64,7 @@ const VariableDesignerPanel: React.FC = () => {
     }
 
     dispatch(
-      componentTreeActions.applyVariableChange({
+      applyVariableChange({
         name,
         initialValue: parseInitialValue(values.initialValue),
       }),

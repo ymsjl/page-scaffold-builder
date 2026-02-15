@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/store/hooks';
-import { componentTreeActions } from '@/store/componentTreeSlice/componentTreeSlice';
+import { selectNode, removeNodeRefFromProps } from '@/store/componentTreeSlice/componentTreeSlice';
 import * as styles from './SlotItemWrapper.css';
 
 interface SlotItemWrapperProps {
@@ -22,13 +22,13 @@ const SlotItemWrapper: React.FC<SlotItemWrapperProps> = ({
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(componentTreeActions.selectNode(nodeId));
+    dispatch(selectNode(nodeId));
   };
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch(
-      componentTreeActions.removeNodeRefFromProps({
+      removeNodeRefFromProps({
         targetNodeId,
         propPath,
         refNodeId: nodeId,

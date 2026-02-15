@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Space, Typography } from 'antd';
 import { useAppSelector } from '@/store/hooks';
-import { selectRuleNodesOfEditingColumn } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { selectRuleNodesOfEditingColumn } from '@/store/columnEditorSlice/selectors';
 import RuleItem from './RuleItem';
 import * as styles from './RuleBuilder.css';
 

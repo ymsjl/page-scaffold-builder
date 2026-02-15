@@ -4,7 +4,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 import type { ActionNode } from '@/types/actions';
 import { useActionFlow } from '@/services/actionFlows/hooks/useActionFlow';
 import { useAppSelector } from '@/store/hooks';
-import { variableSelectors } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { variableSelectors } from '@/store/variablesSlice/selectors';
 import * as styles from './NodeProperties.css';
 
 const { TextArea } = Input;
