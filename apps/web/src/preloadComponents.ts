@@ -1,4 +1,4 @@
-import { lazyLoad } from './componentMetas';
+import { lazyLoad } from './componentRegistry';
 
 export const preloadComponents = async () => {
   await Promise.all([

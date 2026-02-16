@@ -29,6 +29,7 @@ describe('ReactNodeRenderer', () => {
       </Provider>,
     );
 
-    expect(screen.getByText('页面内容')).toBeInTheDocument();
+    // slot label may render as visible text or title attribute depending on DropZone
+    expect(screen.getByTitle('页面内容')).toBeInTheDocument();
   });
 });
