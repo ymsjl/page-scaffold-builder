@@ -1,6 +1,6 @@
-import { RuleNode, RuleNodeType } from "../RuleParamsDateSchema";
-import { normalizeType } from "./utils";
-import type { AntdRule, RuleDescriptor, RuleNodeStrategy } from "./types";
+import { type RuleNode, type RuleNodeType } from '../RuleParamsDateSchema';
+import { normalizeType } from './utils';
+import type { AntdRule, RuleDescriptor, RuleNodeStrategy } from './types';
 
 export class RuleNodeContext {
   private registry: Record<RuleNodeType, RuleNodeStrategy>;
@@ -30,7 +30,7 @@ export class RuleNodeContext {
   getStrategyForNodeOrThrow(node: RuleNode): RuleNodeStrategy {
     const normalizedType = normalizeType(node);
     if (normalizedType === null) {
-      throw new Error("Unsupported RuleNodeType");
+      throw new Error('Unsupported RuleNodeType');
     }
     return this.getStrategyOrThrow(normalizedType);
   }
@@ -42,12 +42,12 @@ export class RuleNodeContext {
 
   toRuleFromDescriptor(descriptor: RuleDescriptor): AntdRule | null {
     const node: RuleNode = {
-      id: "rule_preview",
-      name: "",
+      id: 'rule_preview',
+      name: '',
       type: descriptor.type,
       enabled: true,
       params: descriptor.params ?? {},
-      message: descriptor.message ?? "",
+      message: descriptor.message ?? '',
     };
     const strategy = this.getStrategyForNodeOrThrow(node);
     const message = descriptor.message || strategy.buildDefaultMessage(node);

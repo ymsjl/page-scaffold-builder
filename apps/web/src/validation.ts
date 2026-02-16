@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const SchemaFieldSchema = z.object({
   id: z.string(),
@@ -19,8 +19,8 @@ export type SchemaField = z.infer<typeof SchemaFieldSchema>;
 export const EntityModelSchema = z
   .object({
     id: z.string(),
-    name: z.string().min(1, "Name is required"),
-    title: z.string().min(1, "Title is required"),
+    name: z.string().min(1, 'Name is required'),
+    title: z.string().min(1, 'Title is required'),
     fields: z.array(SchemaFieldSchema),
     primaryKey: z.string().optional(),
   })
@@ -30,7 +30,7 @@ export const EntityModelSchema = z
     if (!ids.includes(val.primaryKey)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "primaryKey must be one of field ids",
+        message: 'primaryKey must be one of field ids',
       });
     }
     const dup = ids.find((id: string, i: number) => ids.indexOf(id) !== i);
@@ -53,17 +53,17 @@ export const PropAttributeSchema = z.object({
   // like `object`, `array`, or nested `schema` definitions.
   // `reactNode` and `reactNodeArray` represent props that accept React component references
   type: z.enum([
-    "string",
-    "number",
-    "boolean",
-    "enum",
-    "date",
-    "object",
-    "array",
-    "schema",
-    "actionFlow",
-    "reactNode",
-    "reactNodeArray",
+    'string',
+    'number',
+    'boolean',
+    'enum',
+    'date',
+    'object',
+    'array',
+    'schema',
+    'actionFlow',
+    'reactNode',
+    'reactNodeArray',
   ]),
   // For reactNode/reactNodeArray types, specify which component types can be dropped
   acceptTypes: z.array(z.string()).optional(),

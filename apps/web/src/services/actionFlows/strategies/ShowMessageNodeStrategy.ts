@@ -1,46 +1,42 @@
-import { BaseNodeStrategy } from "./BaseNodeStrategy";
-import type {
-  ActionNodeBase,
-  FlowExecutionContext,
-  Port,
-} from "@/types/actions";
-import { ShowMessageNodeParamsSchema } from "@/types/actions";
-import { message } from "antd";
+import type { ActionNodeBase, FlowExecutionContext, Port } from '@/types/actions';
+import { ShowMessageNodeParamsSchema } from '@/types/actions';
+import { message } from 'antd';
+import { BaseNodeStrategy } from './BaseNodeStrategy';
 
 /**
  * 消息提示节点策略
  */
 export class ShowMessageNodeStrategy extends BaseNodeStrategy {
-  type = "showMessage";
-  label = "Show Message";
-  description = "显示消息提示";
-  icon = "MessageOutlined";
-  category = "action" as const;
+  type = 'showMessage';
+
+  label = 'Show Message';
+
+  description = '显示消息提示';
+
+  icon = 'MessageOutlined';
+
+  category = 'action' as const;
 
   async execute(
     node: ActionNodeBase,
     inputs: Record<string, any>,
-    _context: FlowExecutionContext,
+    context: FlowExecutionContext,
   ): Promise<Record<string, any>> {
     const params = ShowMessageNodeParamsSchema.parse(node.params);
 
-    const messageType = this.getInput(
-      inputs,
-      "messageType",
-      params.messageType,
-    );
-    const content = this.getInput(inputs, "content", params.content);
-    const duration = this.getInput(inputs, "duration", params.duration);
+    const messageType = this.getInput(inputs, 'messageType', params.messageType);
+    const content = this.getInput(inputs, 'content', params.content);
+    const duration = this.getInput(inputs, 'duration', params.duration);
 
-    this.log(`Showing ${messageType} message: ${content}`);
+    this.log(`Showing ${messageType} message: ${content}`, context.flowId);
 
     try {
       // 显示消息（duration 单位是毫秒，antd 需要秒）
-      if (messageType === "success") {
+      if (messageType === 'success') {
         message.success(content, duration / 1000);
-      } else if (messageType === "error") {
+      } else if (messageType === 'error') {
         message.error(content, duration / 1000);
-      } else if (messageType === "warning") {
+      } else if (messageType === 'warning') {
         message.warning(content, duration / 1000);
       } else {
         message.info(content, duration / 1000);
@@ -52,31 +48,39 @@ export class ShowMessageNodeStrategy extends BaseNodeStrategy {
         content,
       });
     } catch (error) {
-      this.logError("Show message failed", error);
+      this.logError('Show message failed', error);
       throw new Error(
         `Show message failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
-  getInputPorts(_node: ActionNodeBase): Port[] {
+  getInputPorts(node: ActionNodeBase): Port[] {
+    const inheritedPorts = super.getInputPorts(node);
+    if (inheritedPorts.length > 0) {
+      return inheritedPorts;
+    }
     return [
-      { id: "trigger", name: "Trigger", type: "exec", required: false },
-      { id: "messageType", name: "Type", type: "string", required: false },
-      { id: "content", name: "Content", type: "string", required: false },
+      { id: 'trigger', name: 'Trigger', type: 'exec', required: false },
+      { id: 'messageType', name: 'Type', type: 'string', required: false },
+      { id: 'content', name: 'Content', type: 'string', required: false },
       {
-        id: "duration",
-        name: "Duration (ms)",
-        type: "number",
+        id: 'duration',
+        name: 'Duration (ms)',
+        type: 'number',
         required: false,
       },
     ];
   }
 
-  getOutputPorts(_node: ActionNodeBase): Port[] {
+  getOutputPorts(node: ActionNodeBase): Port[] {
+    const inheritedPorts = super.getOutputPorts(node);
+    if (inheritedPorts.length > 0) {
+      return inheritedPorts;
+    }
     return [
-      { id: "completed", name: "Completed", type: "exec", required: false },
-      { id: "success", name: "Success", type: "boolean", required: false },
+      { id: 'completed', name: 'Completed', type: 'exec', required: false },
+      { id: 'success', name: 'Success', type: 'boolean', required: false },
     ];
   }
 
@@ -89,11 +93,11 @@ export class ShowMessageNodeStrategy extends BaseNodeStrategy {
     try {
       const params = ShowMessageNodeParamsSchema.parse(node.params);
 
-      if (!params.content || params.content.trim() === "") {
-        errors.push("消息内容不能为空");
+      if (!params.content || params.content.trim() === '') {
+        errors.push('消息内容不能为空');
       }
     } catch (error) {
-      errors.push("参数配置无效");
+      errors.push('参数配置无效');
     }
 
     return {
@@ -103,9 +107,12 @@ export class ShowMessageNodeStrategy extends BaseNodeStrategy {
   }
 
   getDefaultParams(): Record<string, any> {
+    if (this.type === '') {
+      return {};
+    }
     return {
-      messageType: "info",
-      content: "",
+      messageType: 'info',
+      content: '',
       duration: 3000,
     };
   }

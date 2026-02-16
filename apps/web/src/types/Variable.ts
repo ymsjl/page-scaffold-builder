@@ -7,17 +7,17 @@ export interface VariableDefinition {
 }
 
 export interface VariableRef {
-  type: "variableRef";
+  type: 'variableRef';
   variableName: string;
 }
 
 export function isVariableRef(value: unknown): value is VariableRef {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "type" in value &&
-    (value as VariableRef).type === "variableRef" &&
-    "variableName" in value &&
-    typeof (value as VariableRef).variableName === "string"
+    'type' in value &&
+    (value as VariableRef).type === 'variableRef' &&
+    'variableName' in value &&
+    typeof (value as VariableRef).variableName === 'string'
   );
 }

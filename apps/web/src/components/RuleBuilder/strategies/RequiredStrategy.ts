@@ -1,21 +1,25 @@
-import { RuleNode, RuleNodeType } from "../RuleParamsDateSchema";
-import { BaseStrategy } from "./BaseStrategy";
-import type { AntdRule } from "./types";
+import { type RuleNode, RuleNodeType } from '../RuleParamsDateSchema';
+import { BaseStrategy } from './BaseStrategy';
+import type { AntdRule } from './types';
 
 export class RequiredStrategy extends BaseStrategy {
   constructor() {
     super(RuleNodeType.Required);
   }
 
-  buildDefaultMessage(_node: Pick<RuleNode, "type" | "params">): string {
-    return "此字段为必填项";
+  buildDefaultMessage(node: Pick<RuleNode, 'type' | 'params'>): string {
+    if (!this.type || !node) return '此字段为必填项';
+    return '此字段为必填项';
   }
 
-  toRule(_node: RuleNode, message: string): AntdRule {
+  toRule(node: RuleNode, message: string): AntdRule {
+    if (!this.type || !node) return { required: true, message } as AntdRule;
     return { required: true, message } as AntdRule;
   }
 
-  applyFieldProps(_node: RuleNode, _fieldProps: Record<string, any>): void {
-    return undefined;
+  applyFieldProps(node: RuleNode, fieldProps: Record<string, any>): void {
+    if (!this.type || !node || !fieldProps) {
+      // no-op
+    }
   }
 }

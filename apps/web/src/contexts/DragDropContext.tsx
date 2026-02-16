@@ -1,14 +1,8 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
-import type { ComponentType as AppComponentType } from "@/types";
+import React, { createContext, useContext, useState, useMemo } from 'react';
+import type { ComponentType as AppComponentType } from '@/types';
 
 export interface DragData {
-  type: "treeNode";
+  type: 'treeNode';
   nodeId: string;
   nodeType: AppComponentType;
 }
@@ -26,9 +20,7 @@ interface DragDropContextValue {
 
 const DragDropContext = createContext<DragDropContextValue | null>(null);
 
-export const DragDropProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const DragDropProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeDrag, setActiveDrag] = useState<DragData | null>(null);
   const [activeDropZoneId, setActiveDropZoneId] = useState<string | null>(null);
 
@@ -42,19 +34,13 @@ export const DragDropProvider: React.FC<{ children: React.ReactNode }> = ({
     [activeDrag, activeDropZoneId],
   );
 
-  return (
-    <DragDropContext.Provider value={value}>
-      {children}
-    </DragDropContext.Provider>
-  );
+  return <DragDropContext.Provider value={value}>{children}</DragDropContext.Provider>;
 };
 
 export const useDragDropContext = (): DragDropContextValue => {
   const context = useContext(DragDropContext);
   if (!context) {
-    throw new Error(
-      "useDragDropContext must be used within a DragDropProvider",
-    );
+    throw new Error('useDragDropContext must be used within a DragDropProvider');
   }
   return context;
 };
@@ -62,10 +48,7 @@ export const useDragDropContext = (): DragDropContextValue => {
 /**
  * 检查拖拽的组件类型是否被放置区域接受
  */
-export const isDropAccepted = (
-  dragData: DragData | null,
-  acceptTypes?: string[],
-): boolean => {
+export const isDropAccepted = (dragData: DragData | null, acceptTypes?: string[]): boolean => {
   if (!dragData) return false;
   if (!acceptTypes || acceptTypes.length === 0) return true;
   return acceptTypes.includes(dragData.nodeType);

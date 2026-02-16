@@ -4,8 +4,8 @@ import type {
   ActionEdge,
   FlowExecutionContext,
   NodeExecutionResult,
-} from "@/types/actions";
-import { NodeStrategyRegistry } from "../strategies/NodeStrategyRegistry";
+} from '@/types/actions';
+import { type NodeStrategyRegistry } from '../strategies/NodeStrategyRegistry';
 
 /**
  * Flow 执行引擎
@@ -18,6 +18,8 @@ import { NodeStrategyRegistry } from "../strategies/NodeStrategyRegistry";
 export class FlowExecutor {
   constructor(private strategyRegistry: NodeStrategyRegistry) {}
 
+  private static readonly CONDITION_OPERATOR_REGEX = /(===|!==|>=|<=|>|<)/;
+
   /**
    * 执行完整的 Flow
    */
@@ -27,75 +29,72 @@ export class FlowExecutor {
   ): Promise<NodeExecutionResult[]> {
     const results: NodeExecutionResult[] = [];
     const nodeMap = new Map(flow.nodes.map((n) => [n.id, n]));
-    const edgesBySource = this.groupEdgesBySource(flow.edges);
+    const edgesBySource = FlowExecutor.groupEdgesBySource(flow.edges);
 
     // 找到入口节点（没有输入边的节点或指定的入口节点）
-    const entryNodes = this.findEntryNodes(flow);
+    const entryNodes = FlowExecutor.findEntryNodes(flow);
 
     if (entryNodes.length === 0) {
-      throw new Error("No entry nodes found in flow");
+      throw new Error('No entry nodes found in flow');
     }
 
-    // 使用广度优先遍历
     const queue: ActionNodeBase[] = [...entryNodes];
     const executed = new Set<string>();
 
-    while (queue.length > 0) {
-      // 获取所有可立即执行的节点（依赖已满足）
-      const readyNodes = queue.filter((node) =>
-        this.areInputsSatisfied(node, flow.edges, executed),
-      );
-
-      if (readyNodes.length === 0) {
-        // 检查是否有循环依赖
-        if (queue.length > 0) {
-          throw new Error("Circular dependency detected in flow");
-        }
-        break;
-      }
-
-      // 并行执行所有就绪节点 (Vercel 最佳实践: async-parallel)
-      const batchResults = await Promise.all(
-        readyNodes.map((node) => this.executeNode(node, flow, context)),
-      );
-
-      // 记录结果
-      results.push(...batchResults);
-      batchResults.forEach((result) => {
-        executed.add(result.nodeId);
-        // 缓存节点输出
-        context.nodeOutputs[result.nodeId] = result.outputs;
-      });
-
-      // 移除已执行节点，添加下游节点
-      readyNodes.forEach((node) => {
-        const index = queue.indexOf(node);
-        if (index >= 0) queue.splice(index, 1);
-
-        // 添加下游节点
-        const outgoingEdges = edgesBySource.get(node.id) || [];
-        outgoingEdges.forEach((edge) => {
-          // 检查条件（如果有）
-          if (
-            edge.condition &&
-            !this.evaluateCondition(edge.condition, context)
-          ) {
-            return;
-          }
-
-          const targetNode = nodeMap.get(edge.target);
-          if (
-            targetNode &&
-            !executed.has(targetNode.id) &&
-            !queue.includes(targetNode)
-          ) {
-            queue.push(targetNode);
-          }
-        });
-      });
-    }
+    await this.executeQueueBatch(queue, executed, results, flow, context, nodeMap, edgesBySource);
 
     return results;
+  }
+
+  private async executeQueueBatch(
+    queue: ActionNodeBase[],
+    executed: Set<string>,
+    results: NodeExecutionResult[],
+    flow: ActionFlow,
+    context: FlowExecutionContext,
+    nodeMap: Map<string, ActionNodeBase>,
+    edgesBySource: Map<string, ActionEdge[]>,
+  ): Promise<void> {
+    if (queue.length === 0) {
+      return;
+    }
+
+    const readyNodes = queue.filter((node) =>
+      FlowExecutor.areInputsSatisfied(node, flow.edges, executed),
+    );
+
+    if (readyNodes.length === 0) {
+      throw new Error('Circular dependency detected in flow');
+    }
+
+    const batchResults = await Promise.all(
+      readyNodes.map((node) => this.executeNode(node, flow, context)),
+    );
+
+    results.push(...batchResults);
+    batchResults.forEach((result) => {
+      executed.add(result.nodeId);
+      context.nodeOutputs[result.nodeId] = result.outputs;
+    });
+
+    readyNodes.forEach((node) => {
+      const index = queue.indexOf(node);
+      if (index >= 0) queue.splice(index, 1);
+
+      const outgoingEdges = edgesBySource.get(node.id) || [];
+      outgoingEdges.forEach((edge) => {
+        if (edge.condition && !FlowExecutor.evaluateCondition(edge.condition, context)) {
+          return;
+        }
+
+        const targetNode = nodeMap.get(edge.target);
+        if (targetNode && !executed.has(targetNode.id) && !queue.includes(targetNode)) {
+          queue.push(targetNode);
+        }
+      });
+    });
+
+    await this.executeQueueBatch(queue, executed, results, flow, context, nodeMap, edgesBySource);
   }
 
   /**
@@ -107,10 +106,10 @@ export class FlowExecutor {
     }
 
     const aliasMap: Record<string, string> = {
-      "action.httpRequest": "httpRequest",
-      "action.navigate": "navigate",
-      "action.showMessage": "showMessage",
-      "control.delay": "delay",
+      'action.httpRequest': 'httpRequest',
+      'action.navigate': 'navigate',
+      'action.showMessage': 'showMessage',
+      'control.delay': 'delay',
     };
 
     const mappedType = aliasMap[nodeType];
@@ -146,7 +145,7 @@ export class FlowExecutor {
       const strategy = this.strategyRegistry.getStrategy(strategyType);
 
       // 准备输入数据（从上游节点的输出中提取）
-      const inputs = this.resolveNodeInputs(node, flow, context);
+      const inputs = FlowExecutor.resolveNodeInputs(node, flow, context);
 
       // 执行节点
       const outputs = await strategy.execute(node, inputs, context);
@@ -171,7 +170,7 @@ export class FlowExecutor {
   /**
    * 解析节点输入（从连接的上游节点获取数据）
    */
-  private resolveNodeInputs(
+  private static resolveNodeInputs(
     node: ActionNodeBase,
     flow: ActionFlow,
     context: FlowExecutionContext,
@@ -183,14 +182,12 @@ export class FlowExecutor {
 
     incomingEdges.forEach((edge) => {
       // 从上游节点的输出中获取数据
-      const sourceOutputs = context.nodeOutputs[edge.source] as
-        | Record<string, any>
-        | undefined;
+      const sourceOutputs = context.nodeOutputs[edge.source] as Record<string, any> | undefined;
       if (
         sourceOutputs &&
-        typeof sourceOutputs === "object" &&
-        typeof edge.sourcePort === "string" &&
-        typeof edge.targetPort === "string" &&
+        typeof sourceOutputs === 'object' &&
+        typeof edge.sourcePort === 'string' &&
+        typeof edge.targetPort === 'string' &&
         edge.sourcePort in sourceOutputs
       ) {
         inputs[edge.targetPort] = sourceOutputs[edge.sourcePort];
@@ -210,7 +207,7 @@ export class FlowExecutor {
   /**
    * 检查节点的所有输入是否已满足
    */
-  private areInputsSatisfied(
+  private static areInputsSatisfied(
     node: ActionNodeBase,
     edges: ActionEdge[],
     executed: Set<string>,
@@ -230,7 +227,7 @@ export class FlowExecutor {
   /**
    * 找到流程的入口节点
    */
-  private findEntryNodes(flow: ActionFlow): ActionNodeBase[] {
+  private static findEntryNodes(flow: ActionFlow): ActionNodeBase[] {
     // 如果指定了入口节点，使用指定的
     if (flow.entryNodeId) {
       const entryNode = flow.nodes.find((n) => n.id === flow.entryNodeId);
@@ -245,7 +242,7 @@ export class FlowExecutor {
   /**
    * 按源节点分组边
    */
-  private groupEdgesBySource(edges: ActionEdge[]): Map<string, ActionEdge[]> {
+  private static groupEdgesBySource(edges: ActionEdge[]): Map<string, ActionEdge[]> {
     const map = new Map<string, ActionEdge[]>();
     edges.forEach((edge) => {
       if (!map.has(edge.source)) {
@@ -259,26 +256,118 @@ export class FlowExecutor {
   /**
    * 评估条件表达式
    */
-  private evaluateCondition(
-    condition: string,
-    context: FlowExecutionContext,
-  ): boolean {
-    try {
-      // 简单实现：使用 Function 构造器
-      // 生产环境建议使用更安全的表达式解析库（如 json-logic）
-      const variables = (context as any).variables || {};
-      const variableNames = Object.keys(variables);
-      const args = ["context", ...variableNames];
-      const fn = new Function(...args, `return ${condition};`) as (
-        ...fnArgs: any[]
-      ) => unknown;
-      const variableValues = variableNames.map(
-        (name) => (variables as any)[name],
-      );
-      return !!fn(context, ...variableValues);
-    } catch (error) {
-      console.error("Failed to evaluate condition:", condition, error);
+  private static evaluateCondition(condition: string, context: FlowExecutionContext): boolean {
+    const trimmed = condition.trim();
+    if (!trimmed) {
+      return true;
+    }
+
+    if (trimmed === 'true') {
+      return true;
+    }
+
+    if (trimmed === 'false') {
       return false;
     }
+
+    const orSegments = trimmed.split('||').map((segment) => segment.trim());
+    if (orSegments.length > 1) {
+      return orSegments.some((segment) => FlowExecutor.evaluateCondition(segment, context));
+    }
+
+    const andSegments = trimmed.split('&&').map((segment) => segment.trim());
+    if (andSegments.length > 1) {
+      return andSegments.every((segment) => FlowExecutor.evaluateCondition(segment, context));
+    }
+
+    return FlowExecutor.evaluateAtomicCondition(trimmed, context);
+  }
+
+  private static evaluateAtomicCondition(
+    expression: string,
+    context: FlowExecutionContext,
+  ): boolean {
+    const operatorMatch = expression.match(FlowExecutor.CONDITION_OPERATOR_REGEX);
+
+    if (!operatorMatch) {
+      return Boolean(FlowExecutor.resolveConditionValue(expression, context));
+    }
+
+    const operator = operatorMatch[0];
+    const [leftToken, rightToken] = expression.split(operator).map((part) => part.trim());
+    const leftValue = FlowExecutor.resolveConditionValue(leftToken, context);
+    const rightValue = FlowExecutor.resolveConditionValue(rightToken, context);
+
+    switch (operator) {
+      case '===':
+        return leftValue === rightValue;
+      case '!==':
+        return leftValue !== rightValue;
+      case '>=':
+        return Number(leftValue) >= Number(rightValue);
+      case '<=':
+        return Number(leftValue) <= Number(rightValue);
+      case '>':
+        return Number(leftValue) > Number(rightValue);
+      case '<':
+        return Number(leftValue) < Number(rightValue);
+      default:
+        return false;
+    }
+  }
+
+  private static resolveConditionValue(token: string, context: FlowExecutionContext): unknown {
+    const trimmed = token.trim();
+    const { variables } = context as { variables?: Record<string, unknown> };
+
+    if (trimmed === 'true') {
+      return true;
+    }
+
+    if (trimmed === 'false') {
+      return false;
+    }
+
+    if (trimmed === 'null') {
+      return null;
+    }
+
+    if (
+      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))
+    ) {
+      return trimmed.slice(1, -1);
+    }
+
+    if (trimmed.length > 0 && !Number.isNaN(Number(trimmed))) {
+      return Number(trimmed);
+    }
+
+    if (trimmed.startsWith('context.')) {
+      return FlowExecutor.getValueByPath(context, trimmed.slice('context.'.length));
+    }
+
+    if (trimmed.startsWith('variables.')) {
+      return FlowExecutor.getValueByPath(variables, trimmed.slice('variables.'.length));
+    }
+
+    if (variables && trimmed in variables) {
+      return variables[trimmed];
+    }
+
+    return FlowExecutor.getValueByPath(context, trimmed);
+  }
+
+  private static getValueByPath(source: unknown, path: string): unknown {
+    if (!source || typeof source !== 'object' || !path) {
+      return undefined;
+    }
+
+    return path.split('.').reduce<unknown>((current, key) => {
+      if (current && typeof current === 'object' && key in (current as Record<string, unknown>)) {
+        return (current as Record<string, unknown>)[key];
+      }
+      return undefined;
+    }, source);
   }
 }

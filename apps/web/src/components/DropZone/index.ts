@@ -1,1 +1,1 @@
-export { DropZone, default } from "./DropZone";
+export { DropZone } from './DropZone';

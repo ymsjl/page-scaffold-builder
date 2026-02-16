@@ -1,7 +1,7 @@
-import React from "react";
-import { Drawer } from "antd";
-import { FlowEditor } from "../FlowEditor/FlowEditor";
-import { useAppSelector } from "@/store/hooks";
+import React from 'react';
+import { Drawer } from 'antd';
+import { useAppSelector } from '@/store/hooks';
+import { FlowEditor } from '../FlowEditor/FlowEditor';
 
 interface ActionFlowEditorDrawerProps {
   open: boolean;
@@ -27,11 +27,11 @@ export const ActionFlowEditorDrawer: React.FC<ActionFlowEditorDrawerProps> = ({
       width="100vw"
       height="100vh"
       placement="right"
-      closable={true}
+      closable
       title={`编辑动作流: ${flow.name}`}
       destroyOnClose
       styles={{
-        body: { padding: 0, height: "100%" },
+        body: { padding: 0, height: '100%' },
       }}
     >
       <FlowEditor flowId={flowId!} flow={flow} />

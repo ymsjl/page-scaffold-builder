@@ -1,9 +1,9 @@
-import type { NodeStrategy } from "./NodeStrategy";
-import { HttpRequestNodeStrategy } from "./HttpRequestNodeStrategy";
-import { NavigateNodeStrategy } from "./NavigateNodeStrategy";
-import { ShowMessageNodeStrategy } from "./ShowMessageNodeStrategy";
-import { DelayNodeStrategy } from "./DelayNodeStrategy";
-import { SetVariableNodeStrategy } from "./SetVariableNodeStrategy";
+import type { NodeStrategy } from './NodeStrategy';
+import { HttpRequestNodeStrategy } from './HttpRequestNodeStrategy';
+import { NavigateNodeStrategy } from './NavigateNodeStrategy';
+import { ShowMessageNodeStrategy } from './ShowMessageNodeStrategy';
+import { DelayNodeStrategy } from './DelayNodeStrategy';
+import { SetVariableNodeStrategy } from './SetVariableNodeStrategy';
 
 /**
  * 节点策略注册表
@@ -37,11 +37,6 @@ export class NodeStrategyRegistry {
    * 注册策略
    */
   register(strategy: NodeStrategy): void {
-    if (this.strategies.has(strategy.type)) {
-      console.warn(
-        `Strategy for type "${strategy.type}" already exists. Overwriting.`,
-      );
-    }
     this.strategies.set(strategy.type, strategy);
   }
 
@@ -80,9 +75,7 @@ export class NodeStrategyRegistry {
   /**
    * 按分类获取策略
    */
-  getStrategiesByCategory(
-    category: "control" | "data" | "action" | "component",
-  ): NodeStrategy[] {
+  getStrategiesByCategory(category: 'control' | 'data' | 'action' | 'component'): NodeStrategy[] {
     return this.getAllStrategies().filter((s) => s.category === category);
   }
 }

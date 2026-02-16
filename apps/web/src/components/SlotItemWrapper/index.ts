@@ -1,1 +1,1 @@
-export { default } from "./SlotItemWrapper";
+export { default as SlotItemWrapper } from './SlotItemWrapper';

@@ -1,39 +1,39 @@
-import { BaseNodeStrategy } from "./BaseNodeStrategy";
-import type {
-  ActionNodeBase,
-  FlowExecutionContext,
-  Port,
-} from "@/types/actions";
-import { HttpRequestNodeParamsSchema } from "@/types/actions";
+import type { ActionNodeBase, FlowExecutionContext, Port } from '@/types/actions';
+import { HttpRequestNodeParamsSchema } from '@/types/actions';
+import { BaseNodeStrategy } from './BaseNodeStrategy';
 
 /**
  * HTTP 请求节点策略
  */
 export class HttpRequestNodeStrategy extends BaseNodeStrategy {
-  type = "httpRequest";
-  label = "HTTP Request";
-  description = "发起 HTTP 请求";
-  icon = "GlobalOutlined";
-  category = "action" as const;
+  type = 'httpRequest';
+
+  label = 'HTTP Request';
+
+  description = '发起 HTTP 请求';
+
+  icon = 'GlobalOutlined';
+
+  category = 'action' as const;
 
   async execute(
     node: ActionNodeBase,
     inputs: Record<string, any>,
-    _context: FlowExecutionContext,
+    context: FlowExecutionContext,
   ): Promise<Record<string, any>> {
     // 解析并验证参数
     const params = HttpRequestNodeParamsSchema.parse(node.params);
 
     // 允许从输入端口覆盖参数
-    const url = this.getInput(inputs, "url", params.url);
-    const method = this.getInput(inputs, "method", params.method);
-    const body = this.getInput(inputs, "body", params.body);
+    const url = this.getInput(inputs, 'url', params.url);
+    const method = this.getInput(inputs, 'method', params.method);
+    const body = this.getInput(inputs, 'body', params.body);
     const headers = {
       ...params.headers,
-      ...this.getInput(inputs, "headers", {}),
+      ...this.getInput(inputs, 'headers', {}),
     };
 
-    this.log(`Executing HTTP ${method} ${url}`);
+    this.log(`Executing HTTP ${method} ${url}`, context.flowId);
 
     try {
       const controller = new AbortController();
@@ -44,7 +44,7 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
       const response = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...headers,
         },
         body: body ? JSON.stringify(body) : undefined,
@@ -54,8 +54,8 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
       if (timeoutId) clearTimeout(timeoutId);
 
       let data: any;
-      const contentType = response.headers.get("content-type");
-      if (contentType?.includes("application/json")) {
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
         data = await response.json();
       } else {
         data = await response.text();
@@ -69,39 +69,47 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
         headers: Object.fromEntries(response.headers.entries()),
       });
     } catch (error) {
-      this.logError("HTTP request failed", error);
+      this.logError('HTTP request failed', error);
       throw new Error(
         `HTTP Request failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
-  getInputPorts(_node: ActionNodeBase): Port[] {
+  getInputPorts(node: ActionNodeBase): Port[] {
+    const inheritedPorts = super.getInputPorts(node);
+    if (inheritedPorts.length > 0) {
+      return inheritedPorts;
+    }
     return [
-      { id: "trigger", name: "Trigger", type: "exec", required: false },
-      { id: "url", name: "URL", type: "string", required: false },
-      { id: "method", name: "Method", type: "string", required: false },
-      { id: "headers", name: "Headers", type: "object", required: false },
-      { id: "body", name: "Body", type: "any", required: false },
+      { id: 'trigger', name: 'Trigger', type: 'exec', required: false },
+      { id: 'url', name: 'URL', type: 'string', required: false },
+      { id: 'method', name: 'Method', type: 'string', required: false },
+      { id: 'headers', name: 'Headers', type: 'object', required: false },
+      { id: 'body', name: 'Body', type: 'any', required: false },
     ];
   }
 
-  getOutputPorts(_node: ActionNodeBase): Port[] {
+  getOutputPorts(node: ActionNodeBase): Port[] {
+    const inheritedPorts = super.getOutputPorts(node);
+    if (inheritedPorts.length > 0) {
+      return inheritedPorts;
+    }
     return [
-      { id: "success", name: "Success", type: "exec", required: false },
-      { id: "error", name: "Error", type: "exec", required: false },
-      { id: "response", name: "Response", type: "any", required: false },
-      { id: "status", name: "Status Code", type: "number", required: false },
+      { id: 'success', name: 'Success', type: 'exec', required: false },
+      { id: 'error', name: 'Error', type: 'exec', required: false },
+      { id: 'response', name: 'Response', type: 'any', required: false },
+      { id: 'status', name: 'Status Code', type: 'number', required: false },
       {
-        id: "statusText",
-        name: "Status Text",
-        type: "string",
+        id: 'statusText',
+        name: 'Status Text',
+        type: 'string',
         required: false,
       },
       {
-        id: "headers",
-        name: "Response Headers",
-        type: "object",
+        id: 'headers',
+        name: 'Response Headers',
+        type: 'object',
         required: false,
       },
     ];
@@ -116,11 +124,11 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
     try {
       const params = HttpRequestNodeParamsSchema.parse(node.params);
 
-      if (!params.url || params.url.trim() === "") {
-        errors.push("URL 不能为空");
+      if (!params.url || params.url.trim() === '') {
+        errors.push('URL 不能为空');
       }
     } catch (error) {
-      errors.push("参数配置无效");
+      errors.push('参数配置无效');
     }
 
     return {
@@ -130,9 +138,12 @@ export class HttpRequestNodeStrategy extends BaseNodeStrategy {
   }
 
   getDefaultParams(): Record<string, any> {
+    if (this.type === '') {
+      return {};
+    }
     return {
-      url: "",
-      method: "GET",
+      url: '',
+      method: 'GET',
       headers: {},
       timeout: 30000,
     };

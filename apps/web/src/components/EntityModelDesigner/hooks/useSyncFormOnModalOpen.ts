@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
-import type { FormInstance } from "antd";
+import React, { useEffect } from 'react';
+import type { FormInstance } from 'antd';
 
-import type { EntityModel } from "@/types";
+import type { EntityModel } from '@/types';
 
 export function useSyncFormOnModalOpen(params: {
   isOpen: boolean;

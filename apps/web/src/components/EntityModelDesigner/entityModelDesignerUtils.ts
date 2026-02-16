@@ -1,30 +1,30 @@
-import type { SchemaField } from "@/types";
+import type { SchemaField } from '@/types';
 
-import type { EnumOption } from "./entityModelDesignerTypes";
+import type { EnumOption } from './entityModelDesignerTypes';
 
 export const FIELD_VALUE_TYPE_ENUM = {
-  text: { text: "text" },
-  number: { text: "number" },
-  money: { text: "money" },
-  boolean: { text: "boolean" },
-  enum: { text: "enum" },
-  date: { text: "date" },
-  datetime: { text: "datetime" },
+  text: { text: 'text' },
+  number: { text: 'number' },
+  money: { text: 'money' },
+  boolean: { text: 'boolean' },
+  enum: { text: 'enum' },
+  date: { text: 'date' },
+  datetime: { text: 'datetime' },
 } satisfies Record<string, { text: string }>;
 
 export const makeRandomId = (prefix: string) =>
   `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 
 export const createNewFieldDraft = (): SchemaField => ({
-  id: makeRandomId("field"),
-  key: "",
-  title: "",
-  valueType: "text",
+  id: makeRandomId('field'),
+  key: '',
+  title: '',
+  valueType: 'text',
   isNullable: false,
   isUnique: false,
   isFilterable: true,
   isAutoGenerate: false,
-  description: "",
+  description: '',
   defaultValue: undefined,
   extra: {},
 });
@@ -35,19 +35,16 @@ export const parseEnumOptionsFromExtra = (
 ): EnumOption[] => {
   if (!Array.isArray(fieldExtraOptions)) return [];
   return fieldExtraOptions
-    .filter((opt) => opt && typeof opt === "object")
+    .filter((opt) => opt && typeof opt === 'object')
     .map((opt, index) => ({
       id: `enum_${fieldId}_${index}`,
-      label: String((opt as any).label ?? ""),
-      value: String((opt as any).value ?? ""),
+      label: String((opt as any).label ?? ''),
+      value: String((opt as any).value ?? ''),
     }));
 };
 
 export const buildEnumExtraFromOptions = (enumOptions: EnumOption[]) => ({
   options: enumOptions
-    .filter(
-      (opt) =>
-        String(opt.label).trim() !== "" && String(opt.value).trim() !== "",
-    )
+    .filter((opt) => String(opt.label).trim() !== '' && String(opt.value).trim() !== '')
     .map(({ label, value }) => ({ label, value })),
 });

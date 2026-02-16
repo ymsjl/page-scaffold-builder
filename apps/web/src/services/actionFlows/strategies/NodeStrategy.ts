@@ -1,8 +1,4 @@
-import type {
-  ActionNodeBase,
-  FlowExecutionContext,
-  Port,
-} from "@/types/actions";
+import type { ActionNodeBase, FlowExecutionContext, Port } from '@/types/actions';
 
 /**
  * 节点策略接口
@@ -23,7 +19,7 @@ export interface NodeStrategy {
   icon?: string;
 
   /** 节点分类 */
-  category?: "control" | "data" | "action" | "component";
+  category?: 'control' | 'data' | 'action' | 'component';
 
   /**
    * 执行节点逻辑

@@ -1,4 +1,4 @@
-import z from "zod";
+import z from 'zod';
 
 export enum RuleNodeType {
   Required = 0, // required
@@ -21,7 +21,7 @@ export const RuleTemplateSchema = z.object({
 /** @description 规则模板的类型定义 */
 export type RuleTemplate = z.infer<typeof RuleTemplateSchema>;
 
-export const RuleParamsOperatorSchema = z.enum(["eq", "gte", "lte", "between"]);
+export const RuleParamsOperatorSchema = z.enum(['eq', 'gte', 'lte', 'between']);
 export type RuleParamsOperator = z.infer<typeof RuleParamsOperatorSchema>;
 
 // 用来表示规则节点中，文本长度类型参数的结构
@@ -31,9 +31,7 @@ export const RuleParamsOfTextLengthSchema = z.object({
   max: z.int().optional(),
   operator: RuleParamsOperatorSchema.optional(),
 });
-export type RuleParamsOfTextLength = z.infer<
-  typeof RuleParamsOfTextLengthSchema
->;
+export type RuleParamsOfTextLength = z.infer<typeof RuleParamsOfTextLengthSchema>;
 
 // 用来表示规则节点中，正则表达式类型参数的结构
 export const RuleParamsOfPatternSchema = z.object({
@@ -47,9 +45,7 @@ export const RuleParamsOfNumericRangeSchema = z.object({
   max: z.number().optional(),
   operator: RuleParamsOperatorSchema.optional(),
 });
-export type RuleParamsOfNumericRange = z.infer<
-  typeof RuleParamsOfNumericRangeSchema
->;
+export type RuleParamsOfNumericRange = z.infer<typeof RuleParamsOfNumericRangeSchema>;
 
 // 用来表示规则节点中，小数位数类型参数的结构
 export const RuleParamsOfDecimalSchema = z.object({
@@ -66,9 +62,9 @@ export type RuleParamsOfDecimal = z.infer<typeof RuleParamsOfDecimalSchema>;
 export const RuleParamsAbsoluteDateSchema = z.string();
 
 export enum RelativeDatePresets {
-  Today = "Today",
-  LastDayOfMonth = "LastDayOfMonth",
-  LastDayOfYear = "LastDayOfYear",
+  Today = 'Today',
+  LastDayOfMonth = 'LastDayOfMonth',
+  LastDayOfYear = 'LastDayOfYear',
 }
 
 export const RuleParamsRelativeDateSchema = z.object({
@@ -109,7 +105,7 @@ export const RuleNodeSchema = z.object({
   type: z.enum(RuleNodeType),
   enabled: z.boolean().default(true),
   params: z.record(z.string(), z.any()).default({}),
-  message: z.string().default(""),
+  message: z.string().default(''),
 });
 
 export type RuleNode = z.infer<typeof RuleNodeSchema>;

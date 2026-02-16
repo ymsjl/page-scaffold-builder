@@ -57,7 +57,7 @@ export const selectNormalizedTree = createSelector(selectComponentTreeState, get
  */
 const getComponentNodesEntitiesResult = (
   normalizedTree: MaybeWritable<ReturnType<typeof getNormalizedTree>>,
-) => normalizedTree.entities.nodes;
+) => normalizedTree?.entities?.nodes || {};
 
 const getComponentNodesEntities = (state: MaybeWritable<ComponentTreeState>) =>
   getComponentNodesEntitiesResult(getNormalizedTree(state));
@@ -69,8 +69,9 @@ export const selectComponentNodesEntities = createSelector(
 /**
  * @description 获取根节点ID列表
  */
-const getRootIds = (state: MaybeWritable<ComponentTreeState>) => getNormalizedTree(state).result;
-export const selectRootIds = createSelector(selectComponentTreeState, getRootIds);
+const getRootIds = (normalizedTree: MaybeWritable<ReturnType<typeof getNormalizedTree>>) =>
+  normalizedTree?.result;
+export const selectRootIds = createSelector(selectNormalizedTree, getRootIds);
 
 /**
  * @description 获取当前选中的节点ID

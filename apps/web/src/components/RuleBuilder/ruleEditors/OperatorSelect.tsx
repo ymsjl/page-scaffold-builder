@@ -1,5 +1,5 @@
-import React from "react";
-import { Select } from "antd";
+import React from 'react';
+import { Select } from 'antd';
 
 type Option = { label: string; value: string };
 
@@ -10,18 +10,13 @@ type Props = {
   style?: React.CSSProperties;
 };
 
-export default React.memo(function OperatorSelect({
-  value,
-  onChange,
-  options,
-  style,
-}: Props) {
+export default React.memo(function OperatorSelect({ value, onChange, options, style }: Props) {
   return (
     <Select
       value={value}
       onChange={onChange}
       options={options}
-      style={{ width: "100%", marginBottom: 6, ...(style || {}) }}
+      style={{ width: '100%', marginBottom: 6, ...(style || {}) }}
     />
   );
 });
