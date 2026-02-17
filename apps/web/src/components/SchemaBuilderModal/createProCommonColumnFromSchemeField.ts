@@ -5,13 +5,14 @@ import { getRecommendedWidth } from './getRecommendedWidth';
 
 export const createProCommonColumnFromSchemeField = (
   field?: SchemaField,
+  type: string | null = 'Table',
 ): Omit<ProCommonColumn, 'key'> & { key?: string } => {
   const valueType = field?.valueType || 'text';
   const result: Omit<ProCommonColumn, 'key'> & { dataIndex?: string } = {
     title: field?.title ?? '',
     dataIndex: field?.key ?? '',
     valueType: VALUE_TYPE_ENUM_MAP[valueType] || valueType,
-    width: getRecommendedWidth(valueType) ?? 120,
+    width: type === 'Table' ? (getRecommendedWidth(valueType) ?? 120) : undefined,
     hideInSearch: field ? !field?.isFilterable : false,
     formItemProps: {
       name: field?.key ?? '',

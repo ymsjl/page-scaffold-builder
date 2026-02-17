@@ -12,6 +12,7 @@ export const useAutoFillByDataIndex = (
   >,
   entityFields: SchemaField[],
   initialDataIndex?: string,
+  type: string | null = 'Table',
 ) => {
   const prevDataIndexRef = useRef<string>();
   const dataIndexValue = Form.useWatch('dataIndex', form);
@@ -32,7 +33,7 @@ export const useAutoFillByDataIndex = (
       const matchedField = entityFieldMap.get(dataIndexValue);
       if (dataIndexValue !== '' && !matchedField) return;
       const formItemProps = form.getFieldValue('formItemProps') || {};
-      const nextColumn = createProCommonColumnFromSchemeField(matchedField);
+      const nextColumn = createProCommonColumnFromSchemeField(matchedField, type);
       form.setFieldsValue({
         ...nextColumn,
         formItemProps: {
@@ -41,5 +42,5 @@ export const useAutoFillByDataIndex = (
         },
       });
     }
-  }, [dataIndexValue, entityFieldMap, form, initialDataIndex]);
+  }, [dataIndexValue, entityFieldMap, form, initialDataIndex, type]);
 };

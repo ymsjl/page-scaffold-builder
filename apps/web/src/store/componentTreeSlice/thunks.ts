@@ -27,7 +27,6 @@ export const addColumnsFromEntityModelToSelectedNode = createAsyncThunk<
   const { props } = node;
   const entityModelId = props?.entityModelId;
   if (!entityModelId) return;
-
   const existingKeys = new Set(props.columns?.map((c) => c.key) ?? []);
   const newColumns =
     entityModelAdapter
@@ -36,7 +35,7 @@ export const addColumnsFromEntityModelToSelectedNode = createAsyncThunk<
       ?.fields?.filter((field) => !existingKeys.has(field.key))
       ?.map((field) => ({
         key: makeColumnId(),
-        ...createProCommonColumnFromSchemeField(field),
+        ...createProCommonColumnFromSchemeField(field, node.type),
       })) ?? [];
 
   dispatch(addColumns(newColumns));

@@ -8,7 +8,8 @@ import {
   deleteColumnForSelectedNode,
 } from '@/store/componentTreeSlice/componentTreeSlice';
 import { startEditingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
-import { useAppDispatch } from '@/store/hooks';
+import { selectTypeOfSelectedNode } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
 import {
   DeleteOutlined,
@@ -35,6 +36,7 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
   children,
 }) => {
   const dispatch = useAppDispatch();
+  const componentType = useAppSelector(selectTypeOfSelectedNode);
   const [isRenaming, setIsRenaming] = React.useState(false);
   const [draftTitle, setDraftTitle] = React.useState('');
   const canOperate = !!tableNodeId;
@@ -174,7 +176,7 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
       } else if (typeof key === 'string' && key.startsWith('insert:')) {
         const fieldKey = key.replace('insert:', '');
         const field = entityFields.find((item) => item.key === fieldKey);
-        const newColumn = createProCommonColumnFromSchemeField(field);
+        const newColumn = createProCommonColumnFromSchemeField(field, componentType);
         newColumn.title = '新列';
         dispatch(
           upsertColumnOfSelectedNode({
@@ -198,7 +200,7 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
         );
       }
     },
-    [column, columnIndex, dispatch, entityFields, tableNodeId],
+    [column, columnIndex, dispatch, entityFields, tableNodeId, componentType],
   );
 
   return (
