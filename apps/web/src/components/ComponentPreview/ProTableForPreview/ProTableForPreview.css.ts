@@ -136,3 +136,66 @@ export const dragIcon = style({
   fontSize: 14,
   color: '#1677ff',
 });
+
+export const addColumnIndicatorLayout = style({
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  width: '10px',
+  zIndex: 999,
+  right: 0,
+  cursor: 'pointer',
+  transform: 'translateX(50%)',
+});
+
+export const addColumnIndicator = style({
+  width: '6px',
+  height: '100%',
+  marginInline: 'auto',
+  background: '#e8eff6',
+  borderRadius: '9999px',
+  cursor: 'pointer',
+  opacity: 0,
+
+  transition: transitionFast,
+
+  selectors: {
+    [`${tableHeader}:hover &`]: {
+      opacity: 1,
+    },
+  },
+});
+
+export const addColumnButtonWrapper = style({
+  position: 'absolute',
+  zIndex: 999,
+  top: 0,
+  right: 0,
+  transform: 'translate3d(50%, -50%, 0)',
+});
+
+export const addColumnButton = style({
+  width: '28px',
+  height: '28px',
+  opacity: 0,
+  cursor: 'pointer',
+  outline: 'none',
+  border: '0px',
+
+  background: '#e8eff6',
+  zIndex: 999999,
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+
+  selectors: {
+    [`${tableHeader}:hover &`]: {
+      opacity: 1,
+    },
+
+    '&:hover': {
+      background: '#bcd7ec',
+    },
+  },
+});

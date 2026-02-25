@@ -22,10 +22,12 @@ import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
 import {
   selectNode,
   moveColumnForSelectedNode,
+  upsertColumnOfSelectedNode,
 } from '@/store/componentTreeSlice/componentTreeSlice';
 import { componentNodesSelectors } from '@/store/componentTreeSlice/componentTreeSelectors';
 import { entityModelSelectors } from '@/store/entityModelSlice/selectors';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
 import { ColumnTitleMenu } from './ColumnTitleMenu';
 import { ColumnCellSlot } from './ColumnCellSlot';
 import { generateDataSource } from './mapValueTypeToValue';
@@ -64,6 +66,8 @@ const DragIndexContext = React.createContext<DragIndexState>({
   active: null,
   over: null,
 });
+
+const ColumnDragIdsContext = React.createContext<string[]>([]);
 
 const PLACEHOLDER_PREFIX = '__drag_placeholder__';
 
@@ -146,7 +150,9 @@ const TableBodyCell: React.FC<BodyCellProps> = (props) => {
 };
 
 const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
+  const dispatch = useAppDispatch();
   const dragState = React.useContext(DragIndexContext);
+  const columnDragIds = React.useContext(ColumnDragIdsContext);
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useSortable({
     id: props.id,
     disabled,
@@ -163,7 +169,19 @@ const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
   if (isDragging) headerAttrs['data-dragging'] = 'true';
 
   const headerChildren = typeof props.children === 'function' ? null : props.children;
+  const columnIndex = getColumnIndexById(columnDragIds, props.id);
 
+  const onInsertNewColumnBehind = () => {
+    const newColumn = createProCommonColumnFromSchemeField(undefined, 'Table');
+    newColumn.title = '新列';
+    const insertPos = columnIndex >= 0 ? columnIndex + 1 : 1;
+    dispatch(
+      upsertColumnOfSelectedNode({
+        insertPos,
+        changes: newColumn,
+      }),
+    );
+  };
   return (
     <th
       {...props}
@@ -184,42 +202,17 @@ const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
           <HolderOutlined className={ptStyles.handleIcon} />
         </button>
         <span className={ptStyles.headerTitle}>{headerChildren}</span>
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            width: '4px',
-            background: 'red',
-            borderRadius: '2px',
-            zIndex: 999999,
-            right: 0,
-            transform: 'translateX(50%)',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            zIndex: 999999,
-            top: '0',
-            right: '0',
-            transform: 'translate3d(50%, -50%, 0)',
-          }}
-        >
-          <div
-            style={{
-              width: '28px',
-              height: '28px',
-              background: 'red',
-              zIndex: 999999,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+        <div className={ptStyles.addColumnIndicatorLayout}>
+          <div className={ptStyles.addColumnIndicator} />
+        </div>
+        <div className={ptStyles.addColumnButtonWrapper}>
+          <button
+            type="button"
+            className={ptStyles.addColumnButton}
+            onClick={onInsertNewColumnBehind}
           >
             +
-          </div>
+          </button>
         </div>
       </span>
     </th>
@@ -627,13 +620,15 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
     >
       <SortableContext items={visualColumnIds} strategy={horizontalListSortingStrategy}>
         <DragIndexContext.Provider value={dragState}>
-          <ProTable
-            {...restProps}
-            columns={mergedColumns as any}
-            dataSource={dataSource}
-            components={mergedComponents}
-            toolbar={mergedToolbar}
-          />
+          <ColumnDragIdsContext.Provider value={columnDragIds}>
+            <ProTable
+              {...restProps}
+              columns={mergedColumns as any}
+              dataSource={dataSource}
+              components={mergedComponents}
+              toolbar={mergedToolbar}
+            />
+          </ColumnDragIdsContext.Provider>
         </DragIndexContext.Provider>
       </SortableContext>
       <DragOverlay className={ptStyles.dragOverlay} dropAnimation={{ duration: 150 }}>
