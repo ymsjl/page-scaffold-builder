@@ -13,7 +13,13 @@ export const FormPrototype: ComponentPrototype = {
     layout: 'vertical',
     ignoreRules: false,
     grid: true,
-    columns: [],
+    columns: [
+      {
+        title: '列1',
+        dataIndex: 'column1',
+        valueType: 'text',
+      },
+    ],
   },
   propsTypes: {
     entityModelId: {

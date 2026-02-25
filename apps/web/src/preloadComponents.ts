@@ -11,6 +11,10 @@ export const preloadComponents = async () => {
       () => import('@/components/ComponentPreview/ProTableForPreview/ProTableForPurePreview'),
     ),
     lazyLoad(
+      'PageForPreview',
+      () => import('@/components/ComponentPreview/PageForPreview/PageForPreview'),
+    ),
+    lazyLoad(
       'ModalForPreview',
       () => import('@/components/ComponentPreview/ModalForPreview/ModalForPreview'),
     ),

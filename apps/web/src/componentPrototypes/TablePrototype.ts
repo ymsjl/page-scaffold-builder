@@ -22,6 +22,13 @@ export const TablePrototype: ComponentPrototype = {
     toolbar: {
       actions: [],
     },
+    columns: [
+      {
+        title: '列1',
+        dataIndex: 'column1',
+        valueType: 'text',
+      },
+    ],
   },
   propsTypes: {
     entityModelId: {
@@ -147,6 +154,7 @@ export const TablePrototype: ComponentPrototype = {
       kind: 'reactNodeArray',
       acceptTypes: ['Button'],
       renderMode: 'inline',
+      childrenDirection: 'horizontal',
       wrap: true,
       placeholder: '拖入 表格操作按钮',
     },

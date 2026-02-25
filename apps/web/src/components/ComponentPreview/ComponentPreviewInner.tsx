@@ -1,8 +1,34 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import type { ComponentNode } from '@/types';
-import type { getComponentPrototype } from '../../componentMetas';
-import { useResolvedProps } from './ReactNodeRenderer';
+import { componentNodesSelectors } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { useAppSelector } from '@/store/hooks';
+import { getComponentPrototype } from '../../componentMetas';
+import { usePreviewMode, type PreviewMode } from './previewMode';
+import { RenderNodeRefProvider } from './propResolvers';
 import * as previewStyles from './previewStyles.css';
+import { RenderSingleNode } from './RenderSingleNode';
+
+type RenderNodeRefProps = {
+  nodeId: string;
+  previewMode: PreviewMode;
+};
+
+export const RenderNodeRefComponent: React.FC<RenderNodeRefProps> = ({ nodeId, previewMode }) => {
+  const node = useAppSelector((state) => componentNodesSelectors.selectById(state, nodeId)) as
+    | ComponentNode
+    | undefined;
+
+  if (!node) {
+    return null;
+  }
+
+  const prototype = getComponentPrototype(node.type, { previewMode });
+  if (!prototype) {
+    return null;
+  }
+
+  return <RenderSingleNode node={node} componentPrototype={prototype} />;
+};
 
 type ComponentPreviewInnerProps = {
   node: ComponentNode;
@@ -12,31 +38,24 @@ type ComponentPreviewInnerProps = {
 
 const ComponentPreviewInner = React.memo(
   ({ node, componentPrototype, containerVariant = 'builder' }: ComponentPreviewInnerProps) => {
-    const resolvedProps = useResolvedProps(node, componentPrototype);
-    const componentElem = useMemo(() => {
-      const Component = componentPrototype.component;
-      if (typeof Component === 'string') {
-        const { children, ...props } = resolvedProps;
-        return React.createElement(
-          Component as keyof JSX.IntrinsicElements,
-          { ...props, key: node.id },
-          children as React.ReactNode,
-        );
-      }
-      return (
-        <Component {...resolvedProps} key={node.id}>
-          {resolvedProps.children as React.ReactNode}
-        </Component>
-      );
-    }, [resolvedProps, componentPrototype.component, node.id]);
+    const previewMode = usePreviewMode();
+
+    const renderNodeRef = React.useCallback(
+      (nodeId: string) => (
+        <RenderNodeRefComponent key={nodeId} nodeId={nodeId} previewMode={previewMode} />
+      ),
+      [previewMode],
+    );
 
     const containerClass =
       containerVariant === 'final' ? previewStyles.finalContainer : previewStyles.container;
 
     return (
-      <div id="modal-preview-root" className={containerClass}>
-        {componentElem}
-      </div>
+      <RenderNodeRefProvider renderNodeRef={renderNodeRef}>
+        <div id="modal-preview-root" className={containerClass}>
+          <RenderSingleNode node={node} componentPrototype={componentPrototype} />
+        </div>
+      </RenderNodeRefProvider>
     );
   },
 );

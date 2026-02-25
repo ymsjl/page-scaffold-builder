@@ -11,6 +11,7 @@ export const ModalPrototype: ComponentPrototype = {
   },
   defaultProps: {
     open: false,
+    title: '模态框标题',
   },
   propsTypes: {
     title: {

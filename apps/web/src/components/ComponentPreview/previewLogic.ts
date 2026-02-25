@@ -5,14 +5,18 @@ import { getValueByPath, setValueByPath } from './slotPath';
 
 type NodeRefMap = Record<string, NodeRef[]>;
 
-type BuildResolvedPropsArgs<T> = {
+export type BuildResolvedPropsArgs<T> = {
   mergedProps: Record<string, unknown>;
   slots: SlotDefinition[];
   slotRefsMap: NodeRefMap;
   nodeIdToElement: Record<string, T>;
   renderNodeRef?: (ref: NodeRef) => T;
-  createDropZone: (slot: SlotDefinition) => T;
-  wrapElement: (slot: SlotDefinition, ref: NodeRef, element: T) => T | null;
+  wrapElement: (
+    slot: SlotDefinition,
+    ref: NodeRef | null,
+    element: T | null,
+    addBtnPosition?: 'start' | 'end' | undefined,
+  ) => T | null;
 };
 
 const isPresent = <T>(value: T | null | undefined): value is T =>
@@ -50,56 +54,89 @@ export const collectSlotRefs = (props: Record<string, unknown>, slots: SlotDefin
 export const mapNodeRefsToItems = <T>(allRefs: NodeRef[], items: T[]): Record<string, T> =>
   Object.fromEntries(allRefs.map((ref, index) => [ref.nodeId, items[index]]));
 
+/**
+ * Get the position of the "add" button relative to a list item.
+ * Rules:
+ * - If there is only one element, show the button at the end.
+ * - If there are multiple elements, show the button before the first element and after the last element.
+ * - If the list is in reverse order, show the button before the first element; otherwise, show it after the last element.
+ * @param isFirst Whether this item is the first element in the list.
+ * @param isLast Whether this item is the last element in the list.
+ * @param isReverse Whether the list is rendered in reverse order.
+ * @returns 'start' | 'end' | undefined — show before the first element, after the last element, or not at all.
+ */
+const getAddBtnPosition = (isFirst: boolean, isLast: boolean, isReverse: boolean) => {
+  if (!isFirst && !isLast) return undefined;
+  if (isReverse && isFirst) return 'start';
+  if (isLast) return 'end';
+  return undefined;
+};
+
+export const getWrappedElements = <T>({
+  slot,
+  refs,
+  renderNodeRef,
+  nodeIdToElement,
+  isReverse,
+  wrapElement,
+}: {
+  slot: SlotDefinition;
+  refs: NodeRef[];
+  renderNodeRef?: (ref: NodeRef) => T;
+  nodeIdToElement: Record<string, T>;
+  isReverse: boolean;
+  wrapElement: (
+    targetSlot: SlotDefinition,
+    ref: NodeRef | null,
+    element: T | null,
+    addBtnPosition?: 'start' | 'end' | undefined,
+  ) => T | null;
+}): Array<T | null> => {
+  const elements = renderNodeRef
+    ? refs.map(renderNodeRef)
+    : compact(refs.map((ref) => nodeIdToElement[ref.nodeId]));
+
+  if (!slot.wrap) return elements;
+  if (elements.length === 0) {
+    return [wrapElement(slot, null, null, 'end')];
+  }
+
+  return refs
+    .filter((_, index) => isPresent(elements[index]))
+    .map((ref, index, array) =>
+      wrapElement(
+        slot,
+        ref,
+        elements[index],
+        getAddBtnPosition(index === 0, index === array.length - 1, isReverse),
+      ),
+    );
+};
+
 export const buildResolvedProps = <T>({
   mergedProps,
   slots,
   slotRefsMap,
   nodeIdToElement,
   renderNodeRef,
-  createDropZone,
   wrapElement,
 }: BuildResolvedPropsArgs<T>): Record<string, unknown> => {
   let newProps: Record<string, unknown> = { ...mergedProps };
 
-  for (let i = 0; i < slots.length; i += 1) {
-    const slot = slots[i];
+  slots.forEach((slot) => {
     const refs = slotRefsMap[slot.id] || [];
 
-    // 使用 renderNodeRef 或从映射中获取元素
-    const elements = renderNodeRef
-      ? refs.map(renderNodeRef)
-      : compact(refs.map((ref) => nodeIdToElement[ref.nodeId]));
-
-    const wrappedElements = slot.wrap
-      ? compact(
-          refs.map((ref, index) => {
-            const element = elements[index];
-            if (!isPresent(element)) return null;
-            return wrapElement(slot, ref, element);
-          }),
-        )
-      : elements;
-
-    const dropZone = createDropZone(slot);
-
-    if (slot.renderMode === 'inline') {
-      if (slot.kind === 'reactNodeArray') {
-        newProps = setValueByPath(
-          newProps,
-          slot.path,
-          dropZone ? [...wrappedElements, dropZone] : wrappedElements,
-        );
-      } else {
-        newProps = setValueByPath(newProps, slot.path, wrappedElements[0] ?? dropZone);
-      }
-    } else if (slot.kind === 'reactNodeArray') {
-      newProps = setValueByPath(newProps, slot.path, wrappedElements);
-    } else {
-      newProps = setValueByPath(newProps, slot.path, wrappedElements[0]);
-    }
-  }
+    const isReverse = false;
+    const wrappedElements = getWrappedElements({
+      slot,
+      refs,
+      nodeIdToElement,
+      renderNodeRef,
+      isReverse,
+      wrapElement,
+    });
+    newProps = setValueByPath(newProps, slot.path, wrappedElements);
+  });
 
   return newProps;
 };
-
-export const isInlineRender = ({ renderMode }: SlotDefinition) => renderMode !== 'inline';

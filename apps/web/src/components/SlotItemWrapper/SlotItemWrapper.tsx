@@ -6,19 +6,34 @@ import { selectNode, removeNodeRefFromProps } from '@/store/componentTreeSlice/c
 import * as styles from './SlotItemWrapper.css';
 
 interface SlotItemWrapperProps {
-  nodeId: string;
+  /**
+   * Optional id of the node rendered inside this slot.
+   *
+   * When omitted or undefined, the wrapper will render `children` as-is,
+   * without the selectable/removable overlay or click/keyboard handlers.
+   * This is typically used for plain content that should not be selectable
+   * as a separate node in the component tree.
+   */
+  nodeId?: string;
   targetNodeId: string;
   propPath: string;
   children: React.ReactNode;
 }
 
-const SlotItemWrapper: React.FC<SlotItemWrapperProps> = ({
+const SlotItemWrapper = ({
   nodeId,
   targetNodeId,
   propPath,
   children,
-}) => {
+}: SlotItemWrapperProps): React.ReactNode => {
   const dispatch = useAppDispatch();
+  if (!children) {
+    return null;
+  }
+
+  if (!nodeId) {
+    return children;
+  }
 
   const handleSelect = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();

@@ -1,1 +1,1 @@
-export { DropZone } from './DropZone';
+export { AddComponentIntoPreview } from './DropZone';

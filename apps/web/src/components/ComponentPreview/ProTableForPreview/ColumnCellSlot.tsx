@@ -1,8 +1,8 @@
 import React from 'react';
 import type { ComponentType, NodeRef } from '@/types';
-import { DropZone } from '@/components/DropZone/DropZone';
+import { AddComponentIntoPreview } from '@/components/DropZone/DropZone';
 import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
-import { useRenderNodeRefs } from '../ReactNodeRenderer';
+import { useRenderNodeRefs } from '../propResolvers';
 import * as ptStyles from './ProTableForPreview.css';
 
 export const ColumnCellSlot: React.FC<{
@@ -33,12 +33,11 @@ export const ColumnCellSlot: React.FC<{
           </SlotItemWrapper>
         );
       })}
-      <DropZone
-        id={`rowActions:${propPath}`}
+      <AddComponentIntoPreview
         targetNodeId={targetNodeId}
         propPath={propPath}
+        direction="horizontal"
         acceptTypes={acceptTypes}
-        label="列渲染内容"
       />
     </div>
   );

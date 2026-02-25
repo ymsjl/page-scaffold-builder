@@ -1,11 +1,11 @@
 import React from 'react';
-import { useDroppable } from '@dnd-kit/core';
 import { Popover, Typography } from 'antd';
 import { useAppDispatch } from '@/store/hooks';
 import { addNodeToSlot } from '@/store/componentTreeSlice/componentTreeSlice';
 import type { ComponentType } from '@/types';
 import { COMPONENT_TYPES } from '@/types/Component';
 import * as dropZoneStyles from './DropZone.css';
+import * as indicatorLineStyles from './IndicatorLine.css';
 
 const componentLabelMap: Record<ComponentType, string> = {
   Page: '页面组件',
@@ -17,119 +17,136 @@ const componentLabelMap: Record<ComponentType, string> = {
   Modal: '模态框组件',
 };
 
-interface DropZoneProps {
-  /** 放置区域的唯一标识符，格式: targetNodeId:propPath */
-  id: string;
+interface AddComponentIntoPreviewProps {
   /** 目标节点 ID */
   targetNodeId: string;
   /** Props 路径，如 "toolbar.actions" */
   propPath: string;
+  /** 容器的排布方向 — 决定指示器的朝向（默认："vertical"） */
+  direction?: 'horizontal' | 'vertical';
   /** 接受的组件类型列表 */
   acceptTypes?: string[];
-  /** 显示标签 */
-  label?: string;
+  children?: (renderProps: {
+    onClick?: () => void;
+    defaultIndicator: React.ReactNode;
+    isSingleAcceptType: boolean;
+    singleAcceptType?: ComponentType;
+    singleAcceptTypeLabel?: string;
+  }) => React.ReactNode;
 }
 
-export const DropZone: React.FC<DropZoneProps> = ({
-  id,
-  targetNodeId,
-  propPath,
-  acceptTypes,
-  label,
-}) => {
-  const dispatch = useAppDispatch();
-  const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
-  const { isOver, setNodeRef, active } = useDroppable({
-    id,
-    data: {
-      type: 'dropZone',
-      targetNodeId,
-      propPath,
-      acceptTypes,
-    },
-  });
+export const AddComponentIntoPreview: React.FC<AddComponentIntoPreviewProps> = React.memo(
+  ({ targetNodeId, propPath, direction = 'vertical', acceptTypes, children }) => {
+    const dispatch = useAppDispatch();
+    const isContainerHorizontal = direction === 'horizontal';
+    const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
 
-  // 检查当前拖拽的组件是否被接受
-  const dragData = active?.data?.current as { type: string; nodeType: string } | undefined;
+    const filteredComponents = React.useMemo(
+      () =>
+        COMPONENT_TYPES.filter((type) => type !== 'Page')
+          .map((type) => ({ type, label: componentLabelMap[type] ?? type }))
+          .filter(
+            (comp) => !acceptTypes || acceptTypes.length === 0 || acceptTypes.includes(comp.type),
+          ),
+      [acceptTypes],
+    );
 
-  const isAccepted =
-    dragData?.type === 'treeNode' &&
-    (!acceptTypes || acceptTypes.length === 0 || acceptTypes.includes(dragData.nodeType));
+    const singleAcceptType = React.useMemo(() => {
+      if (!acceptTypes || acceptTypes.length !== 1) return null;
+      const type = acceptTypes[0] as ComponentType;
+      return { type, label: componentLabelMap[type] ?? type };
+    }, [acceptTypes]);
 
-  const isActive = isOver && isAccepted;
-  const isInvalid = isOver && !isAccepted;
-  const isDragging = Boolean(active);
+    const handleSelectComponent = React.useCallback(
+      (type: ComponentType) => {
+        dispatch(
+          addNodeToSlot({
+            targetNodeId,
+            propPath,
+            type,
+            label: componentLabelMap[type],
+          }),
+        );
+        setIsPopoverOpen(false);
+      },
+      [dispatch, propPath, targetNodeId],
+    );
 
-  const filteredComponents = React.useMemo(
-    () =>
-      COMPONENT_TYPES.filter((type) => type !== 'Page')
-        .map((type) => ({ type, label: componentLabelMap[type] ?? type }))
-        .filter(
-          (comp) => !acceptTypes || acceptTypes.length === 0 || acceptTypes.includes(comp.type),
-        ),
-    [acceptTypes],
-  );
+    const handleSingleAcceptClick = React.useCallback(() => {
+      if (!singleAcceptType) return;
+      handleSelectComponent(singleAcceptType.type);
+    }, [handleSelectComponent, singleAcceptType]);
 
-  React.useEffect(() => {
-    if (isDragging && isPopoverOpen) {
-      setIsPopoverOpen(false);
+    let popoverContent = null;
+    if (singleAcceptType) {
+      popoverContent = (
+        <Typography.Text type="secondary">添加 {singleAcceptType.label} 组件</Typography.Text>
+      );
+    } else if (filteredComponents.length === 0) {
+      popoverContent = <Typography.Text type="secondary">暂无可添加组件</Typography.Text>;
+    } else {
+      popoverContent = (
+        <ul className={dropZoneStyles.menuList}>
+          {filteredComponents.map((item) => (
+            <li key={item.type} className={dropZoneStyles.menuItem}>
+              <button
+                type="button"
+                className={dropZoneStyles.menuButton}
+                onClick={() => handleSelectComponent(item.type)}
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      );
     }
-  }, [isDragging, isPopoverOpen]);
 
-  const handleSelectComponent = (type: ComponentType) => {
-    dispatch(
-      addNodeToSlot({
-        targetNodeId,
-        propPath,
-        type,
-        label: componentLabelMap[type],
-      }),
-    );
-    setIsPopoverOpen(false);
-  };
-
-  const popoverContent =
-    filteredComponents.length > 0 ? (
-      <ul className={dropZoneStyles.menuList}>
-        {filteredComponents.map((item) => (
-          <li key={item.type} className={dropZoneStyles.menuItem}>
-            <button
-              type="button"
-              className={dropZoneStyles.menuButton}
-              onClick={() => handleSelectComponent(item.type)}
+    const defaultIndicatorElem = React.useMemo(
+      () => (
+        <div className={indicatorLineStyles.indicatorLineContainer}>
+          <div
+            className={`${indicatorLineStyles.indicatorIconContainer} ${isContainerHorizontal ? indicatorLineStyles.indicatorIconContainerTop : indicatorLineStyles.indicatorIconContainerRight}`}
+          >
+            <div
+              className={`${indicatorLineStyles.indicatorIcon} ${isContainerHorizontal ? indicatorLineStyles.indicatorIconTop : indicatorLineStyles.indicatorIconSide}`}
+              aria-hidden="true"
             >
-              {item.label}
-            </button>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <Typography.Text type="secondary">暂无可添加组件</Typography.Text>
+              +
+            </div>
+          </div>
+        </div>
+      ),
+      [isContainerHorizontal],
     );
 
-  return (
-    <Popover
-      content={popoverContent}
-      trigger="hover"
-      placement="right"
-      arrow={false}
-      overlayInnerStyle={{
-        padding: '4px 0',
-      }}
-      open={isPopoverOpen && !isDragging}
-      onOpenChange={(open) => setIsPopoverOpen(open)}
-    >
-      <div
-        ref={setNodeRef}
-        className={`${dropZoneStyles.dropZone} ${isActive ? dropZoneStyles.dropZoneActive : ''} ${isInvalid ? dropZoneStyles.dropZoneInvalid : ''} ${active ? dropZoneStyles.dropZoneDragging : ''}`}
-        title={label}
-      >
-        <div className={dropZoneStyles.dropZoneIcon} aria-hidden>
-          +
-        </div>
-      </div>
-    </Popover>
-  );
-};
+    const renderProps = React.useMemo(
+      () => ({
+        onClick: singleAcceptType ? handleSingleAcceptClick : undefined,
+        defaultIndicator: defaultIndicatorElem,
+        isSingleAcceptType: Boolean(singleAcceptType),
+        singleAcceptType: singleAcceptType?.type,
+        singleAcceptTypeLabel: singleAcceptType?.label,
+      }),
+      [defaultIndicatorElem, handleSingleAcceptClick, singleAcceptType],
+    );
 
-export default DropZone;
+    return (
+      <Popover
+        content={popoverContent}
+        trigger="hover"
+        placement={isContainerHorizontal ? 'bottom' : 'left'}
+        arrow={false}
+        overlayInnerStyle={{
+          padding: '4px 0',
+        }}
+        open={isPopoverOpen}
+        onOpenChange={(open) => setIsPopoverOpen(open)}
+      >
+        {children ? children(renderProps) : defaultIndicatorElem}
+      </Popover>
+    );
+  },
+);
+
+export default AddComponentIntoPreview;

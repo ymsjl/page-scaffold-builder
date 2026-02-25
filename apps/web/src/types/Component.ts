@@ -22,6 +22,7 @@ export interface SlotDefinition {
   kind: SlotKind;
   acceptTypes?: ComponentType[];
   renderMode?: SlotRenderMode;
+  childrenDirection?: 'horizontal' | 'vertical';
   wrap?: boolean;
   placeholder?: string;
 }

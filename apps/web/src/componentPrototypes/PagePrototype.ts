@@ -1,11 +1,14 @@
 import type { ComponentPrototype } from '@/types';
+import { getRegisteredComponent } from '../componentRegistry';
 
 export const PagePrototype: ComponentPrototype = {
   name: 'Page',
   label: '页面组件',
   description: '页面顶层容器组件',
   isContainer: true,
-  component: 'div' as unknown as React.ComponentType<any>,
+  get component() {
+    return getRegisteredComponent('PageForPreview');
+  },
   defaultProps: {},
   propsTypes: {
     path: {
@@ -31,6 +34,7 @@ export const PagePrototype: ComponentPrototype = {
       kind: 'reactNodeArray',
       renderMode: 'inline',
       wrap: true,
+      childrenDirection: 'vertical',
       placeholder: '拖入页面内容',
     },
   ],

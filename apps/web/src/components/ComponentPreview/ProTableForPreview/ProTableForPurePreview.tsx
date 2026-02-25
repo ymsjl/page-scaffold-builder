@@ -1,10 +1,11 @@
 import React from 'react';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
+import { isNodeRef } from '@/types';
 import type { NodeRef, ProCommonColumn } from '@/types';
 import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
 import { generateDataSource } from './mapValueTypeToValue';
-import { useRenderNodeRefs } from '../ReactNodeRenderer';
+import { useRenderNodeRefs } from '../propResolvers';
 
 type ProTableProps = React.ComponentProps<typeof ProTable>;
 
@@ -14,8 +15,19 @@ export type SerializableProTableProps = Omit<ProTableProps, 'columns'> & {
 };
 
 const ProTableForPurePreview: React.FC<SerializableProTableProps> = (props) => {
-  const { columns = [], rowActions, ...restProps } = props;
+  const { columns = [], rowActions, toolbar, ...restProps } = props;
   const renderedRowActions = useRenderNodeRefs(rowActions ?? []);
+  const toolbarActionRefs = React.useMemo(() => {
+    const rawActions = toolbar?.actions;
+    if (Array.isArray(rawActions)) {
+      return (rawActions as unknown[]).filter(isNodeRef) as NodeRef[];
+    }
+    if (isNodeRef(rawActions)) {
+      return [rawActions];
+    }
+    return [] as NodeRef[];
+  }, [toolbar?.actions]);
+  const renderedToolbarActions = useRenderNodeRefs(toolbarActionRefs);
 
   const dataSource = React.useMemo(() => {
     return [generateDataSource(columns)];
@@ -34,7 +46,22 @@ const ProTableForPurePreview: React.FC<SerializableProTableProps> = (props) => {
     });
   }, [columns, renderedRowActions]);
 
-  return <ProTable {...restProps} columns={mergedColumns} dataSource={dataSource} />;
+  const mergedToolbar = React.useMemo(() => {
+    if (!toolbar) return undefined;
+    return {
+      ...toolbar,
+      actions: renderedToolbarActions,
+    };
+  }, [renderedToolbarActions, toolbar]);
+
+  return (
+    <ProTable
+      {...restProps}
+      columns={mergedColumns}
+      dataSource={dataSource}
+      toolbar={mergedToolbar}
+    />
+  );
 };
 
 export default ProTableForPurePreview;
