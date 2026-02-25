@@ -6,6 +6,7 @@ import { registerComponent, getRegisteredComponent, lazyLoad } from './component
 
 import {
   PagePrototype,
+  CardPrototype,
   ModalPrototype,
   DescriptionPrototype,
   TablePrototype,
@@ -18,6 +19,7 @@ export { registerComponent, lazyLoad };
 
 export const componentPrototypeMap: Record<ComponentType, ComponentPrototype> = {
   Page: PagePrototype,
+  Card: CardPrototype,
   Modal: ModalPrototype,
   Description: DescriptionPrototype,
   Table: TablePrototype,

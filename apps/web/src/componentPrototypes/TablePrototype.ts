@@ -27,6 +27,7 @@ export const TablePrototype: ComponentPrototype = {
         title: '列1',
         dataIndex: 'column1',
         valueType: 'text',
+        key: 'column1',
       },
     ],
   },

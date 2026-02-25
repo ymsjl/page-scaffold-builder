@@ -15,6 +15,10 @@ export const preloadComponents = async () => {
       () => import('@/components/ComponentPreview/PageForPreview/PageForPreview'),
     ),
     lazyLoad(
+      'CardForPreview',
+      () => import('@/components/ComponentPreview/CardForPreview/CardForPreview'),
+    ),
+    lazyLoad(
       'ModalForPreview',
       () => import('@/components/ComponentPreview/ModalForPreview/ModalForPreview'),
     ),
@@ -22,8 +26,10 @@ export const preloadComponents = async () => {
     lazyLoad('ProDescriptions', () =>
       import('@ant-design/pro-components').then((m) => ({ default: m.ProDescriptions })),
     ),
-    lazyLoad('BetaSchemaForm', () =>
-      import('@ant-design/pro-components').then((m) => ({ default: m.BetaSchemaForm })),
+    lazyLoad('BetaSchemaFormForPreview', () =>
+      import(
+        '@/components/ComponentPreview/BetaSchemaFormForPreview/BetaSchemaFormForPreview'
+      ),
     ),
   ]);
 };

@@ -125,7 +125,7 @@ const resolvePropsForNode = ({
 }): Record<string, unknown> => {
   const nodeProps = node.props || {};
   const mergedProps: Record<string, unknown> = {
-    ...(previewMode === 'edit' && (node.type === 'Table' || node.isContainer)
+    ...(previewMode === 'edit' 
       ? { previewNodeId: node.id }
       : {}),
     ...(componentPrototype.defaultProps || {}),

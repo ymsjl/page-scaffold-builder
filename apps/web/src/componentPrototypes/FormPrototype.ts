@@ -7,7 +7,7 @@ export const FormPrototype: ComponentPrototype = {
   description: '基于 BetaSchemaForm 的表单组件',
   isContainer: false,
   get component() {
-    return getRegisteredComponent('BetaSchemaForm');
+    return getRegisteredComponent('BetaSchemaFormForPreview');
   },
   defaultProps: {
     layout: 'vertical',

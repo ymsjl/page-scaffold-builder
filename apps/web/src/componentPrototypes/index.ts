@@ -1,4 +1,5 @@
 export { PagePrototype } from './PagePrototype';
+export { CardPrototype } from './CardPrototype';
 export { ModalPrototype } from './ModalPrototype';
 
 export { DescriptionPrototype } from './DescriptionPrototype';

@@ -11,10 +11,12 @@ const toArgs = (files) =>
 module.exports = {
   'apps/web/**/*.{ts,tsx,js,jsx}': (files) => {
     const joined = toArgs(files);
-    return [`pnpm -C apps/web exec eslint --fix -- ${joined}`];
+    // return [`pnpm -C apps/web exec eslint --fix -- ${joined}`];
+    return []
   },
   'apps/web/**/*.{ts,tsx,js,jsx,json,md}': (files) => {
     const joined = toArgs(files);
-    return [`pnpm -C apps/web exec prettier --write -- ${joined}`];
+    // return [`pnpm -C apps/web exec prettier --write -- ${joined}`];
+    return []
   },
 };

@@ -3,6 +3,7 @@ import { type ProCommonColumn, type PropAttribute } from '@/types';
 
 export const COMPONENT_TYPES = [
   'Page',
+  'Card',
   'Table',
   'Form',
   'Description',

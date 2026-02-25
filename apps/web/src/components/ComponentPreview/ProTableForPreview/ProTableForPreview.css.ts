@@ -157,8 +157,6 @@ export const addColumnIndicator = style({
   cursor: 'pointer',
   opacity: 0,
 
-  transition: transitionFast,
-
   selectors: {
     [`${tableHeader}:hover &`]: {
       opacity: 1,
@@ -183,7 +181,7 @@ export const addColumnButton = style({
   border: '0px',
 
   background: '#e8eff6',
-  zIndex: 999999,
+  zIndex: 999,
   borderRadius: '50%',
   display: 'flex',
   alignItems: 'center',

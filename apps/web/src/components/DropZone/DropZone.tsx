@@ -9,6 +9,7 @@ import * as indicatorLineStyles from './IndicatorLine.css';
 
 const componentLabelMap: Record<ComponentType, string> = {
   Page: '页面组件',
+  Card: '卡片组件',
   Table: '表格组件',
   Form: '表单组件',
   Description: '描述组件',
