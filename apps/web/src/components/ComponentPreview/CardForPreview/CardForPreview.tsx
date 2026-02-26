@@ -65,17 +65,8 @@ const CardForPreview: React.FC<CardForPreviewProps> = React.memo((props) => {
   const { previewNodeId, title, children, footer, ...restProps } = props;
   const previewMode = usePreviewMode();
 
-  const titleRefs = React.useMemo(() => normalizeNodeRefs(title), [title]);
   const bodyRefs = React.useMemo(() => normalizeNodeRefs(children), [children]);
   const footerRefs = React.useMemo(() => normalizeNodeRefs(footer), [footer]);
-
-  const titleContent = useSlotItems({
-    previewNodeId,
-    previewMode,
-    propPath: 'title',
-    refs: titleRefs,
-    direction: 'horizontal',
-  });
 
   const bodyContent = useSlotItems({
     previewNodeId,
@@ -94,7 +85,7 @@ const CardForPreview: React.FC<CardForPreviewProps> = React.memo((props) => {
   });
 
   return (
-    <Card {...restProps} className={styles.card} title={<div className={styles.title}>{titleContent}</div>}>
+    <Card {...restProps} className={styles.card}>
       <div className={`${styles.section} ${styles.body}`}>{bodyContent}</div>
       <div className={`${styles.section} ${styles.footer}`}>{footerContent}</div>
     </Card>

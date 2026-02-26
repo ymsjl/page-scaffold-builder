@@ -209,35 +209,34 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
       menu={{ items: menuItems, onClick: handleMenuClick }}
       overlayClassName={ptStyles.dropdownOverlay}
     >
-      <button
-        type="button"
-        className={ptStyles.titleContainer}
-        style={{ cursor: getCursorStyle() }}
-        onClick={(event) => event.stopPropagation()}
-        onDoubleClick={handleDoubleClick}
-      >
-        {isRenaming ? (
-          <Input
-            size="small"
-            value={draftTitle}
-            autoFocus
-            className={ptStyles.inputAutoWidth}
-            onChange={(event) => setDraftTitle(event.target.value)}
-            onBlur={applyRename}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.currentTarget.blur();
-              }
-              if (event.key === 'Escape') {
-                cancelRename();
-              }
-            }}
-            onClick={(event) => event.stopPropagation()}
-          />
-        ) : (
-          children
-        )}
-      </button>
+      {isRenaming ? (
+        <Input
+          size="small"
+          value={draftTitle}
+          autoFocus
+          onChange={(event) => setDraftTitle(event.target.value)}
+          onBlur={applyRename}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.currentTarget.blur();
+            }
+            if (event.key === 'Escape') {
+              cancelRename();
+            }
+          }}
+          onClick={(event) => event.stopPropagation()}
+        />
+      ) : (
+        <button
+          type="button"
+          className={ptStyles.titleContainer}
+          style={{ cursor: getCursorStyle() }}
+          onClick={(event) => event.stopPropagation()}
+          onDoubleClick={handleDoubleClick}
+        >
+          {children}
+        </button>
+      )}
     </Dropdown>
   );
 };

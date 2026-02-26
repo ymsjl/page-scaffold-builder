@@ -1,11 +1,11 @@
 import { style } from '@vanilla-extract/css';
 import {
   colorPrimary,
-  colorTextSecondary,
   colorTextDisabled,
   radiusSmall,
   transitionFast,
   fontSizeBase,
+  space1,
   space2,
 } from '@/styles/tokens.css';
 
@@ -38,17 +38,26 @@ export const headerContent = style({
 
 export const handle = style({
   all: 'unset',
+  position: 'absolute',
+  bottom: '100%',
+  left: 0,
+  right: 0,
+  background: colorPrimary,
+  color: '#ffffff',
+  opacity: 0,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 20,
-  height: 20,
-  borderRadius: radiusSmall,
-  color: colorTextSecondary,
-  background: 'transparent',
+  height: 28,
+  borderRadius: `6px 6px 0 0`,
   transition: transitionFast,
   cursor: 'grab',
   flex: '0 0 auto',
+  selectors: {
+    [`${tableHeader}:hover &`]: {
+      opacity: 1,
+    },
+  },
 });
 
 export const handleDisabled = style({
@@ -57,8 +66,8 @@ export const handleDisabled = style({
 });
 
 export const handleDragging = style({
-  background: 'rgba(22, 119, 255, 0.15)',
   cursor: 'grabbing',
+  zIndex: 9999,
 });
 
 export const handleIcon = style({
@@ -92,21 +101,16 @@ export const titleContainer = style({
   transition: transitionFast,
 });
 
-export const inputAutoWidth = style({
-  width: 'auto',
-});
-
 // DragOverlay 样式
 export const dragOverlay = style({
   zIndex: 9999,
 });
 
 export const dragPreview = style({
-  backgroundColor: '#f0f5ff',
+  backgroundColor: colorPrimary,
   padding: 12,
   fontWeight: 'bold',
   boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-  border: '1px solid rgba(22, 119, 255, 0.35)',
   cursor: 'grabbing',
   position: 'relative',
 });
@@ -118,7 +122,7 @@ export const dragHint = style({
   transform: 'translate3d(-50%, -100%, 0)',
   fontSize: 12,
   borderRadius: '10px',
-  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: colorPrimary,
   padding: '4px 8px',
   whiteSpace: 'nowrap',
   border: '1px solid rgba(22, 119, 255, 0.15)',
@@ -149,11 +153,11 @@ export const addColumnIndicatorLayout = style({
 });
 
 export const addColumnIndicator = style({
-  width: '6px',
+  width: '1px',
   height: '100%',
   marginInline: 'auto',
-  background: '#e8eff6',
-  borderRadius: '9999px',
+
+  borderLeft: `2px dashed ${colorPrimary}`,
   cursor: 'pointer',
   opacity: 0,
 
@@ -168,8 +172,11 @@ export const addColumnButtonWrapper = style({
   position: 'absolute',
   zIndex: 999,
   top: 0,
+  bottom: 0,
+  height: '28px',
+  marginBlock: 'auto',
   right: 0,
-  transform: 'translate3d(50%, -50%, 0)',
+  transform: 'translateX(50%)',
 });
 
 export const addColumnButton = style({
@@ -178,9 +185,10 @@ export const addColumnButton = style({
   opacity: 0,
   cursor: 'pointer',
   outline: 'none',
-  border: '0px',
+  border: '2px solid currentColor',
 
-  background: '#e8eff6',
+  background: colorPrimary,
+  color: '#ffffff',
   zIndex: 999,
   borderRadius: '50%',
   display: 'flex',
@@ -191,9 +199,39 @@ export const addColumnButton = style({
     [`${tableHeader}:hover &`]: {
       opacity: 1,
     },
+  },
+});
 
-    '&:hover': {
-      background: '#bcd7ec',
+export const fieldActions = style({
+  position: 'absolute',
+  top: '100%',
+  left: 0,
+  right: 0,
+  opacity: 0,
+  zIndex: 999,
+  backgroundColor: colorPrimary,
+  borderRadius: '0 0 6px 6px',
+  borderLeft: '0px',
+  transition: transitionFast,
+  display: 'flex',
+  gap: 4,
+  color: '#ffffff',
+  selectors: {
+    [`${tableHeader}:hover &`]: {
+      opacity: 1,
     },
   },
+});
+
+export const actionButton = style({
+  all: 'unset',
+  width: 24,
+  height: 24,
+  borderRadius: radiusSmall,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  padding: space1,
+  transition: transitionFast,
 });

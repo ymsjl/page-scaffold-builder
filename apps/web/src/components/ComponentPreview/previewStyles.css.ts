@@ -8,7 +8,7 @@ import {
   radiusSmall,
   radiusLarge,
   fontSizeBase,
-  space5,
+  space8,
 } from '@/styles/tokens.css';
 
 export const emptyState = style({
@@ -36,7 +36,7 @@ export const errorState = style({
 });
 
 export const container = style({
-  padding: space5,
+  padding: space8,
   height: '100%',
   overflow: 'auto',
   backgroundColor: colorBgContainer,

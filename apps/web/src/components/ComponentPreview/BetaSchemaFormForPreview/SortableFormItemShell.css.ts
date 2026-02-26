@@ -1,11 +1,7 @@
 import { style } from '@vanilla-extract/css';
 import {
-  colorBgContainer,
-  colorBorder,
-  colorError,
   colorPrimary,
   colorTextDisabled,
-  colorTextSecondary,
   fontSizeBase,
   radiusSmall,
   space1,
@@ -16,7 +12,6 @@ import {
 export const formItemShell = style({
   position: 'relative',
   display: 'flex',
-  alignItems: 'flex-start',
   gap: space2,
   width: '100%',
   selectors: {
@@ -32,20 +27,24 @@ export const formItemDragging = style({
 
 export const dragHandle = style({
   all: 'unset',
-  width: 20,
-  height: 20,
-  borderRadius: radiusSmall,
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  right: '100%',
+  width: '28px',
+  backgroundColor: colorPrimary,
+  borderRadius: '6px 0 0 6px',
+  color: '#ffffff',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: colorTextSecondary,
+  opacity: 0,
   cursor: 'grab',
   transition: transitionFast,
   flex: '0 0 auto',
-  marginTop: 6,
   selectors: {
-    '&:hover': {
-      background: colorBgContainer,
+    [`${formItemShell}:hover &`]: {
+      opacity: 1,
     },
   },
 });
@@ -91,12 +90,13 @@ export const addFieldButton = style({
   position: 'absolute',
   top: 0,
   bottom: 0,
-  marginBlock: 'auto',
+  margin: 'auto auto',
   left: 0,
+  right: 0,
   width: 28,
   height: 28,
   borderRadius: '50%',
-  border: 0,
+  border: '2px solid #ffffff',
   outline: 0,
   opacity: 0,
   cursor: 'pointer',
@@ -119,16 +119,27 @@ export const addFieldDivider = style({
   top: 0,
   bottom: 0,
   marginBlock: 'auto',
-  height: '6px',
+  height: '1px',
+  borderTop: `2px dashed ${colorPrimary}`,
   borderRadius: '9999px',
-  backgroundColor: colorPrimary,
 });
 
 export const fieldActions = style({
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: '100%',
   flex: '0 0 auto',
   marginTop: 4,
   opacity: 0,
+  backgroundColor: colorPrimary,
+  borderRadius: '0 6px 6px 0',
+  borderLeft: '0px',
   transition: transitionFast,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+  color: '#ffffff',
   selectors: {
     [`${formItemShell}:hover &`]: {
       opacity: 1,
@@ -136,7 +147,7 @@ export const fieldActions = style({
   },
 });
 
-export const deleteFieldButton = style({
+export const actionButton = style({
   all: 'unset',
   width: 24,
   height: 24,
@@ -144,14 +155,7 @@ export const deleteFieldButton = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: colorTextSecondary,
   cursor: 'pointer',
   padding: space1,
   transition: transitionFast,
-  selectors: {
-    '&:hover': {
-      color: colorError,
-      backgroundColor: colorBgContainer,
-    },
-  },
 });

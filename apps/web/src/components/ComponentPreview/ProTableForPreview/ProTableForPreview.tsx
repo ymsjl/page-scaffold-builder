@@ -2,18 +2,12 @@ import React from 'react';
 import { ProTable } from '@ant-design/pro-components';
 import { Button } from 'antd';
 import type { ProColumns } from '@ant-design/pro-components';
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { HolderOutlined, PlusOutlined } from '@ant-design/icons';
+import { CSS } from '@dnd-kit/utilities';
+import { HolderOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { AddComponentIntoPreview } from '@/components/DropZone/DropZone';
 import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
 import { isNodeRef } from '@/types';
@@ -46,135 +40,47 @@ type PreviewExtras = {
 type HeaderCellProps = React.HTMLAttributes<HTMLTableCellElement> & {
   id: string;
   disabled?: boolean;
+  columnIndex?: number;
 };
 
 type BodyCellProps = React.HTMLAttributes<HTMLTableCellElement> & {
-  id: string;
-};
-
-type DragIndexState = {
-  active: UniqueIdentifier | null;
-  over: UniqueIdentifier | null;
-};
-
-type PlaceholderState = {
-  id: string | null;
-  index: number | null;
-};
-
-const DragIndexContext = React.createContext<DragIndexState>({
-  active: null,
-  over: null,
-});
-
-const ColumnDragIdsContext = React.createContext<string[]>([]);
-
-const PLACEHOLDER_PREFIX = '__drag_placeholder__';
-
-const makePlaceholderId = (activeId: UniqueIdentifier) =>
-  `${PLACEHOLDER_PREFIX}${String(activeId)}`;
-
-const isPlaceholderId = (id: UniqueIdentifier | null) =>
-  typeof id === 'string' && id.startsWith(PLACEHOLDER_PREFIX);
-
-const getColumnIndexById = (columnDragIds: string[], id: UniqueIdentifier | null) => {
-  if (!id) return -1;
-  return columnDragIds.findIndex((columnId) => columnId === id);
-};
-
-const getColumnTitleText = (columns: ProCommonColumn[], index: number) => {
-  if (index < 0 || index >= columns.length) return null;
-  const title = columns[index]?.title;
-  if (typeof title === 'function') return null;
-  if (typeof title === 'string' || typeof title === 'number') {
-    return String(title);
-  }
-  return null;
-};
-
-const getDropTargetIndex = (from: number, rawTarget: number) => {
-  let to = rawTarget;
-  if (from < to) {
-    to -= 1;
-  }
-  return to;
-};
-
-const getRawTargetIndex = (from: number, overIndex: number) =>
-  overIndex + (overIndex > from ? 1 : 0);
-
-const getDragOverlayHint = (params: {
-  columns: ProCommonColumn[];
-  columnDragIds: string[];
-  dragState: DragIndexState;
-  placeholder: PlaceholderState;
-  dragTitleText: string | null;
-}) => {
-  const { columns, columnDragIds, dragState, placeholder, dragTitleText } = params;
-  if (!dragTitleText || !dragState.active) return null;
-
-  const from = getColumnIndexById(columnDragIds, dragState.active);
-  if (from === -1) return `把 ${dragTitleText} 移到这里`;
-
-  const overIndex = getColumnIndexById(columnDragIds, dragState.over);
-  if (overIndex === -1) return `把 ${dragTitleText} 移到这里`;
-
-  const rawTarget =
-    placeholder.id && placeholder.index !== null
-      ? placeholder.index
-      : getRawTargetIndex(from, overIndex);
-  const to = getDropTargetIndex(from, rawTarget);
-
-  if (to === from) {
-    return `把 ${dragTitleText} 放回原位`;
-  }
-
-  const isMovingRight = to > from;
-  const baseTitleText = getColumnTitleText(columns, overIndex);
-  if (!baseTitleText) return `把 ${dragTitleText} 移到这里`;
-
-  const direction = isMovingRight ? '后面' : '前面';
-  return `把 ${dragTitleText} 移到 ${baseTitleText} 的${direction}`;
+  id?: string;
 };
 
 const TableBodyCell: React.FC<BodyCellProps> = (props) => {
-  const { id, style } = props;
-  const dragState = React.useContext(DragIndexContext);
-  const classes = [ptStyles.tableCell];
-  if (dragState.active && dragState.active === id) {
-    classes.push(ptStyles.tableCellActive);
-  } else if (dragState.over && isPlaceholderId(id)) {
-    classes.push(ptStyles.tableCellPlaceholder);
-  }
-  return <td {...props} className={classes.join(' ')} style={style} />;
+  return <td {...props} className={ptStyles.tableCell} style={props.style} />;
 };
 
-const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
+const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, columnIndex, ...props }) => {
   const dispatch = useAppDispatch();
-  const dragState = React.useContext(DragIndexContext);
-  const columnDragIds = React.useContext(ColumnDragIdsContext);
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: props.id,
     disabled,
   });
 
   const classes = [ptStyles.tableCell, ptStyles.tableHeader];
-  if (dragState.active && dragState.active === props.id) {
+  if (isDragging) {
     classes.push(ptStyles.tableCellActive);
-  } else if (dragState.over && isPlaceholderId(props.id)) {
-    classes.push(ptStyles.tableCellPlaceholder);
   }
 
   const headerAttrs: Record<string, any> = {};
   if (isDragging) headerAttrs['data-dragging'] = 'true';
 
   const headerChildren = typeof props.children === 'function' ? null : props.children;
-  const columnIndex = getColumnIndexById(columnDragIds, props.id);
+  const resolvedIndex = typeof columnIndex === 'number' ? columnIndex : -1;
 
   const onInsertNewColumnBehind = () => {
     const newColumn = createProCommonColumnFromSchemeField(undefined, 'Table');
     newColumn.title = '新列';
-    const insertPos = columnIndex >= 0 ? columnIndex + 1 : 1;
+    const insertPos = resolvedIndex >= 0 ? resolvedIndex + 1 : 1;
     dispatch(
       upsertColumnOfSelectedNode({
         insertPos,
@@ -185,11 +91,9 @@ const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
   return (
     <th
       {...props}
+      style={{ ...props.style, transform: CSS.Transform.toString(transform), transition }}
       ref={setNodeRef}
       className={classes.join(' ')}
-      style={props.style}
-      {...attributes}
-      {...headerAttrs}
     >
       <span className={ptStyles.headerContent}>
         <button
@@ -198,9 +102,19 @@ const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, ...props }) => {
           className={`${ptStyles.handle} ${disabled ? ptStyles.handleDisabled : ''} ${isDragging ? ptStyles.handleDragging : ''}`}
           onClick={(event) => event.stopPropagation()}
           {...listeners}
+          {...attributes}
+          {...headerAttrs}
         >
           <HolderOutlined className={ptStyles.handleIcon} />
         </button>
+        <div className={ptStyles.fieldActions}>
+          <button type="button" className={ptStyles.actionButton}>
+            <EditOutlined />
+          </button>
+          <button type="button" className={ptStyles.actionButton}>
+            <DeleteOutlined />
+          </button>
+        </div>
         <span className={ptStyles.headerTitle}>{headerChildren}</span>
         <div className={ptStyles.addColumnIndicatorLayout}>
           <div className={ptStyles.addColumnIndicator} />
@@ -290,179 +204,28 @@ const useToolbarActions = (
   }, [previewNodeId, renderedToolbarActions, toolbar, toolbarActionRefs]);
 };
 
-const useColumnDragState = (params: {
-  columns: ProCommonColumn[];
-  previewNodeId: string | undefined;
-  dispatch: ReturnType<typeof useAppDispatch>;
-}) => {
-  const { columns, previewNodeId, dispatch } = params;
-  const canDrag = Boolean(previewNodeId) && Array.isArray(columns) && columns.length > 1;
-
-  const [dragState, setDragState] = React.useState<DragIndexState>({
-    active: null,
-    over: null,
-  });
-  const [placeholder, setPlaceholder] = React.useState<PlaceholderState>({
-    id: null,
-    index: null,
-  });
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 4 },
-    }),
-  );
-
-  const columnDragIds = React.useMemo(() => {
-    if (!Array.isArray(columns)) return [] as string[];
-    return columns.map((column, index) => getColumnDragId(column, index));
-  }, [columns]);
-
-  const visualColumns = React.useMemo(() => {
-    if (!Array.isArray(columns)) return columns;
-    if (!placeholder.id || placeholder.index === null) return columns;
-
-    const activeIndex = columnDragIds.findIndex((id) => id === dragState.active);
-    if (activeIndex === -1) return columns;
-
-    const sourceColumn = columns[activeIndex];
-    if (!sourceColumn) return columns;
-
-    const placeholderColumn = {
-      ...sourceColumn,
-      key: placeholder.id,
-      hideInSearch: true,
-    } as ProCommonColumn;
-
-    const next = [...columns];
-    const insertIndex = Math.min(Math.max(placeholder.index, 0), next.length);
-    next.splice(insertIndex, 0, placeholderColumn);
-    return next;
-  }, [columns, columnDragIds, dragState.active, placeholder.id, placeholder.index]);
-
-  const visualColumnIds = React.useMemo(() => {
-    if (!Array.isArray(visualColumns)) return [] as string[];
-    return visualColumns.map((column, index) => getColumnDragId(column, index));
-  }, [visualColumns]);
-
-  const handleDragOver = React.useCallback(
-    ({ active, over }: DragOverEvent) => {
-      if (!over || !canDrag) return;
-      if (isPlaceholderId(over.id)) return;
-      const activeIndex = getColumnIndexById(columnDragIds, active.id);
-      const overIndex = getColumnIndexById(columnDragIds, over.id);
-
-      if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
-        setPlaceholder({ id: null, index: null });
-        setDragState({ active: active.id, over: over.id });
-        return;
-      }
-
-      const rawTarget = getRawTargetIndex(activeIndex, overIndex);
-      const to = getDropTargetIndex(activeIndex, rawTarget);
-      if (to === activeIndex) {
-        setPlaceholder({ id: null, index: null });
-        setDragState({ active: active.id, over: over.id });
-        return;
-      }
-
-      setPlaceholder({ id: makePlaceholderId(active.id), index: rawTarget });
-      setDragState({ active: active.id, over: over.id });
-    },
-    [canDrag, columnDragIds],
-  );
-
-  const handleDragEnd = React.useCallback(
-    ({ active, over }: DragEndEvent) => {
-      if (!over || !canDrag) {
-        setDragState({ active: null, over: null });
-        setPlaceholder({ id: null, index: null });
-        return;
-      }
-
-      const from = getColumnIndexById(columnDragIds, active.id);
-      const hasPlaceholder = placeholder.id && placeholder.index !== null;
-      const rawTarget = hasPlaceholder
-        ? placeholder.index
-        : getRawTargetIndex(from, getColumnIndexById(columnDragIds, over.id));
-      let to = typeof rawTarget === 'number' ? rawTarget : -1;
-
-      if (from === -1 || to === -1 || !previewNodeId) {
-        setDragState({ active: null, over: null });
-        setPlaceholder({ id: null, index: null });
-        return;
-      }
-
-      if (from < to) {
-        to -= 1;
-      }
-
-      if (from === to) {
-        setDragState({ active: null, over: null });
-        setPlaceholder({ id: null, index: null });
-        return;
-      }
-
-      dispatch(selectNode(previewNodeId));
-      dispatch(moveColumnForSelectedNode({ from, to }));
-      setDragState({ active: null, over: null });
-      setPlaceholder({ id: null, index: null });
-    },
-    [canDrag, columnDragIds, dispatch, placeholder.id, placeholder.index, previewNodeId],
-  );
-
-  const handleDragCancel = React.useCallback(() => {
-    setDragState({ active: null, over: null });
-    setPlaceholder({ id: null, index: null });
-  }, []);
-
-  return {
-    canDrag,
-    columnDragIds,
-    dragState,
-    handleDragCancel,
-    handleDragEnd,
-    handleDragOver,
-    placeholder,
-    sensors,
-    visualColumnIds,
-    visualColumns,
-  };
-};
-
 const useMergedColumns = (params: {
   canDrag: boolean;
-  columnDragIds: string[];
   entityFields: SchemaField[];
-  placeholderId: string | null;
   previewNodeId: string | undefined;
   rowActions: NodeRef[] | undefined;
-  visualColumns: ProCommonColumn[] | Record<string, unknown>;
+  columns: ProCommonColumn[] | Record<string, unknown>;
 }) => {
-  const {
-    canDrag,
-    columnDragIds,
-    entityFields,
-    placeholderId,
-    previewNodeId,
-    rowActions,
-    visualColumns,
-  } = params;
+  const { canDrag, entityFields, previewNodeId, rowActions, columns } = params;
 
   return React.useMemo(() => {
-    if (!Array.isArray(visualColumns)) return visualColumns;
-    return visualColumns.map((column, index) => {
+    if (!Array.isArray(columns)) return columns;
+    return columns.map((column, index) => {
       const normalizedColumn = mapProCommonColumnToProps(column) as ProColumns<Record<string, any>>;
       const dragId = getColumnDragId(column, index);
-      const isPlaceholder = placeholderId === dragId;
-      const realIndex = columnDragIds.findIndex((id) => id === dragId);
-      const columnIndex = realIndex >= 0 ? realIndex : index;
+      const columnIndex = index;
 
       const existingHeaderCell = normalizedColumn.onHeaderCell;
       normalizedColumn.onHeaderCell = (col: Record<string, any>) => ({
         ...(typeof existingHeaderCell === 'function' ? existingHeaderCell(col) : null),
         id: dragId,
-        disabled: !canDrag || isPlaceholder,
+        disabled: !canDrag,
+        columnIndex,
       });
 
       const existingOnCell = normalizedColumn.onCell;
@@ -471,7 +234,7 @@ const useMergedColumns = (params: {
         id: dragId,
       });
 
-      if (!isPlaceholder && typeof normalizedColumn.title !== 'function') {
+      if (typeof normalizedColumn.title !== 'function') {
         normalizedColumn.title = (
           <ColumnTitleMenu
             column={column}
@@ -484,7 +247,7 @@ const useMergedColumns = (params: {
         );
       }
 
-      if (!isPlaceholder && typeof normalizedColumn.formItemProps !== 'function') {
+      if (typeof normalizedColumn.formItemProps !== 'function') {
         normalizedColumn.formItemProps = {
           ...normalizedColumn.formItemProps,
           label: (
@@ -500,7 +263,7 @@ const useMergedColumns = (params: {
         };
       }
 
-      if (!isPlaceholder && previewNodeId && normalizedColumn.valueType === 'option') {
+      if (previewNodeId && normalizedColumn.valueType === 'option') {
         normalizedColumn.render = () => (
           <ColumnCellSlot
             targetNodeId={previewNodeId}
@@ -513,15 +276,7 @@ const useMergedColumns = (params: {
 
       return normalizedColumn;
     });
-  }, [
-    canDrag,
-    columnDragIds,
-    entityFields,
-    placeholderId,
-    previewNodeId,
-    rowActions,
-    visualColumns,
-  ]);
+  }, [canDrag, entityFields, previewNodeId, rowActions, columns]);
 };
 
 export type SerializableProTableProps = Omit<ProTableProps, 'columns'> &
@@ -548,30 +303,33 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
   const entityFields = React.useMemo(() => entityModel?.fields ?? [], [entityModel]);
   const dataSource = React.useMemo(() => [generateDataSource(columns)], [columns]);
   const mergedToolbar = useToolbarActions(toolbar, previewNodeId);
-  const {
-    canDrag,
-    columnDragIds,
-    dragState,
-    handleDragCancel,
-    handleDragEnd,
-    handleDragOver,
-    placeholder,
-    sensors,
-    visualColumnIds,
-    visualColumns,
-  } = useColumnDragState({
-    columns,
-    previewNodeId,
-    dispatch,
-  });
+  const canDrag = Boolean(previewNodeId) && columns.length > 1;
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 4 },
+    }),
+  );
+  const columnDragIds = React.useMemo(
+    () => columns.map((column, index) => getColumnDragId(column, index)),
+    [columns],
+  );
+  const handleDragEnd = React.useCallback(
+    ({ active, over }: DragEndEvent) => {
+      if (!over || !previewNodeId || !canDrag || active.id === over.id) return;
+      const from = columnDragIds.findIndex((id) => id === active.id);
+      const to = columnDragIds.findIndex((id) => id === over.id);
+      if (from < 0 || to < 0 || from === to) return;
+      dispatch(selectNode(previewNodeId));
+      dispatch(moveColumnForSelectedNode({ from, to }));
+    },
+    [canDrag, columnDragIds, dispatch, previewNodeId],
+  );
   const mergedColumns = useMergedColumns({
     canDrag,
-    columnDragIds,
     entityFields,
-    placeholderId: placeholder.id,
     previewNodeId,
     rowActions,
-    visualColumns,
+    columns,
   });
 
   const mergedComponents = React.useMemo(() => {
@@ -583,65 +341,22 @@ const ProTableForPreview: React.FC<SerializableProTableProps> = (props) => {
     };
   }, [restProps.components]);
 
-  const dragOverlayTitle = React.useMemo(() => {
-    if (!dragState.active || !Array.isArray(columns)) return null;
-    const index = getColumnIndexById(columnDragIds, dragState.active);
-    if (index === -1) return null;
-    const title = columns[index]?.title;
-    if (typeof title === 'function') return null;
-    return title ?? null;
-  }, [columnDragIds, columns, dragState.active]);
-
-  const dragOverlayTitleText = React.useMemo(() => {
-    if (!dragState.active || !Array.isArray(columns)) return null;
-    const index = getColumnIndexById(columnDragIds, dragState.active);
-    return getColumnTitleText(columns, index);
-  }, [columnDragIds, columns, dragState.active]);
-
-  const dragOverlayHint = React.useMemo(() => {
-    if (!Array.isArray(columns)) return null;
-    return getDragOverlayHint({
-      columns,
-      columnDragIds,
-      dragState,
-      placeholder,
-      dragTitleText: dragOverlayTitleText,
-    });
-  }, [columnDragIds, columns, dragOverlayTitleText, dragState, placeholder]);
-
   return (
     <DndContext
       sensors={sensors}
       modifiers={[restrictToHorizontalAxis]}
       onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDragCancel={handleDragCancel}
       collisionDetection={closestCenter}
     >
-      <SortableContext items={visualColumnIds} strategy={horizontalListSortingStrategy}>
-        <DragIndexContext.Provider value={dragState}>
-          <ColumnDragIdsContext.Provider value={columnDragIds}>
-            <ProTable
-              {...restProps}
-              columns={mergedColumns as any}
-              dataSource={dataSource}
-              components={mergedComponents}
-              toolbar={mergedToolbar}
-            />
-          </ColumnDragIdsContext.Provider>
-        </DragIndexContext.Provider>
+      <SortableContext items={columnDragIds} strategy={horizontalListSortingStrategy}>
+        <ProTable
+          {...restProps}
+          columns={mergedColumns as any}
+          dataSource={dataSource}
+          components={mergedComponents}
+          toolbar={mergedToolbar}
+        />
       </SortableContext>
-      <DragOverlay className={ptStyles.dragOverlay} dropAnimation={{ duration: 150 }}>
-        {dragOverlayTitle ? (
-          <div className={ptStyles.dragPreview}>
-            <div className={ptStyles.dragHint}>{dragOverlayHint ?? ''}</div>
-            <span className={ptStyles.dragContent}>
-              <HolderOutlined className={ptStyles.dragIcon} />
-              <span>{dragOverlayTitle}</span>
-            </span>
-          </div>
-        ) : null}
-      </DragOverlay>
     </DndContext>
   );
 };

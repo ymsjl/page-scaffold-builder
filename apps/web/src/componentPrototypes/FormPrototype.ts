@@ -18,6 +18,7 @@ export const FormPrototype: ComponentPrototype = {
         title: '列1',
         dataIndex: 'column1',
         valueType: 'text',
+        key: 'column1',
       },
     ],
   },

@@ -28,6 +28,7 @@ export const TablePrototype: ComponentPrototype = {
         dataIndex: 'column1',
         valueType: 'text',
         key: 'column1',
+        width: 150,
       },
     ],
   },
