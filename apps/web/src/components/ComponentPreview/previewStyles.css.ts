@@ -59,7 +59,7 @@ export const toolbar = style({
   left: 0,
   margin: '0 auto',
   width: 'max-content',
-  zIndex: 20,
+  zIndex: 99999,
 });
 
 export const toolbarContainer = style({
