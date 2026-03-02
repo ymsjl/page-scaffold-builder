@@ -19,6 +19,7 @@ import {
   updateNodeProps,
   addNodeToSlot,
   upsertColumnOfSelectedNode,
+  updateNode,
 } from '@/store/componentTreeSlice/componentTreeSlice';
 import { startAddingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
 import { getComponentPrototype } from '@/componentMetas';
@@ -271,8 +272,6 @@ const PropertyPanel: React.FC = () => {
 
   const renderSchemaList = useCallback(() => <SchemaList />, []);
 
-  const renderActionFlowSelector = useCallback(() => <ActionFlowSelector />, []);
-
   const renderComponentPropList = useCallback(
     (item: FlattenedPropAttribute) => {
       if (!selectedNode) return null;
@@ -317,7 +316,7 @@ const PropertyPanel: React.FC = () => {
 
   const createColumn = useCallback(
     (item: FlattenedPropAttribute) => {
-      const valueType = VALUE_TYPE_ENUM_MAP[item.type] || item.type || 'text';
+      const valueType = item.valueType || VALUE_TYPE_ENUM_MAP[item.type] || item.type || 'text';
       // 支持数组路径（用于嵌套对象属性）
       const nameOrPath = item.name;
       const result = {
@@ -399,9 +398,6 @@ const PropertyPanel: React.FC = () => {
             </Flex>
           ),
         };
-      } else if (item.type === 'actionFlow') {
-        // 动作流类型使用自定义渲染器
-        result.renderFormItem = renderActionFlowSelector;
       } else if (item.type === 'reactNode' || item.type === 'reactNodeArray') {
         result.renderFormItem = () => renderComponentPropList(item);
         result.valueType = 'text';
@@ -427,10 +423,35 @@ const PropertyPanel: React.FC = () => {
       columns,
       dispatch,
       selectedNodeId,
-      renderActionFlowSelector,
       form,
       setPropValue,
     ],
+  );
+
+  const actionBindings = useMemo(
+    () => selectedNode?.actionBindings ?? {},
+    [selectedNode?.actionBindings],
+  );
+
+  const handleActionBindingChange = useCallback(
+    (eventName: string, value?: string) => {
+      if (!selectedNodeId) return;
+      const nextBindings = { ...actionBindings };
+      if (value) {
+        nextBindings[eventName] = value;
+      } else {
+        delete nextBindings[eventName];
+      }
+      dispatch(
+        updateNode({
+          id: selectedNodeId,
+          updates: {
+            actionBindings: nextBindings,
+          },
+        }),
+      );
+    },
+    [selectedNodeId, actionBindings, dispatch],
   );
 
   if (!selectedNode) {
@@ -450,7 +471,9 @@ const PropertyPanel: React.FC = () => {
     </Space>
   );
 
-  if (propAttrs.length === 0) {
+  const supportedEvents = componentPrototype?.supportedEvents ?? [];
+
+  if (propAttrs.length === 0 && supportedEvents.length === 0) {
     return (
       <ProCard bordered className={panelStyles.cardRounded} title={cardTitleElem} size="small">
         <div className={panelStyles.noConfig}>组件 {selectedNode.type} 暂无可配置属性</div>
@@ -459,6 +482,34 @@ const PropertyPanel: React.FC = () => {
   }
 
   const hasGroups = propAttrs.some((propAttr) => propAttr.group);
+
+  const renderEventBindings = () => {
+    if (supportedEvents.length === 0) return null;
+    return (
+      <ProCard
+        key="事件"
+        size="small"
+        title="事件"
+        headerBordered
+        bordered
+        className={panelStyles.cardRoundedWithMargin}
+        bodyStyle={{ padding: '16px' }}
+      >
+        <Space direction="vertical" className={panelStyles.fullWidth} size={12}>
+          {supportedEvents.map((event) => (
+            <div key={event.eventName}>
+              <Typography.Text>{event.label}</Typography.Text>
+              <ActionFlowSelector
+                value={actionBindings[event.eventName]}
+                onChange={(value) => handleActionBindingChange(event.eventName, value)}
+                placeholder="选择动作流"
+              />
+            </div>
+          ))}
+        </Space>
+      </ProCard>
+    );
+  };
 
   if (!hasGroups) {
     return (
@@ -478,6 +529,7 @@ const PropertyPanel: React.FC = () => {
           submitter={false}
           columns={propAttrs.map((item) => createColumn(item))}
         />
+        {renderEventBindings()}
       </ProCard>
     );
   }
@@ -544,6 +596,7 @@ const PropertyPanel: React.FC = () => {
           />
         </ProCard>
       ))}
+      {renderEventBindings()}
     </div>
   );
 };

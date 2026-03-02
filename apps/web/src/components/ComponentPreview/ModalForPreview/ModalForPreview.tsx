@@ -2,10 +2,9 @@ import React from 'react';
 import { Modal, type ModalProps } from 'antd';
 import { AddComponentIntoPreview } from '@/components/DropZone/DropZone';
 import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
-import { isNodeRef } from '@/types';
-import type { NodeRef } from '@/types';
 import { usePreviewMode } from '../previewMode';
 import { useRenderNodeRefs } from '../propResolvers';
+import { normalizeNodeRefs } from '../nodeRefLogic';
 
 type ModalForPreviewProps = Omit<React.ComponentProps<typeof Modal>, 'children'> & {
   previewNodeId?: string;
@@ -15,15 +14,7 @@ type ModalForPreviewProps = Omit<React.ComponentProps<typeof Modal>, 'children'>
 const ModalForPreview: React.FC<ModalForPreviewProps> = React.memo((props) => {
   const { previewNodeId, children, ...restProps } = props;
   const previewMode = usePreviewMode();
-  const childRefs = React.useMemo(() => {
-    if (Array.isArray(children)) {
-      return children.filter(isNodeRef) as NodeRef[];
-    }
-    if (isNodeRef(children)) {
-      return [children];
-    }
-    return [] as NodeRef[];
-  }, [children]);
+  const childRefs = React.useMemo(() => normalizeNodeRefs(children), [children]);
   const renderedChildren = useRenderNodeRefs(childRefs);
 
   const resolvedChildren = React.useMemo(() => {

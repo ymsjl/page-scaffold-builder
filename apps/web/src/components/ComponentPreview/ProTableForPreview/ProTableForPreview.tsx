@@ -10,7 +10,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { HolderOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { AddComponentIntoPreview } from '@/components/DropZone/DropZone';
 import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
-import { isNodeRef } from '@/types';
 import type { NodeRef, ProCommonColumn, SchemaField } from '@/types';
 import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
 import {
@@ -26,6 +25,7 @@ import { ColumnTitleMenu } from './ColumnTitleMenu';
 import { ColumnCellSlot } from './ColumnCellSlot';
 import { generateDataSource } from './mapValueTypeToValue';
 import { useRenderNodeRefs } from '../propResolvers';
+import { normalizeNodeRefs } from '../nodeRefLogic';
 
 // drag styles are expressed via classnames in CSS; logic below assigns classes where needed.
 
@@ -48,7 +48,7 @@ type BodyCellProps = React.HTMLAttributes<HTMLTableCellElement> & {
 };
 
 const TableBodyCell: React.FC<BodyCellProps> = (props) => {
-  return <td {...props} className={ptStyles.tableCell} style={props.style} />;
+  return <td {...props} className={ptStyles.tableCell} />;
 };
 
 const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, columnIndex, ...props }) => {
@@ -136,16 +136,6 @@ const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, columnIndex, ...
 const getColumnDragId = (column: ProCommonColumn, index: number) => {
   const dataIndex = Array.isArray(column.dataIndex) ? column.dataIndex.join('.') : column.dataIndex;
   return String(column.key ?? dataIndex ?? `col-${index}`);
-};
-
-const normalizeNodeRefs = (value: unknown): NodeRef[] => {
-  if (Array.isArray(value)) {
-    return (value as unknown[]).filter(isNodeRef) as NodeRef[];
-  }
-  if (isNodeRef(value)) {
-    return [value];
-  }
-  return [];
 };
 
 const useToolbarActions = (

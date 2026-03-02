@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { ComponentNode, NodeRef } from '@/types';
+import { isNodeRef, type ComponentNode, type NodeRef } from '@/types';
 import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
 
 type PrototypeLike = {
@@ -23,6 +23,16 @@ export const mergeNodeProps = (
 
 const buildChildrenRefs = (childrenIds: string[]): NodeRef[] =>
   childrenIds.map((nodeId) => ({ type: 'nodeRef', nodeId }));
+
+export const normalizeNodeRefs = (value: unknown): NodeRef[] => {
+  if (Array.isArray(value)) {
+    return value.filter(isNodeRef) as NodeRef[];
+  }
+  if (isNodeRef(value)) {
+    return [value];
+  }
+  return [];
+};
 
 const normalizeNodePropsForPreview = (
   node: ComponentNode,

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card, type CardProps } from 'antd';
 import { AddComponentIntoPreview } from '@/components/DropZone/DropZone';
-import { isNodeRef } from '@/types';
 import type { NodeRef } from '@/types';
 import { usePreviewMode } from '../previewMode';
 import { useRenderNodeRefs } from '../propResolvers';
+import { normalizeNodeRefs } from '../nodeRefLogic';
 import * as styles from './CardForPreview.css';
 
 type CardForPreviewProps = Omit<CardProps, 'title' | 'children'> & {
@@ -12,16 +12,6 @@ type CardForPreviewProps = Omit<CardProps, 'title' | 'children'> & {
   title?: unknown;
   children?: unknown;
   footer?: unknown;
-};
-
-const normalizeNodeRefs = (value: unknown): NodeRef[] => {
-  if (Array.isArray(value)) {
-    return value.filter(isNodeRef) as NodeRef[];
-  }
-  if (isNodeRef(value)) {
-    return [value];
-  }
-  return [];
 };
 
 const useSlotItems = (params: {

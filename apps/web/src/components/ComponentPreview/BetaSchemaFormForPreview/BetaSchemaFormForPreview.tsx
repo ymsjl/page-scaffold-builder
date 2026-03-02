@@ -1,4 +1,5 @@
 import React from 'react';
+import { Input } from 'antd';
 import {
   BetaSchemaForm,
   ProForm,
@@ -43,9 +44,13 @@ type SerializableBetaSchemaFormProps = {
 
 export type NormalizedFormColumn = Record<string, any>;
 
-const renderEditableField = (column: NormalizedFormColumn, index: number) => {
+const renderEditableField = (
+  column: NormalizedFormColumn,
+  index: number,
+  labelOverride?: React.ReactNode,
+) => {
   const name = getFieldName(column, index);
-  const label = getFieldLabel(column, name);
+  const label = labelOverride ?? getFieldLabel(column, name);
   const valueType = String(column.valueType ?? 'text').toLowerCase();
   const formItemProps = { ...getFormItemPropsObject(column), name, label };
   const fieldProps = (column.fieldProps ?? {}) as Record<string, any>;
@@ -86,6 +91,8 @@ const BetaSchemaFormForPreview: React.FC<SerializableBetaSchemaFormProps> = Reac
   const BetaSchemaFormComponent = BetaSchemaForm as unknown as React.ComponentType<any>;
   const ProFormComponent = ProForm as unknown as React.ComponentType<any>;
   const isPurePreview = previewMode === 'pure' || !previewNodeId;
+  const [editingLabelId, setEditingLabelId] = React.useState<string | null>(null);
+  const [draftLabel, setDraftLabel] = React.useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -158,6 +165,50 @@ const BetaSchemaFormForPreview: React.FC<SerializableBetaSchemaFormProps> = Reac
     [canDrag, columnDragIds, dispatch, previewNodeId],
   );
 
+  const startEditingLabel = React.useCallback(
+    (labelId: string, currentLabel: string) => {
+      if (isPurePreview) return;
+      setEditingLabelId(labelId);
+      setDraftLabel(currentLabel);
+    },
+    [isPurePreview],
+  );
+
+  const cancelEditingLabel = React.useCallback(() => {
+    setEditingLabelId(null);
+    setDraftLabel('');
+  }, []);
+
+  const applyEditingLabel = React.useCallback(
+    (column: ProCommonColumn) => {
+      const nextLabel = draftLabel.trim();
+      if (!nextLabel) {
+        cancelEditingLabel();
+        return;
+      }
+
+      if (!previewNodeId || !column.key) {
+        setEditingLabelId(null);
+        return;
+      }
+
+      dispatch(selectNode(previewNodeId));
+      dispatch(
+        upsertColumnOfSelectedNode({
+          key: column.key,
+          title: nextLabel,
+          formItemProps: {
+            ...column.formItemProps,
+            label: nextLabel,
+          },
+        }),
+      );
+
+      setEditingLabelId(null);
+    },
+    [cancelEditingLabel, dispatch, draftLabel, previewNodeId],
+  );
+
   const normalizedColumns = React.useMemo(
     () => columns.map((column) => mapProCommonColumnToProps(column) as NormalizedFormColumn),
     [columns],
@@ -179,12 +230,51 @@ const BetaSchemaFormForPreview: React.FC<SerializableBetaSchemaFormProps> = Reac
   const editContent = (
     <ProFormComponent
       layout={(restProps.layout as string | undefined) ?? 'vertical'}
-      submitter={false}
+      // submitter={false}
       initialValues={restProps.initialValues as Record<string, unknown> | undefined}
     >
       {columns.map((column, index) => {
         const dragId = getColumnDragId(column, index);
         const normalizedColumn = normalizedColumns[index];
+        const fieldName = getFieldName(normalizedColumn, index);
+        const labelText = getFieldLabel(normalizedColumn, fieldName);
+        const isEditingLabel = editingLabelId === dragId;
+        const labelNode = isEditingLabel ? (
+          <Input
+            size="small"
+            value={draftLabel}
+            autoFocus
+            onChange={(event) => setDraftLabel(event.target.value)}
+            onBlur={() => applyEditingLabel(column)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.currentTarget.blur();
+              }
+              if (event.key === 'Escape') {
+                cancelEditingLabel();
+              }
+            }}
+            onClick={(event) => event.stopPropagation()}
+          />
+        ) : (
+          <button
+            type="button"
+            style={{
+              background: 'none',
+              border: 0,
+              padding: 0,
+              textAlign: 'left',
+              cursor: 'text',
+            }}
+            onClick={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => {
+              event.stopPropagation();
+              startEditingLabel(dragId, String(labelText ?? ''));
+            }}
+          >
+            {labelText}
+          </button>
+        );
 
         return (
           <SortableFormItemShell
@@ -195,7 +285,7 @@ const BetaSchemaFormForPreview: React.FC<SerializableBetaSchemaFormProps> = Reac
             onEdit={() => onEditField(column)}
             onInsertBehind={() => onInsertNewFieldBehind(index)}
           >
-            {renderEditableField(normalizedColumn, index)}
+            {renderEditableField(normalizedColumn, index, labelNode)}
           </SortableFormItemShell>
         );
       })}

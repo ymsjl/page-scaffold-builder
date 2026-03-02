@@ -9,7 +9,7 @@ import { ActionFlowEditorDrawer } from './ActionFlowEditorDrawer';
 
 interface ActionFlowSelectorProps {
   value?: string;
-  onChange?: (value: string) => void;
+  onChange?: (value?: string) => void;
   placeholder?: string;
 }
 

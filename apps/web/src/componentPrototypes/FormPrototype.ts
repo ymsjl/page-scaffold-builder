@@ -52,12 +52,12 @@ export const FormPrototype: ComponentPrototype = {
       ],
       defaultValue: 'vertical',
     },
-    onFinish: {
-      name: 'onFinish',
-      type: 'actionFlow',
-      label: '提交成功动作流',
-      description: '表单提交成功后触发的动作流',
-      defaultValue: null,
-    },
   },
+  supportedEvents: [
+    {
+      eventName: 'onFinish',
+      label: '提交成功事件',
+      description: '表单提交成功后触发',
+    },
+  ],
 };

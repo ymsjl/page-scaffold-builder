@@ -70,6 +70,7 @@ const slice = createSlice({
         name: label || `New ${type}`,
         isContainer: isContainer ?? false,
         props: defaultProps ? { ...defaultProps } : {},
+        actionBindings: {},
         childrenIds: [],
       };
       nodes[node.id] = node;

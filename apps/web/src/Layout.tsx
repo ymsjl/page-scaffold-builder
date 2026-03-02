@@ -27,6 +27,7 @@ import ComponentPreview from './components/ComponentPreview/ComponentPreview';
 import PropertyPanel from './components/PropertyPanel/PropertyPanel';
 import { DragDropProvider } from './contexts/DragDropContext';
 import VariableDesignerPanel from './components/VariablesDesigner/VariableDesignerPanel';
+import { ProjectToolbar } from './components/ProjectToolbar/ProjectToolbar';
 
 import * as layoutStyles from './Layout.css';
 
@@ -130,7 +131,10 @@ export const PageScaffoldBuilderLayout = () => {
         onDragCancel={handleDragCancel}
       >
         <Layout className={layoutStyles.builder}>
-          <Layout>
+          <Layout.Header className={layoutStyles.header}>
+            <ProjectToolbar />
+          </Layout.Header>
+          <Layout className={layoutStyles.main}>
             <Layout.Sider
               width={300}
               collapsedWidth={0}

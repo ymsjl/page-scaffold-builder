@@ -1,6 +1,7 @@
 import { style } from '@vanilla-extract/css';
 import {
   colorBgBase,
+  colorBorder,
   colorPrimary,
   radiusSmall,
   radiusLarge,
@@ -14,6 +15,19 @@ export const builder = style({
   display: 'flex',
   flexDirection: 'column',
   height: '100vh',
+});
+
+export const header = style({
+  background: colorBgBase,
+  borderBottom: `1px solid ${colorBorder}`,
+  padding: `0 ${space4}px`,
+  display: 'flex',
+  alignItems: 'center',
+});
+
+export const main = style({
+  flex: 1,
+  minHeight: 0,
 });
 
 export const sider = style({

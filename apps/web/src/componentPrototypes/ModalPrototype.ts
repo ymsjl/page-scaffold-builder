@@ -12,6 +12,7 @@ export const ModalPrototype: ComponentPrototype = {
   defaultProps: {
     open: false,
     title: '模态框标题',
+    children: [],
   },
   propsTypes: {
     title: {
@@ -35,24 +36,21 @@ export const ModalPrototype: ComponentPrototype = {
       description: '控制模态框的显示与隐藏',
       defaultValue: false,
     },
-    onCancel: {
-      name: 'onCancel',
-      type: 'actionFlow',
-      label: '取消事件动作流',
-      description: '模态框取消事件触发的动作流',
-      defaultValue: null,
+    children: {
+      name: 'children',
+      type: 'reactNodeArray',
+      label: '模态框内容',
+      description: '模态框内的子组件',
+      acceptTypes: ['Form', 'Button', 'Description', 'Table', 'Text'],
+      valueType: 'nodeRefList',
+      defaultValue: [],
     },
   },
-  slots: [
+  supportedEvents: [
     {
-      id: 'modal.children',
-      path: 'children',
-      label: '模态框内容',
-      kind: 'reactNodeArray',
-      acceptTypes: ['Form', 'Button', 'Description', 'Table', 'Text'],
-      renderMode: 'inline',
-      wrap: true,
-      placeholder: '拖入 模态框内容',
+      eventName: 'onCancel',
+      label: '取消事件',
+      description: '用户关闭模态框时触发',
     },
   ],
 };

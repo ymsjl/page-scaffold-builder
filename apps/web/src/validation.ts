@@ -48,9 +48,6 @@ export const PropAttributeSchema = z.object({
   name: z.string(),
   label: z.string(),
   group: z.string().optional(),
-  // `actionFlow` represents a property whose value is an action/workflow definition,
-  // as opposed to primitive values (`string`, `number`, etc.) or structural types
-  // like `object`, `array`, or nested `schema` definitions.
   // `reactNode` and `reactNodeArray` represent props that accept React component references
   type: z.enum([
     'string',
@@ -61,12 +58,13 @@ export const PropAttributeSchema = z.object({
     'object',
     'array',
     'schema',
-    'actionFlow',
     'reactNode',
     'reactNodeArray',
   ]),
   // For reactNode/reactNodeArray types, specify which component types can be dropped
   acceptTypes: z.array(z.string()).optional(),
+  // Optional UI hint for property panel rendering
+  valueType: z.string().optional(),
   options: z.array(z.object({ label: z.string(), value: z.any() })).optional(),
   defaultValue: z.any().optional(),
   required: z.boolean().optional(),

@@ -16,6 +16,8 @@ export type EntityModelState = {
   editingEntityModelId: string | null;
 };
 
+export type EntityModelSnapshot = Pick<EntityModelState, 'entityModel'>;
+
 const initialState: EntityModelState = {
   entityModel: entityModelAdapter.getInitialState({}),
   isEntityModelModalOpen: false,
@@ -97,6 +99,15 @@ const slice = createSlice({
         },
       });
     },
+
+    hydrateFromSnapshot: (state, action: PayloadAction<Partial<EntityModelSnapshot>>) => {
+      const next = action.payload;
+      if (next.entityModel) {
+        state.entityModel = next.entityModel;
+      }
+      state.isEntityModelModalOpen = false;
+      state.editingEntityModelId = null;
+    },
   },
 });
 
@@ -108,5 +119,6 @@ export const {
   applyEntityModelChange,
   deleteEntityModel,
   updateEntityFieldExtra,
+  hydrateFromSnapshot,
 } = slice.actions;
 export default slice.reducer;

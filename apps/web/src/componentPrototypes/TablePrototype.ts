@@ -148,17 +148,4 @@ export const TablePrototype: ComponentPrototype = {
       ],
     },
   },
-  slots: [
-    {
-      id: 'table.toolbar.actions',
-      path: 'toolbar.actions',
-      label: '表格操作按钮',
-      kind: 'reactNodeArray',
-      acceptTypes: ['Button'],
-      renderMode: 'inline',
-      childrenDirection: 'horizontal',
-      wrap: true,
-      placeholder: '拖入 表格操作按钮',
-    },
-  ],
 };

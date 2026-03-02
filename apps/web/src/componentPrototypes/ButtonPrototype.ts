@@ -95,13 +95,6 @@ export const ButtonPrototype: ComponentPrototype = {
       ],
       defaultValue: 'button',
     },
-    onClick: {
-      name: 'onClick',
-      type: 'actionFlow',
-      label: '点击事件动作流',
-      description: '按钮点击时触发的动作流',
-      defaultValue: null,
-    },
   },
   supportedEvents: [
     {

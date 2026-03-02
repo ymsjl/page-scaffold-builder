@@ -32,6 +32,7 @@ module.exports = {
   rules: {
     "prettier/prettier": "error",
     "import/extensions": "off",
+    "import/no-extraneous-dependencies": ["error", { packageDir: [__dirname] }],
     "import/prefer-default-export": "off",
     "react/react-in-jsx-scope": "off",
     "react/function-component-definition": ["error", { namedComponents: "arrow-function" }],

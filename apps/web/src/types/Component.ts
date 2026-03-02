@@ -13,21 +13,6 @@ export const COMPONENT_TYPES = [
 ] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
-export type SlotRenderMode = 'inline' | 'panel';
-export type SlotKind = 'reactNode' | 'reactNodeArray';
-
-export interface SlotDefinition {
-  id: string;
-  path: string;
-  label: string;
-  kind: SlotKind;
-  acceptTypes?: ComponentType[];
-  renderMode?: SlotRenderMode;
-  childrenDirection?: 'horizontal' | 'vertical';
-  wrap?: boolean;
-  placeholder?: string;
-}
-
 /**
  * 表示对另一个组件节点的引用
  * 用于 ReactNode 类型的 props，允许将组件树中的节点作为 props 传递
@@ -112,9 +97,6 @@ export interface ComponentPrototype {
 
   /** 组件属性定义，用于属性面板生成 */
   propsTypes?: Record<string, PropAttribute>;
-
-  /** 组件插槽定义，用于 ReactNode 类型 props 的拖拽与渲染 */
-  slots?: SlotDefinition[];
 
   /**
    * 组件支持的事件列表

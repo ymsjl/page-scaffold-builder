@@ -29,6 +29,11 @@ interface ActionFlowsState {
   selectedNodeIds: string[];
 }
 
+export type ActionFlowsSnapshot = Pick<
+  ActionFlowsState,
+  'flows' | 'activeFlowId' | 'selectedNodeIds'
+>;
+
 const initialState: ActionFlowsState = {
   flows: flowAdapter.getInitialState(),
   activeFlowId: null,
@@ -319,6 +324,19 @@ const slice = createSlice({
       flow.entryNodeId = action.payload || undefined;
       flow.updatedAt = Date.now();
     },
+
+    hydrateFromSnapshot: (state, action: PayloadAction<Partial<ActionFlowsSnapshot>>) => {
+      const next = action.payload;
+      if (next.flows) {
+        state.flows = next.flows;
+      }
+      if (typeof next.activeFlowId !== 'undefined') {
+        state.activeFlowId = next.activeFlowId;
+      }
+      if (Array.isArray(next.selectedNodeIds)) {
+        state.selectedNodeIds = next.selectedNodeIds;
+      }
+    },
   },
 });
 
@@ -338,6 +356,7 @@ export const {
   selectNodes,
   clearSelection,
   setEntryNode,
+  hydrateFromSnapshot,
 } = slice.actions;
 export default slice.reducer;
 

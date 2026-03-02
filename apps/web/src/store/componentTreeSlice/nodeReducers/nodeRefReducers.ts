@@ -92,6 +92,7 @@ export const createNodeRefReducers = () => {
         name: label || `New ${type}`,
         isContainer: isContainer ?? false,
         props: defaultProps ? { ...defaultProps } : {},
+        actionBindings: {},
         childrenIds: [],
       };
 

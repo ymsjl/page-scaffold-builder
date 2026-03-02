@@ -7,6 +7,7 @@ import { columnEditorReducer } from './columnEditorSlice/columnEditorSlice';
 import { propertyPanelReducer } from './propertyPanelSlice/propertyPanelSlice';
 import { variablesReducer } from './variablesSlice/variablesSlice';
 import actionFlows, { actionFlowsPersistWhitelist } from './actionFlows/actionFlowsSlice';
+import { projectReducer } from './projectSlice/projectSlice';
 import { baseApi } from './api/baseApi';
 
 export const componentTreePersistWhitelist = ['entityModel'] as const;
@@ -36,6 +37,7 @@ export const rootReducer = combineReducers({
   columnEditor: columnEditorReducer,
   variables: variablesReducer,
   actionFlows: persistReducer(actionFlowsPersistConfig, actionFlows),
+  project: projectReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

@@ -8,7 +8,6 @@ export type {
   ComponentId,
   NodeRef,
   ToolbarActionButtonProps,
-  SlotDefinition,
 } from './Component';
 export { isNodeRef } from './Component';
 export type { ProCommonColumn, ProValueEnum, ColumnSchema } from './tableColumsTypes';

@@ -9,7 +9,6 @@ import {
   isNodeRef,
   isVariableRef,
 } from '@/types';
-import { getValueByPath, setValueByPath } from './slotPath';
 import { type PreviewMode, usePreviewMode } from './previewMode';
 
 export type RenderNodeRef = (nodeId: string) => React.ReactNode;
@@ -73,40 +72,33 @@ const resolveVariableRefsInValue = (
   );
 };
 
-const getActionFlowPropPaths = (componentPrototype: ComponentPrototype): string[] => {
-  return Object.values(componentPrototype.propsTypes || {})
-    .filter((prop) => prop.type === 'actionFlow')
-    .map((prop) => prop.name);
-};
-
-const resolveActionFlowProps = ({
+const resolveActionBindings = ({
   props,
-  actionFlowPropPaths,
+  componentPrototype,
+  actionBindings,
   createFlowHandler,
   nodeId,
   nodeProps,
 }: {
   props: Record<string, unknown>;
-  actionFlowPropPaths: string[];
+  componentPrototype: ComponentPrototype;
+  actionBindings?: Record<string, string>;
   createFlowHandler: ReturnType<typeof useActionFlowHandler>['createFlowHandler'];
   nodeId: string;
   nodeProps: Record<string, unknown>;
-}): Record<string, unknown> => {
-  return actionFlowPropPaths.reduce((acc, propPath) => {
-    const flowId = getValueByPath(acc, propPath);
-    if (typeof flowId !== 'string' || !flowId) {
-      return acc;
-    }
-
-    return setValueByPath(
-      acc,
-      propPath,
-      createFlowHandler(flowId, {
+}) => {
+  const events = componentPrototype.supportedEvents || [];
+  return events.reduce((acc, event) => {
+    const flowId = actionBindings?.[event.eventName];
+    if (!flowId) return acc;
+    return {
+      ...acc,
+      [event.eventName]: createFlowHandler(flowId, {
         componentId: nodeId,
         componentProps: nodeProps,
-        eventName: propPath,
+        eventName: event.eventName,
       }),
-    );
+    };
   }, props);
 };
 
@@ -125,14 +117,12 @@ const resolvePropsForNode = ({
 }): Record<string, unknown> => {
   const nodeProps = node.props || {};
   const mergedProps: Record<string, unknown> = {
-    ...(previewMode === 'edit' 
-      ? { previewNodeId: node.id }
-      : {}),
+    ...(previewMode === 'edit' ? { previewNodeId: node.id } : {}),
     ...(componentPrototype.defaultProps || {}),
     ...nodeProps,
   };
 
-  if (node.isContainer) {
+  if (node.isContainer && typeof mergedProps.children === 'undefined') {
     mergedProps.children = (node.childrenIds ?? []).map((nodeId) => ({
       type: 'nodeRef',
       nodeId,
@@ -144,10 +134,10 @@ const resolvePropsForNode = ({
     unknown
   >;
 
-  const actionFlowPropPaths = getActionFlowPropPaths(componentPrototype);
-  const actionResolvedProps = resolveActionFlowProps({
+  const actionResolvedProps = resolveActionBindings({
     props: variableResolvedProps,
-    actionFlowPropPaths,
+    componentPrototype,
+    actionBindings: node.actionBindings,
     createFlowHandler,
     nodeId: node.id,
     nodeProps,

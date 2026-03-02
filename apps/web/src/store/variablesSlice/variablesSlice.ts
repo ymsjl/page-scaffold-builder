@@ -22,6 +22,8 @@ export interface VariablesState {
   editingVariableId: string | null;
 }
 
+export type VariablesSnapshot = Pick<VariablesState, 'variables' | 'variableValues'>;
+
 const initialState: VariablesState = {
   variables: variableAdapter.getInitialState({}),
   variableValues: {},
@@ -108,6 +110,18 @@ const slice = createSlice({
     resetVariableValues: (state) => {
       buildVariableValuesFromDefinitions(state);
     },
+
+    hydrateFromSnapshot: (state, action: PayloadAction<Partial<VariablesSnapshot>>) => {
+      const next = action.payload;
+      if (next.variables) {
+        state.variables = next.variables;
+      }
+      if (next.variableValues) {
+        state.variableValues = next.variableValues;
+      }
+      state.isVariableModalOpen = false;
+      state.editingVariableId = null;
+    },
   },
 });
 
@@ -120,5 +134,6 @@ export const {
   deleteVariable,
   setVariableValue,
   resetVariableValues,
+  hydrateFromSnapshot,
 } = variablesActions;
 export const variablesReducer = slice.reducer;

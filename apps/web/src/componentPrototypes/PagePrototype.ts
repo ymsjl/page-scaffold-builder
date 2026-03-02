@@ -9,7 +9,9 @@ export const PagePrototype: ComponentPrototype = {
   get component() {
     return getRegisteredComponent('PageForPreview');
   },
-  defaultProps: {},
+  defaultProps: {
+    children: [],
+  },
   propsTypes: {
     path: {
       name: 'path',
@@ -25,17 +27,13 @@ export const PagePrototype: ComponentPrototype = {
       description: '页面的默认搜索参数',
       defaultValue: {},
     },
-  },
-  slots: [
-    {
-      id: 'page.children',
-      path: 'children',
+    children: {
+      name: 'children',
+      type: 'reactNodeArray',
       label: '页面内容',
-      kind: 'reactNodeArray',
-      renderMode: 'inline',
-      wrap: true,
-      childrenDirection: 'vertical',
-      placeholder: '拖入页面内容',
+      description: '页面内的子组件',
+      valueType: 'nodeRefList',
+      defaultValue: [],
     },
-  ],
+  },
 };

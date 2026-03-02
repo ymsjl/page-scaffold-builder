@@ -1,10 +1,9 @@
 import React from 'react';
 import { AddComponentIntoPreview } from '@/components/DropZone/DropZone';
 import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
-import { isNodeRef } from '@/types';
-import type { NodeRef } from '@/types';
 import { usePreviewMode } from '../previewMode';
 import { useRenderNodeRefs } from '../propResolvers';
+import { normalizeNodeRefs } from '../nodeRefLogic';
 
 type PageForPreviewProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> & {
   previewNodeId?: string;
@@ -14,15 +13,7 @@ type PageForPreviewProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'children'
 const PageForPreview: React.FC<PageForPreviewProps> = React.memo(
   ({ previewNodeId, children, ...restProps }) => {
     const previewMode = usePreviewMode();
-    const childRefs = React.useMemo(() => {
-      if (Array.isArray(children)) {
-        return children.filter(isNodeRef) as NodeRef[];
-      }
-      if (isNodeRef(children)) {
-        return [children];
-      }
-      return [] as NodeRef[];
-    }, [children]);
+    const childRefs = React.useMemo(() => normalizeNodeRefs(children), [children]);
 
     const renderedChildren = useRenderNodeRefs(childRefs);
 

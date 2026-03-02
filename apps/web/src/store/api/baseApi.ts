@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { ProjectListItem, ProjectSnapshot } from '@/types/ProjectSnapshot';
 
 export type SqlParseRequest = {
   sql: string;
@@ -35,7 +36,44 @@ export const baseApi = createApi({
         body,
       }),
     }),
+    listProjects: builder.query<ProjectListItem[], void>({
+      query: () => ({
+        url: '/api/projects',
+      }),
+    }),
+    getProject: builder.query<ProjectSnapshot, string>({
+      query: (id) => ({
+        url: `/api/projects/${id}`,
+      }),
+    }),
+    createProject: builder.mutation<ProjectSnapshot, ProjectSnapshot>({
+      query: (body) => ({
+        url: '/api/projects',
+        method: 'POST',
+        body,
+      }),
+    }),
+    updateProject: builder.mutation<ProjectSnapshot, { id: string; snapshot: ProjectSnapshot }>({
+      query: ({ id, snapshot }) => ({
+        url: `/api/projects/${id}`,
+        method: 'PUT',
+        body: snapshot,
+      }),
+    }),
+    deleteProject: builder.mutation<{ success: true }, string>({
+      query: (id) => ({
+        url: `/api/projects/${id}`,
+        method: 'DELETE',
+      }),
+    }),
   }),
 });
 
-export const { useParseSqlMutation } = baseApi;
+export const {
+  useParseSqlMutation,
+  useListProjectsQuery,
+  useLazyGetProjectQuery,
+  useCreateProjectMutation,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
+} = baseApi;
