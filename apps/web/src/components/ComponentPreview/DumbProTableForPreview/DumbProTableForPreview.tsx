@@ -242,6 +242,7 @@ type SortableHeaderCellProps = {
   onCancelDraft: () => void;
   onStartEditing: () => void;
   onHoverChange: (nextHovered: boolean) => void;
+  cellContent: React.ReactNode;
 };
 
 const SortableHeaderCell: React.FC<SortableHeaderCellProps> = ({
@@ -258,6 +259,7 @@ const SortableHeaderCell: React.FC<SortableHeaderCellProps> = ({
   onCancelDraft,
   onStartEditing,
   onHoverChange,
+  cellContent,
 }) => {
   const dispatch = useAppDispatch();
   const activeSource = useAppSelector(selectActiveEditingSource);
@@ -459,11 +461,11 @@ const SortableHeaderCell: React.FC<SortableHeaderCellProps> = ({
     </div>
   );
 
-  const headerShell = projection ? (
+  const columnShell = projection ? (
     <EditableShell
       target={projection}
       selected={isSelected}
-      className={`${styles.shellStretch} ${isDragging ? styles.draggingShell : ''}`}
+      className={`${styles.columnShell} ${styles.shellStretch} ${isDragging ? styles.draggingShell : ''}`}
       onSelect={(event) => {
         event.stopPropagation();
         focusColumn();
@@ -514,10 +516,16 @@ const SortableHeaderCell: React.FC<SortableHeaderCellProps> = ({
         </div>
       }
     >
-      {editableContent}
+      <div className={styles.columnContent}>
+        <div className={styles.headerShell}>{editableContent}</div>
+        <div className={styles.bodyCell}>{cellContent}</div>
+      </div>
     </EditableShell>
   ) : (
-    editableContent
+    <div className={styles.columnContent}>
+      <div className={styles.headerShell}>{editableContent}</div>
+      <div className={styles.bodyCell}>{cellContent}</div>
+    </div>
   );
 
   return (
@@ -529,10 +537,10 @@ const SortableHeaderCell: React.FC<SortableHeaderCellProps> = ({
         ref={setNodeRef}
         style={{ transform: CSS.Transform.toString(transform), transition }}
         className={
-          isColumnActive ? `${styles.headerCell} ${styles.headerCellActive}` : styles.headerCell
+          isColumnActive ? `${styles.columnLane} ${styles.columnLaneActive}` : styles.columnLane
         }
       >
-        <div className={styles.headerShell}>{headerShell}</div>
+        {columnShell}
       </div>
     </Dropdown>
   );
@@ -912,7 +920,29 @@ const DumbProTableForPreview: React.FC<SerializableProTableProps> = React.memo((
     [columns, dispatch, inlineEditMode, previewNodeId],
   );
 
-  const visibleRowActions = rowActions ?? [];
+  const visibleRowActions = React.useMemo(() => rowActions ?? [], [rowActions]);
+
+  const renderColumnCellContent = React.useCallback(
+    (column: ProCommonColumn) => {
+      if (String(column.valueType ?? '').toLowerCase() === 'option') {
+        return (
+          <ColumnCellSlot
+            targetNodeId={previewNodeId}
+            acceptTypes={['Button']}
+            nodeRefs={visibleRowActions}
+            propPath="rowActions"
+          />
+        );
+      }
+
+      return (
+        <div className={styles.valueText}>
+          {String(dataSource[column.dataIndex as string] ?? '示例值')}
+        </div>
+      );
+    },
+    [dataSource, previewNodeId, visibleRowActions],
+  );
 
   return (
     <div className={styles.root}>
@@ -920,9 +950,6 @@ const DumbProTableForPreview: React.FC<SerializableProTableProps> = React.memo((
         <div className={styles.header}>
           <div className={styles.titleBlock}>
             <h3 className={styles.heading}>{headerTitle || '示意表格'}</h3>
-            <div className={styles.caption}>
-              编辑态使用 dumb 布局骨架，保留表格标题、搜索区、列排序和行操作槽位。
-            </div>
           </div>
           <div className={styles.toolbarActions}>
             {toolbarActionNodes.length > 0 ? (
@@ -1028,104 +1055,61 @@ const DumbProTableForPreview: React.FC<SerializableProTableProps> = React.memo((
                 strategy={horizontalListSortingStrategy}
               >
                 <div className={styles.tableWrap}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr className={styles.headerRow}>
-                        {visibleTableColumns.map((item) => {
-                          const columnSource = previewNodeId
-                            ? createSchemaColumnSource({
-                                ownerNodeId: previewNodeId,
-                                column: item.column,
-                                columnIndex: item.columnIndex,
-                              })
-                            : null;
-                          const isSelected = isSameEditableSource(activeSource, columnSource);
-                          const isColumnActive = hoveredColumnId === item.dragId || isSelected;
-                          const isEditing =
-                            inlineEditMode?.kind === 'header' &&
-                            inlineEditMode.columnKey === item.column.key;
+                  <div className={styles.columnsRow}>
+                    {visibleTableColumns.map((item) => {
+                      const columnSource = previewNodeId
+                        ? createSchemaColumnSource({
+                            ownerNodeId: previewNodeId,
+                            column: item.column,
+                            columnIndex: item.columnIndex,
+                          })
+                        : null;
+                      const isSelected = isSameEditableSource(activeSource, columnSource);
+                      const isColumnActive = hoveredColumnId === item.dragId || isSelected;
+                      const isEditing =
+                        inlineEditMode?.kind === 'header' &&
+                        inlineEditMode.columnKey === item.column.key;
 
-                          return (
-                            <th
-                              key={item.dragId}
-                              style={item.column.width ? { width: item.column.width } : undefined}
-                            >
-                              <SortableHeaderCell
-                                dragId={item.dragId}
-                                column={item.column}
-                                columnIndex={item.columnIndex}
-                                previewNodeId={previewNodeId}
-                                entityFields={entityFields}
-                                isColumnActive={isColumnActive}
-                                isEditing={Boolean(isEditing)}
-                                draftValue={isEditing ? (inlineEditMode?.draft ?? '') : ''}
-                                onDraftChange={(nextValue) =>
-                                  setInlineEditMode((current) =>
-                                    current?.kind === 'header' &&
-                                    current.columnKey === item.column.key
-                                      ? { ...current, draft: nextValue }
-                                      : current,
-                                  )
-                                }
-                                onApplyDraft={() => applyHeaderRename(item.column)}
-                                onCancelDraft={() => setInlineEditMode(null)}
-                                onStartEditing={() =>
-                                  setInlineEditMode({
-                                    kind: 'header',
-                                    columnKey: item.column.key,
-                                    draft: getColumnTitleText(item.column),
-                                  })
-                                }
-                                onHoverChange={(nextHovered) =>
-                                  setHoveredColumnId(nextHovered ? item.dragId : null)
-                                }
-                              />
-                            </th>
-                          );
-                        })}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        {visibleTableColumns.map((item) => {
-                          const columnSource = previewNodeId
-                            ? createSchemaColumnSource({
-                                ownerNodeId: previewNodeId,
-                                column: item.column,
-                                columnIndex: item.columnIndex,
+                      return (
+                        <div
+                          key={item.dragId}
+                          className={styles.columnWrap}
+                          style={item.column.width ? { width: item.column.width } : undefined}
+                        >
+                          <SortableHeaderCell
+                            dragId={item.dragId}
+                            column={item.column}
+                            columnIndex={item.columnIndex}
+                            previewNodeId={previewNodeId}
+                            entityFields={entityFields}
+                            isColumnActive={isColumnActive}
+                            isEditing={Boolean(isEditing)}
+                            draftValue={isEditing ? (inlineEditMode?.draft ?? '') : ''}
+                            onDraftChange={(nextValue) =>
+                              setInlineEditMode((current) =>
+                                current?.kind === 'header' && current.columnKey === item.column.key
+                                  ? { ...current, draft: nextValue }
+                                  : current,
+                              )
+                            }
+                            onApplyDraft={() => applyHeaderRename(item.column)}
+                            onCancelDraft={() => setInlineEditMode(null)}
+                            onStartEditing={() =>
+                              setInlineEditMode({
+                                kind: 'header',
+                                columnKey: item.column.key,
+                                draft: getColumnTitleText(item.column),
                               })
-                            : null;
-                          const isSelected = isSameEditableSource(activeSource, columnSource);
-                          const isColumnActive = hoveredColumnId === item.dragId || isSelected;
-                          const cellClassName = isColumnActive
-                            ? `${styles.bodyCell} ${styles.bodyCellActive}`
-                            : styles.bodyCell;
-
-                          return (
-                            <td
-                              key={item.dragId}
-                              className={cellClassName}
-                              onMouseEnter={() => setHoveredColumnId(item.dragId)}
-                              onMouseLeave={() => setHoveredColumnId(null)}
-                            >
-                              {String(item.column.valueType ?? '').toLowerCase() === 'option' ? (
-                                <ColumnCellSlot
-                                  targetNodeId={previewNodeId}
-                                  acceptTypes={['Button']}
-                                  nodeRefs={visibleRowActions}
-                                  propPath="rowActions"
-                                />
-                              ) : (
-                                <div className={styles.valueText}>
-                                  {String(dataSource[item.column.dataIndex as string] ?? '示例值')}
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    </tbody>
-                  </table>
+                            }
+                            onHoverChange={(nextHovered) =>
+                              setHoveredColumnId(nextHovered ? item.dragId : null)
+                            }
+                            cellContent={renderColumnCellContent(item.column)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </SortableContext>
             </DndContext>

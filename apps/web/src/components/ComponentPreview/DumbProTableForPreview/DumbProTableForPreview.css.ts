@@ -183,51 +183,60 @@ export const tableWrap = style({
   overflowX: 'auto',
   border: `1px solid ${colorBorderSecondary}`,
   borderRadius: radiusMedium,
-});
-
-export const table = style({
-  width: '100%',
-  borderCollapse: 'separate',
-  borderSpacing: 0,
-  tableLayout: 'fixed',
   background: colorBgBase,
 });
 
-export const headerRow = style({});
+export const columnsRow = style({
+  display: 'flex',
+  alignItems: 'stretch',
+  minWidth: 'max-content',
+  background: colorBgBase,
+});
 
-export const headerCell = style({
+export const columnWrap = style({
+  flex: '0 0 220px',
+  minWidth: 220,
+  borderRight: `1px solid ${colorBorderSecondary}`,
+  selectors: {
+    '&:last-child': {
+      borderRight: 'none',
+    },
+  },
+});
+
+export const columnShell = style({
+  height: '100%',
+});
+
+export const columnLane = style({
   position: 'relative',
-  padding: space2,
-  verticalAlign: 'top',
-  background: '#fafcff',
-  borderBottom: `1px solid ${colorBorderSecondary}`,
+  height: '100%',
   transition: transitionFast,
 });
 
-export const headerCellActive = style({
-  background: 'rgba(24, 144, 255, 0.06)',
-  borderTop: `2px solid ${colorPrimary}`,
-  borderLeft: `2px solid ${colorPrimary}`,
-  borderRight: `2px solid ${colorPrimary}`,
+export const columnLaneActive = style({
+  background: 'rgba(24, 144, 255, 0.04)',
 });
 
 export const bodyCell = style({
   padding: `${space3}px ${space2}px`,
-  verticalAlign: 'top',
+  minHeight: 88,
   borderBottom: `1px solid ${colorBorderSecondary}`,
   transition: transitionFast,
   background: colorBgBase,
 });
 
-export const bodyCellActive = style({
-  background: 'rgba(24, 144, 255, 0.04)',
-  borderLeft: `2px solid ${colorPrimary}`,
-  borderRight: `2px solid ${colorPrimary}`,
-  borderBottom: `2px solid ${colorPrimary}`,
+export const columnContent = style({
+  display: 'grid',
+  gridTemplateRows: 'auto 1fr',
+  minHeight: 100,
 });
 
 export const headerShell = style({
   minHeight: 72,
+  padding: space2,
+  background: '#fafcff',
+  borderBottom: `1px solid ${colorBorderSecondary}`,
 });
 
 export const headerContent = style({
