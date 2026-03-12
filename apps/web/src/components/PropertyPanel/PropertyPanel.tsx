@@ -4,6 +4,7 @@ import { Button, Flex, Form, Input, InputNumber, List, Select, Space, Typography
 import { AppstoreOutlined, LeftOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
+  selectActiveColumnInPropertyPanel,
   componentNodesSelectors,
   selectColumnsOfSelectedNode,
   selectNodeInPropertyPanel,
@@ -22,6 +23,7 @@ import {
   updateNode,
 } from '@/store/componentTreeSlice/componentTreeSlice';
 import { startAddingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
+import { openSchemaColumnEditor } from '@/editing/bindings/schemaColumns';
 import { getComponentPrototype } from '@/componentMetas';
 import {
   type ComponentNode,
@@ -188,6 +190,7 @@ const getNodeRefIdsFromProp = (
 const PropertyPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const selectedNode = useAppSelector(selectNodeInPropertyPanel);
+  const activeColumnInPanel = useAppSelector(selectActiveColumnInPropertyPanel);
   const showBackInPropertyPanel = useAppSelector(selectShowBackInPropertyPanel);
   const selectedNodeId = selectedNode?.id;
   const selectedComponentType = selectedNode?.type;
@@ -468,6 +471,9 @@ const PropertyPanel: React.FC = () => {
         />
       )}
       <Typography.Text>{`属性面板：${selectedNode.name}`}</Typography.Text>
+      {activeColumnInPanel ? (
+        <Typography.Text type="secondary">{`/ 列：${activeColumnInPanel.title}`}</Typography.Text>
+      ) : null}
     </Space>
   );
 
@@ -559,6 +565,29 @@ const PropertyPanel: React.FC = () => {
         className={panelStyles.cardRounded}
         bodyStyle={{ padding: '16px' }}
       >
+        {activeColumnInPanel ? (
+          <Button
+            onClick={() => {
+              if (!selectedNodeId) {
+                return;
+              }
+
+              const activeColumnIndex = columns.findIndex(
+                (column) => column.key === activeColumnInPanel.key,
+              );
+              dispatch(
+                openSchemaColumnEditor({
+                  ownerNodeId: selectedNodeId,
+                  column: activeColumnInPanel,
+                  columnIndex: activeColumnIndex >= 0 ? activeColumnIndex : undefined,
+                  interactionSource: 'panel',
+                }),
+              );
+            }}
+          >
+            编辑当前列
+          </Button>
+        ) : null}
         <Button
           onClick={() => {
             dispatch(

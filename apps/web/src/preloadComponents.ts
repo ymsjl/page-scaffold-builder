@@ -3,6 +3,10 @@ import { lazyLoad } from './componentRegistry';
 export const preloadComponents = async () => {
   await Promise.all([
     lazyLoad(
+      'DumbProTableForPreview',
+      () => import('@/components/ComponentPreview/DumbProTableForPreview/DumbProTableForPreview'),
+    ),
+    lazyLoad(
       'ProTableForPreview',
       () => import('@/components/ComponentPreview/ProTableForPreview/ProTableForPreview'),
     ),
@@ -26,10 +30,10 @@ export const preloadComponents = async () => {
     lazyLoad('ProDescriptions', () =>
       import('@ant-design/pro-components').then((m) => ({ default: m.ProDescriptions })),
     ),
-    lazyLoad('BetaSchemaFormForPreview', () =>
-      import(
-        '@/components/ComponentPreview/BetaSchemaFormForPreview/BetaSchemaFormForPreview'
-      ),
+    lazyLoad(
+      'BetaSchemaFormForPreview',
+      () =>
+        import('@/components/ComponentPreview/BetaSchemaFormForPreview/BetaSchemaFormForPreview'),
     ),
   ]);
 };

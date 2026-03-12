@@ -1,6 +1,7 @@
 import { combineReducers } from '@reduxjs/toolkit';
 import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import { editingReducer } from '@/editing/store/editingSlice';
 import componentTree from './componentTreeSlice/componentTreeSlice';
 import entityModelReducers from './entityModelSlice/entityModelSlice';
 import { columnEditorReducer } from './columnEditorSlice/columnEditorSlice';
@@ -33,6 +34,7 @@ export const rootReducer = combineReducers({
     },
     entityModelReducers,
   ),
+  editing: editingReducer,
   propertyPanel: propertyPanelReducer,
   columnEditor: columnEditorReducer,
   variables: variablesReducer,

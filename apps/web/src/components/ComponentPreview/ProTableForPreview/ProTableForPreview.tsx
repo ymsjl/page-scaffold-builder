@@ -7,7 +7,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { HolderOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { HolderOutlined, PlusOutlined } from '@ant-design/icons';
 import { AddComponentIntoPreview } from '@/components/DropZone/DropZone';
 import SlotItemWrapper from '@/components/SlotItemWrapper/SlotItemWrapper';
 import type { NodeRef, ProCommonColumn, SchemaField } from '@/types';
@@ -107,14 +107,6 @@ const TableHeaderCell: React.FC<HeaderCellProps> = ({ disabled, columnIndex, ...
         >
           <HolderOutlined className={ptStyles.handleIcon} />
         </button>
-        <div className={ptStyles.fieldActions}>
-          <button type="button" className={ptStyles.actionButton}>
-            <EditOutlined />
-          </button>
-          <button type="button" className={ptStyles.actionButton}>
-            <DeleteOutlined />
-          </button>
-        </div>
         <span className={ptStyles.headerTitle}>{headerChildren}</span>
         <div className={ptStyles.addColumnIndicatorLayout}>
           <div className={ptStyles.addColumnIndicator} />

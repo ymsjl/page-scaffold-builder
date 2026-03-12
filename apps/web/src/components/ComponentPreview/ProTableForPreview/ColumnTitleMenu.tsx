@@ -1,16 +1,6 @@
 import React, { type PropsWithChildren } from 'react';
-import { Dropdown, Input } from 'antd';
+import { Button, Dropdown, Input, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
-import type { ProCommonColumn, SchemaField } from '@/types';
-import {
-  selectNode,
-  upsertColumnOfSelectedNode,
-  deleteColumnForSelectedNode,
-} from '@/store/componentTreeSlice/componentTreeSlice';
-import { startEditingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
-import { selectTypeOfSelectedNode } from '@/store/componentTreeSlice/componentTreeSelectors';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -19,6 +9,24 @@ import {
   NumberOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { EditableShell } from '@/components/EditableShell/EditableShell';
+import { type ProCommonColumn, type SchemaField } from '@/types';
+import {
+  upsertColumnOfSelectedNode,
+  deleteColumnForSelectedNode,
+} from '@/store/componentTreeSlice/componentTreeSlice';
+import { selectTypeOfSelectedNode } from '@/store/componentTreeSlice/componentTreeSelectors';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { selectActiveEditingSource } from '@/editing/store/selectors';
+import { setHoverSource } from '@/editing/store/editingSlice';
+import {
+  createSchemaColumnProjection,
+  createSchemaColumnSource,
+  focusSchemaColumn,
+  openSchemaColumnEditor,
+} from '@/editing/bindings/schemaColumns';
+import { isSameEditableSource } from '@/editing/types/EditableSource';
+import { createProCommonColumnFromSchemeField } from '@/components/SchemaBuilderModal/createProCommonColumnFromSchemeField';
 import * as ptStyles from './ProTableForPreview.css';
 
 type ColumnTitleMenuProps = {
@@ -37,9 +45,36 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
 }) => {
   const dispatch = useAppDispatch();
   const componentType = useAppSelector(selectTypeOfSelectedNode);
+  const activeSource = useAppSelector(selectActiveEditingSource);
   const [isRenaming, setIsRenaming] = React.useState(false);
   const [draftTitle, setDraftTitle] = React.useState('');
   const canOperate = !!tableNodeId;
+
+  const columnSource = React.useMemo(() => {
+    if (!tableNodeId) {
+      return null;
+    }
+
+    return createSchemaColumnSource({
+      ownerNodeId: tableNodeId,
+      column,
+      columnIndex,
+    });
+  }, [column, columnIndex, tableNodeId]);
+
+  const columnProjection = React.useMemo(() => {
+    if (!tableNodeId) {
+      return null;
+    }
+
+    return createSchemaColumnProjection({
+      ownerNodeId: tableNodeId,
+      column,
+      columnIndex,
+    });
+  }, [column, columnIndex, tableNodeId]);
+
+  const isSelected = isSameEditableSource(activeSource, columnSource);
 
   const getCursorStyle = React.useCallback((): React.CSSProperties['cursor'] => {
     if (isRenaming) return 'text';
@@ -74,7 +109,14 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
 
     const currentTitle = getTitleText();
     if (nextTitle !== currentTitle) {
-      dispatch(selectNode(tableNodeId));
+      dispatch(
+        focusSchemaColumn({
+          ownerNodeId: tableNodeId,
+          column,
+          columnIndex,
+          interactionSource: 'canvas',
+        }),
+      );
       dispatch(
         upsertColumnOfSelectedNode({
           key: column.key,
@@ -84,16 +126,58 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
     }
 
     setIsRenaming(false);
-  }, [cancelRename, column.key, dispatch, draftTitle, getTitleText, tableNodeId]);
+  }, [cancelRename, column, columnIndex, dispatch, draftTitle, getTitleText, tableNodeId]);
+
+  const focusColumn = React.useCallback(() => {
+    if (!tableNodeId || !columnSource) {
+      return;
+    }
+
+    dispatch(
+      focusSchemaColumn({
+        ownerNodeId: tableNodeId,
+        column,
+        columnIndex,
+        interactionSource: 'canvas',
+      }),
+    );
+  }, [column, columnIndex, columnSource, dispatch, tableNodeId]);
 
   const handleDoubleClick = React.useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       if (!canOperate) return;
       event.stopPropagation();
+      focusColumn();
       setDraftTitle(getTitleText());
       setIsRenaming(true);
     },
-    [canOperate, getTitleText],
+    [canOperate, focusColumn, getTitleText],
+  );
+
+  const handleEdit = React.useCallback(
+    (event?: React.MouseEvent | React.KeyboardEvent) => {
+      event?.stopPropagation();
+      if (!tableNodeId) return;
+      dispatch(
+        openSchemaColumnEditor({
+          ownerNodeId: tableNodeId,
+          column,
+          columnIndex,
+          interactionSource: 'canvas',
+        }),
+      );
+    },
+    [column, columnIndex, dispatch, tableNodeId],
+  );
+
+  const handleDelete = React.useCallback(
+    (event?: React.MouseEvent | React.KeyboardEvent) => {
+      event?.stopPropagation();
+      if (!tableNodeId || !column.key) return;
+      focusColumn();
+      dispatch(deleteColumnForSelectedNode(column.key));
+    },
+    [column.key, dispatch, focusColumn, tableNodeId],
   );
 
   const insertItems = React.useMemo<MenuProps['items']>(() => {
@@ -167,10 +251,17 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
       if (!tableNodeId) return;
       if (!column.key) return;
 
-      dispatch(selectNode(tableNodeId));
+      focusColumn();
 
       if (key === 'edit' || key === 'rules') {
-        dispatch(startEditingColumn(column));
+        dispatch(
+          openSchemaColumnEditor({
+            ownerNodeId: tableNodeId,
+            column,
+            columnIndex,
+            interactionSource: 'context-menu',
+          }),
+        );
       } else if (key === 'delete') {
         dispatch(deleteColumnForSelectedNode(column.key));
       } else if (typeof key === 'string' && key.startsWith('insert:')) {
@@ -200,8 +291,12 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
         );
       }
     },
-    [column, columnIndex, dispatch, entityFields, tableNodeId, componentType],
+    [column, columnIndex, dispatch, entityFields, tableNodeId, componentType, focusColumn],
   );
+
+  if (!columnProjection || !columnSource) {
+    return children;
+  }
 
   return (
     <Dropdown
@@ -227,15 +322,45 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
           onClick={(event) => event.stopPropagation()}
         />
       ) : (
-        <button
-          type="button"
-          className={ptStyles.titleContainer}
-          style={{ cursor: getCursorStyle() }}
-          onClick={(event) => event.stopPropagation()}
-          onDoubleClick={handleDoubleClick}
+        <EditableShell
+          target={columnProjection}
+          selected={isSelected}
+          onSelect={(event) => {
+            event.stopPropagation();
+            focusColumn();
+          }}
+          onMouseEnter={() => dispatch(setHoverSource(columnSource))}
+          onMouseLeave={() => dispatch(setHoverSource(null))}
+          toolbar={
+            <>
+              <Tooltip title="编辑列">
+                <Button size="small" type="text" icon={<EditOutlined />} onClick={handleEdit} />
+              </Tooltip>
+              <Tooltip title="删除列">
+                <Button
+                  size="small"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={handleDelete}
+                />
+              </Tooltip>
+            </>
+          }
         >
-          {children}
-        </button>
+          <button
+            type="button"
+            className={ptStyles.titleContainer}
+            style={{ cursor: getCursorStyle() }}
+            onClick={(event) => {
+              event.stopPropagation();
+              focusColumn();
+            }}
+            onDoubleClick={handleDoubleClick}
+          >
+            {children}
+          </button>
+        </EditableShell>
       )}
     </Dropdown>
   );

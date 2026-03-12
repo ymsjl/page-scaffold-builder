@@ -5,7 +5,6 @@ import {
   deleteColumnForSelectedNode,
   moveColumnForSelectedNode,
 } from '@/store/componentTreeSlice/componentTreeSlice';
-import { startEditingColumn } from '@/store/columnEditorSlice/columnEditorSlice';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -14,10 +13,13 @@ import {
 } from '@ant-design/icons';
 import type { ProCommonColumn } from '@/types';
 import {
+  selectActiveColumnTargetInPropertyPanel,
   selectColumnsOfSelectedNode,
   selectFieldsOfEntityModelInUse,
+  selectNodeInPropertyPanel,
 } from '@/store/componentTreeSlice/componentTreeSelectors';
 import { addColumnsFromEntityModelToSelectedNode } from '@/store/componentTreeSlice/thunks';
+import { focusSchemaColumn, openSchemaColumnEditor } from '@/editing/bindings/schemaColumns';
 
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -33,48 +35,63 @@ interface SchemaListProps {
 
 interface SortableItemProps {
   field: ProCommonColumn;
+  fieldIndex: number;
+  isActive: boolean;
+  onFocus: (field: ProCommonColumn, fieldIndex: number) => void;
   onEdit: (field: ProCommonColumn) => void;
   onDelete: (key: string) => void;
 }
 
-const SortableItem: React.FC<SortableItemProps> = React.memo(({ field, onEdit, onDelete }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: field.key,
-  });
+const SortableItem: React.FC<SortableItemProps> = React.memo(
+  ({ field, fieldIndex, isActive, onFocus, onEdit, onDelete }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+      id: field.key,
+    });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    cursor: isDragging ? 'grabbing' : 'grab',
-  };
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      cursor: isDragging ? 'grabbing' : 'grab',
+    };
 
-  const valueTypeLabel =
-    ValueTyps.find((opt) => opt.value === field.valueType)?.label || field.valueType;
+    const valueTypeLabel =
+      ValueTyps.find((opt) => opt.value === field.valueType)?.label || field.valueType;
 
-  return (
-    <List.Item ref={setNodeRef} style={style}>
-      <Flex gap={8} className={styles.fullWidth} align="center">
-        <div {...attributes} {...listeners} className={styles.dragHandle}>
-          <HolderOutlined className={styles.dragIcon} />
-        </div>
-        <div className={styles.fieldTitle}>{field.title}</div>
-        <Flex gap={8} wrap="wrap">
-          <Tag color="blue">{valueTypeLabel}</Tag>
-        </Flex>
-        <Space size="small">
-          <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(field)} />
+    return (
+      <List.Item
+        ref={setNodeRef}
+        style={style}
+        className={`${styles.sortableItem} ${isActive ? styles.sortableItemActive : ''}`}
+      >
+        <Flex gap={8} className={styles.fullWidth} align="center">
+          <div {...attributes} {...listeners} className={styles.dragHandle}>
+            <HolderOutlined className={styles.dragIcon} />
+          </div>
           <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => onDelete(field.key as string)}
-          />
-        </Space>
-      </Flex>
-    </List.Item>
-  );
-});
+            type="text"
+            className={styles.fieldTitle}
+            onClick={() => onFocus(field, fieldIndex)}
+          >
+            {field.title}
+          </Button>
+          <Flex gap={8} wrap="wrap">
+            <Tag color="blue">{valueTypeLabel}</Tag>
+          </Flex>
+          <Space size="small">
+            <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(field)} />
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onDelete(field.key as string)}
+            />
+          </Space>
+        </Flex>
+      </List.Item>
+    );
+  },
+);
 
 SortableItem.displayName = 'SortableItem';
 
@@ -103,6 +120,9 @@ AddColumnsFromEntityModelButton.displayName = 'AddColumnsFromEntityModelButton';
 export const SchemaList: React.FC<SchemaListProps> = React.memo(() => {
   const dispatch = useAppDispatch();
   const columns = useAppSelector(selectColumnsOfSelectedNode);
+  const nodeInPropertyPanel = useAppSelector(selectNodeInPropertyPanel);
+  const activeColumnTarget = useAppSelector(selectActiveColumnTargetInPropertyPanel);
+  const ownerNodeId = nodeInPropertyPanel?.id;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -113,8 +133,40 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(() => {
   );
 
   const handleStartEdit = useCallback(
-    (field: ProCommonColumn) => dispatch(startEditingColumn(field)),
-    [dispatch],
+    (field: ProCommonColumn) => {
+      if (!ownerNodeId) {
+        return;
+      }
+
+      const fieldIndex = columns.findIndex((column) => column.key === field.key);
+      dispatch(
+        openSchemaColumnEditor({
+          ownerNodeId,
+          column: field,
+          columnIndex: fieldIndex >= 0 ? fieldIndex : undefined,
+          interactionSource: 'panel',
+        }),
+      );
+    },
+    [columns, dispatch, ownerNodeId],
+  );
+
+  const handleFocus = useCallback(
+    (field: ProCommonColumn, fieldIndex: number) => {
+      if (!ownerNodeId) {
+        return;
+      }
+
+      dispatch(
+        focusSchemaColumn({
+          ownerNodeId,
+          column: field,
+          columnIndex: fieldIndex,
+          interactionSource: 'panel',
+        }),
+      );
+    },
+    [dispatch, ownerNodeId],
   );
 
   const handleDelete = useCallback(
@@ -175,10 +227,18 @@ export const SchemaList: React.FC<SchemaListProps> = React.memo(() => {
             >
               <List<ProCommonColumn>
                 dataSource={columns}
-                renderItem={(field) => (
+                renderItem={(field, index) => (
                   <SortableItem
                     key={field.key}
                     field={field}
+                    fieldIndex={index}
+                    isActive={
+                      !!activeColumnTarget &&
+                      ((activeColumnTarget.itemKey && activeColumnTarget.itemKey === field.key) ||
+                        (typeof activeColumnTarget.itemIndex === 'number' &&
+                          activeColumnTarget.itemIndex === index))
+                    }
+                    onFocus={handleFocus}
                     onEdit={handleStartEdit}
                     onDelete={handleDelete}
                   />

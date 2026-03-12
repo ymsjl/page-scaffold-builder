@@ -7,7 +7,7 @@ export const TablePrototype: ComponentPrototype = {
   description: '基于 ProTable 的表格组件',
   isContainer: false,
   get component() {
-    return getRegisteredComponent('ProTableForPreview');
+    return getRegisteredComponent('DumbProTableForPreview');
   },
   defaultProps: {
     headerTitle: '示例表格',

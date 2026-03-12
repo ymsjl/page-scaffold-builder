@@ -16,9 +16,11 @@
 
 import type { WritableDraft } from 'immer';
 import { createSelector } from 'reselect';
+import type { SchemaItemSource } from '@/editing/types/EditableSource';
+import { selectActiveSchemaItemSource } from '@/editing/store/selectors';
 
 import type { ComponentNodeWithColumns } from '@/types/Component';
-import type { ComponentNode, ProCommonColumn, ComponentType } from '@/types';
+import type { ComponentNode, ComponentType, ProCommonColumn } from '@/types';
 import type { EntityModel } from '@/validation';
 
 import type { RootState } from '../rootReducer';
@@ -226,4 +228,59 @@ const getFieldsOfEntityModelInUseResult = (entityModel: EntityModel | null | und
 export const selectFieldsOfEntityModelInUse = createSelector(
   selectEntityModelInUse,
   getFieldsOfEntityModelInUseResult,
+);
+
+const getActiveColumnTargetInPropertyPanelResult = (
+  nodeInPropertyPanel: ComponentNode | null | undefined,
+  activeEditingSource: SchemaItemSource | null,
+) => {
+  if (!nodeInPropertyPanel || !activeEditingSource) {
+    return null;
+  }
+
+  if (
+    activeEditingSource.collectionKey !== 'columns' ||
+    activeEditingSource.editorKind !== 'column' ||
+    activeEditingSource.ownerNodeId !== nodeInPropertyPanel.id
+  ) {
+    return null;
+  }
+
+  return activeEditingSource;
+};
+
+export const selectActiveColumnTargetInPropertyPanel = createSelector(
+  selectNodeInPropertyPanel,
+  selectActiveSchemaItemSource,
+  getActiveColumnTargetInPropertyPanelResult,
+);
+
+const getActiveColumnInPropertyPanelResult = (
+  nodeInPropertyPanel: ComponentNode | null | undefined,
+  activeColumnTarget: SchemaItemSource | null,
+): ProCommonColumn | null => {
+  if (!nodeInPropertyPanel || !activeColumnTarget) {
+    return null;
+  }
+
+  const columns = nodeInPropertyPanel.props?.columns;
+  if (!Array.isArray(columns)) {
+    return null;
+  }
+
+  if (activeColumnTarget.itemKey) {
+    return columns.find((column) => column.key === activeColumnTarget.itemKey) ?? null;
+  }
+
+  if (typeof activeColumnTarget.itemIndex === 'number') {
+    return columns[activeColumnTarget.itemIndex] ?? null;
+  }
+
+  return null;
+};
+
+export const selectActiveColumnInPropertyPanel = createSelector(
+  selectNodeInPropertyPanel,
+  selectActiveColumnTargetInPropertyPanel,
+  getActiveColumnInPropertyPanelResult,
 );
