@@ -16,7 +16,6 @@ import {
   radiusLarge,
   radiusMedium,
   radiusSmall,
-  shadowBase,
   shadowPrimaryLight,
   space1,
   space2,
@@ -39,7 +38,6 @@ export const surface = style({
   background: colorBgBase,
   border: `1px solid ${colorBorderSecondary}`,
   borderRadius: radiusLarge,
-  boxShadow: shadowBase,
   overflow: 'hidden',
 });
 
@@ -111,15 +109,7 @@ export const sectionHint = style({
   fontSize: fontSizeSmall,
 });
 
-export const searchGrid = style({
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-  gap: space3,
-});
-
-export const fieldShell = style({
-  minHeight: 112,
-});
+export const fieldShell = style({});
 
 export const fieldContent = style({
   display: 'grid',
@@ -194,8 +184,7 @@ export const columnsRow = style({
 });
 
 export const columnWrap = style({
-  flex: '0 0 220px',
-  minWidth: 220,
+  flex: '1 1 auto',
   borderRight: `1px solid ${colorBorderSecondary}`,
   selectors: {
     '&:last-child': {
@@ -209,8 +198,6 @@ export const columnShell = style({
 });
 
 export const columnLane = style({
-  position: 'relative',
-  height: '100%',
   transition: transitionFast,
 });
 
@@ -220,20 +207,14 @@ export const columnLaneActive = style({
 
 export const bodyCell = style({
   padding: `${space3}px ${space2}px`,
-  minHeight: 88,
   borderBottom: `1px solid ${colorBorderSecondary}`,
   transition: transitionFast,
   background: colorBgBase,
 });
 
-export const columnContent = style({
-  display: 'grid',
-  gridTemplateRows: 'auto 1fr',
-  minHeight: 100,
-});
+export const columnContent = style({});
 
 export const headerShell = style({
-  minHeight: 72,
   padding: space2,
   background: '#fafcff',
   borderBottom: `1px solid ${colorBorderSecondary}`,
@@ -377,9 +358,7 @@ export const dataPanel = style({
   background: colorBgBase,
 });
 
-export const headerPanel = style({
-  background: colorBgBase,
-});
+export const headerPanel = style({});
 
 export const selectedSummary = style({
   display: 'inline-flex',

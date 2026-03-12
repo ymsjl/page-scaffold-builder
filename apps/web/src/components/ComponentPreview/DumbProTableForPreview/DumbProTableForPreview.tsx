@@ -1,5 +1,16 @@
 import React from 'react';
-import { Button, DatePicker, Dropdown, Input, InputNumber, Select, Switch, Tooltip } from 'antd';
+import {
+  Button,
+  Col,
+  DatePicker,
+  Dropdown,
+  Input,
+  InputNumber,
+  Row,
+  Select,
+  Switch,
+  Tooltip,
+} from 'antd';
 import type { MenuProps } from 'antd';
 import {
   type DragEndEvent,
@@ -10,12 +21,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   DeleteOutlined,
@@ -454,10 +460,6 @@ const SortableHeaderCell: React.FC<SortableHeaderCellProps> = ({
       >
         <span className={styles.headerTitleText}>{getColumnTitleText(column)}</span>
       </button>
-      <div className={styles.headerSubtext}>{String(column.valueType ?? 'text')}</div>
-      <div className={styles.columnWidthHint}>
-        {column.width ? `宽度 ${column.width}px` : '自动宽度'}
-      </div>
     </div>
   );
 
@@ -946,32 +948,9 @@ const DumbProTableForPreview: React.FC<SerializableProTableProps> = React.memo((
 
   return (
     <div className={styles.root}>
-      <section className={`${styles.surface} ${styles.headerPanel}`}>
-        <div className={styles.header}>
-          <div className={styles.titleBlock}>
-            <h3 className={styles.heading}>{headerTitle || '示意表格'}</h3>
-          </div>
-          <div className={styles.toolbarActions}>
-            {toolbarActionNodes.length > 0 ? (
-              toolbarActionNodes
-            ) : (
-              <div className={styles.toolbarPlaceholder}>工具栏操作区</div>
-            )}
-          </div>
-        </div>
-      </section>
-
       {search !== false ? (
         <section className={`${styles.surface} ${styles.searchPanel}`}>
           <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.sectionTitle}>查询表单</div>
-              <div className={styles.sectionHint}>
-                {visibleSearchColumns.length > 0
-                  ? `${search.layout === 'horizontal' ? '水平' : '垂直'}布局示意，双击标签可直接改名`
-                  : '当前没有可显示的查询字段'}
-              </div>
-            </div>
             {visibleSearchColumns.length > 0 ? (
               <DndContext
                 sensors={sensors}
@@ -979,52 +958,51 @@ const DumbProTableForPreview: React.FC<SerializableProTableProps> = React.memo((
                 collisionDetection={closestCenter}
                 onDragEnd={handleSearchDragEnd}
               >
-                <SortableContext
-                  items={visibleSearchColumns.map((item) => item.dragId)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className={styles.searchGrid}>
+                <SortableContext items={visibleSearchColumns.map((item) => item.dragId)}>
+                  <Row gutter={[16, 16]}>
                     {visibleSearchColumns.map((item) => {
                       const isEditing =
                         inlineEditMode?.kind === 'search-label' &&
                         inlineEditMode.columnKey === item.column.key;
                       return (
-                        <SortableSearchField
-                          key={item.dragId}
-                          item={item}
-                          previewNodeId={previewNodeId}
-                          entityFields={entityFields}
-                          isEditing={Boolean(isEditing)}
-                          draftValue={isEditing ? (inlineEditMode?.draft ?? '') : ''}
-                          onDraftChange={(nextValue) =>
-                            setInlineEditMode((current) =>
-                              current?.kind === 'search-label' &&
-                              current.columnKey === item.column.key
-                                ? { ...current, draft: nextValue }
-                                : current,
-                            )
-                          }
-                          onApplyDraft={() => applySearchLabelRename(item.column)}
-                          onCancelDraft={() => setInlineEditMode(null)}
-                          onStartEditing={() =>
-                            setInlineEditMode({
-                              kind: 'search-label',
-                              columnKey: item.column.key,
-                              draft: String(
-                                getFieldLabel(
-                                  item.column as Record<string, unknown>,
-                                  getFieldName(
+                        <Col key={item.dragId} xs={24} sm={12} md={8} lg={6}>
+                          <SortableSearchField
+                            key={item.dragId}
+                            item={item}
+                            previewNodeId={previewNodeId}
+                            entityFields={entityFields}
+                            isEditing={Boolean(isEditing)}
+                            draftValue={isEditing ? (inlineEditMode?.draft ?? '') : ''}
+                            onDraftChange={(nextValue) =>
+                              setInlineEditMode((current) =>
+                                current?.kind === 'search-label' &&
+                                current.columnKey === item.column.key
+                                  ? { ...current, draft: nextValue }
+                                  : current,
+                              )
+                            }
+                            onApplyDraft={() => applySearchLabelRename(item.column)}
+                            onCancelDraft={() => setInlineEditMode(null)}
+                            onStartEditing={() =>
+                              setInlineEditMode({
+                                kind: 'search-label',
+                                columnKey: item.column.key,
+                                draft: String(
+                                  getFieldLabel(
                                     item.column as Record<string, unknown>,
-                                    item.columnIndex,
+                                    getFieldName(
+                                      item.column as Record<string, unknown>,
+                                      item.columnIndex,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            })
-                          }
-                        />
+                              })
+                            }
+                          />
+                        </Col>
                       );
                     })}
-                  </div>
+                  </Row>
                 </SortableContext>
               </DndContext>
             ) : (
@@ -1034,15 +1012,22 @@ const DumbProTableForPreview: React.FC<SerializableProTableProps> = React.memo((
         </section>
       ) : null}
 
-      <section className={`${styles.surface} ${styles.dataPanel}`}>
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitle}>数据表格</div>
-            <div className={styles.selectedSummary}>
-              <span>{visibleTableColumns.length} 列</span>
-              <span className={styles.countText}>悬停列会高亮整列，双击列头可直接改名</span>
+      <section className={`${styles.dataPanel}`}>
+        <section className={`${styles.headerPanel}`}>
+          <div className={styles.header}>
+            <div className={styles.titleBlock}>
+              <h3 className={styles.heading}>{headerTitle || '示意表格'}</h3>
+            </div>
+            <div className={styles.toolbarActions}>
+              {toolbarActionNodes.length > 0 ? (
+                toolbarActionNodes
+              ) : (
+                <div className={styles.toolbarPlaceholder}>工具栏操作区</div>
+              )}
             </div>
           </div>
+        </section>
+        <div className={styles.section}>
           {visibleTableColumns.length > 0 ? (
             <DndContext
               sensors={sensors}
