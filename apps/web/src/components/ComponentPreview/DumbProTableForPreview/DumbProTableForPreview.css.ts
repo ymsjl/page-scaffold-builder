@@ -9,9 +9,8 @@ import {
   colorTextDisabled,
   colorTextSecondary,
   fontSizeBase,
-  fontSizeHeading,
+  fontSizeLarge,
   fontSizeSmall,
-  fontWeightMedium,
   fontWeightSemibold,
   radiusLarge,
   radiusMedium,
@@ -25,8 +24,6 @@ import {
 } from '@/styles/tokens.css';
 
 export const root = style({
-  display: 'grid',
-  gap: space4,
   color: colorTextBase,
 });
 
@@ -37,7 +34,6 @@ export const shellStretch = style({
 export const surface = style({
   background: colorBgBase,
   border: `1px solid ${colorBorderSecondary}`,
-  borderRadius: radiusLarge,
   overflow: 'hidden',
 });
 
@@ -47,8 +43,6 @@ export const header = style({
   justifyContent: 'space-between',
   gap: space4,
   padding: `${space4}px ${space4}px ${space3}px`,
-  borderBottom: `1px solid ${colorBorderSecondary}`,
-  background: 'linear-gradient(180deg, rgba(24, 144, 255, 0.08) 0%, rgba(24, 144, 255, 0.02) 100%)',
 });
 
 export const titleBlock = style({
@@ -57,8 +51,7 @@ export const titleBlock = style({
 
 export const heading = style({
   margin: 0,
-  fontSize: fontSizeHeading,
-  fontWeight: fontWeightSemibold,
+  fontSize: fontSizeLarge,
   lineHeight: 1.3,
 });
 
@@ -82,7 +75,6 @@ export const toolbarPlaceholder = style({
   paddingInline: space3,
   minHeight: 32,
   border: `1px dashed ${colorBorder}`,
-  borderRadius: 999,
   color: colorTextDisabled,
   fontSize: fontSizeSmall,
   background: colorBgContainer,
@@ -90,18 +82,8 @@ export const toolbarPlaceholder = style({
 
 export const section = style({
   padding: space4,
-});
-
-export const sectionHeader = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: space3,
-});
-
-export const sectionTitle = style({
-  fontSize: fontSizeBase,
-  fontWeight: fontWeightMedium,
+  borderRadius: radiusLarge,
+  background: colorBgBase,
 });
 
 export const sectionHint = style({
@@ -109,18 +91,12 @@ export const sectionHint = style({
   fontSize: fontSizeSmall,
 });
 
-export const fieldShell = style({});
-
 export const fieldContent = style({
   display: 'grid',
-  gap: space2,
 });
 
 export const fieldLabelRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: space2,
+  paddingBottom: space2,
   minWidth: 0,
 });
 
@@ -130,7 +106,6 @@ export const labelButton = style({
   alignItems: 'center',
   minWidth: 0,
   maxWidth: '100%',
-  fontWeight: fontWeightMedium,
   color: colorTextBase,
   cursor: 'text',
   selectors: {
@@ -146,6 +121,8 @@ export const labelText = style({
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
+  fontSize: fontSizeBase,
+  lineHeight: '22px',
 });
 
 export const fieldMeta = style({
@@ -173,7 +150,6 @@ export const tableWrap = style({
   overflowX: 'auto',
   border: `1px solid ${colorBorderSecondary}`,
   borderRadius: radiusMedium,
-  background: colorBgBase,
 });
 
 export const columnsRow = style({
@@ -215,8 +191,8 @@ export const bodyCell = style({
 export const columnContent = style({});
 
 export const headerShell = style({
-  padding: space2,
-  background: '#fafcff',
+  background: '#fafafa',
+  padding: `${space3}px ${space2}px`,
   borderBottom: `1px solid ${colorBorderSecondary}`,
 });
 
@@ -245,7 +221,9 @@ export const headerTitleText = style({
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
-  fontWeight: fontWeightMedium,
+  fontSize: fontSizeBase,
+  lineHeight: '22px',
+  fontWeight: fontWeightSemibold,
 });
 
 export const headerSubtext = style({
@@ -352,10 +330,7 @@ export const columnWidthHint = style({
 
 export const searchPanel = style({
   background: '#fcfdff',
-});
-
-export const dataPanel = style({
-  background: colorBgBase,
+  marginBottom: space4,
 });
 
 export const headerPanel = style({});

@@ -1,11 +1,9 @@
-import { style } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 import {
   colorBgBase,
   colorBorderSecondary,
-  colorPrimary,
   radiusSmall,
   shadowBase,
-  shadowPrimaryLight,
   transitionFast,
 } from '@/styles/tokens.css';
 
@@ -13,20 +11,8 @@ export const shell = style({
   all: 'unset',
   display: 'block',
   position: 'relative',
-  padding: 2,
-  borderRadius: radiusSmall,
-  border: '1px dashed transparent',
   transition: transitionFast,
   selectors: {
-    '&[data-highlighted="true"]:hover': {
-      borderColor: colorPrimary,
-      backgroundColor: 'rgba(24, 144, 255, 0.06)',
-    },
-    '&[data-selected="true"]': {
-      borderColor: colorPrimary,
-      boxShadow: shadowPrimaryLight,
-      backgroundColor: 'rgba(24, 144, 255, 0.08)',
-    },
     '&[data-disabled="true"]': {
       cursor: 'default',
     },
@@ -38,24 +24,26 @@ export const content = style({
 });
 
 export const toolbar = style({
-  display: 'none',
-  position: 'absolute',
-  top: '-10px',
-  right: '-10px',
+  display: 'inline-flex',
+  alignItems: 'center',
   gap: 4,
+  padding: 2,
   background: colorBgBase,
   border: `1px solid ${colorBorderSecondary}`,
   borderRadius: radiusSmall,
   boxShadow: shadowBase,
-  zIndex: 2,
-  selectors: {
-    [`${shell}:hover &`]: {
-      display: 'inline-flex',
-    },
-    [`${shell}[data-selected="true"] &`]: {
-      display: 'inline-flex',
-    },
-  },
+});
+
+export const toolbarPopoverOverlay = style({});
+
+globalStyle(`${toolbarPopoverOverlay} .ant-popover-inner`, {
+  padding: 0,
+  background: 'transparent',
+  boxShadow: 'none',
+});
+
+globalStyle(`${toolbarPopoverOverlay} .ant-popover-inner-content`, {
+  padding: 0,
 });
 
 export const dragHandle = style({
