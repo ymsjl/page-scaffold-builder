@@ -7,7 +7,6 @@ import {
   EditOutlined,
   EyeInvisibleOutlined,
   EyeOutlined,
-  HolderOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
 import { EditableShell } from '@/components/EditableShell/EditableShell';
@@ -151,10 +150,6 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
       [column, focusColumn, handleDelete, handleEdit, insertBehind, previewNodeId, updateColumn],
     );
 
-    const controlButtonClassName = isDragging
-      ? `${styles.controlButton} ${styles.dragButton} ${styles.dragButtonDragging}`
-      : `${styles.controlButton} ${styles.dragButton}`;
-
     const editableContent = (
       <InlineEditableText
         isEditing={isEditing}
@@ -175,6 +170,9 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
       <EditableShell
         target={projection}
         selected={isSelected}
+        dragActivatorProps={canOperate ? { ...listeners, ...attributes } : undefined}
+        altDragEnabled={canOperate}
+        data-dragging={isDragging || undefined}
         className={`${styles.columnShell} ${styles.shellStretch} ${isDragging ? styles.draggingShell : ''}`}
         onSelect={(event) => {
           if (event.type !== 'contextmenu') {
@@ -194,17 +192,6 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
         }}
         toolbar={
           <div className={styles.compactToolbar}>
-            <Tooltip title="拖动排序">
-              <Button
-                size="small"
-                type="text"
-                className={controlButtonClassName}
-                icon={<HolderOutlined />}
-                onClick={(event) => event.stopPropagation()}
-                {...listeners}
-                {...attributes}
-              />
-            </Tooltip>
             <Tooltip title="编辑列">
               <Button size="small" type="text" icon={<EditOutlined />} onClick={handleEdit} />
             </Tooltip>

@@ -80,6 +80,15 @@ const getPreviewSelectedElements = (): HTMLElement[] => {
   return Array.from(previewRoot.querySelectorAll<HTMLElement>('[data-selected="true"]'));
 };
 
+const isPreviewDragging = (): boolean => {
+  const previewRoot = getPreviewRoot();
+  if (!previewRoot) {
+    return false;
+  }
+
+  return previewRoot.querySelector('[data-dragging="true"]') !== null;
+};
+
 const isElementVisible = (element: HTMLElement): boolean => {
   const rect = element.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) {
@@ -181,21 +190,31 @@ const getVariantClassName = (tone: OutlineTone, variant: OutlineVariant): string
 const measureActiveOutlines = ({
   hoveredTargetId,
   selectedTargetId,
+  previousOutlines,
+  dragging,
 }: {
   hoveredTargetId: string | null;
   selectedTargetId: string | null;
+  previousOutlines: OutlineSnapshot[];
+  dragging: boolean;
 }): OutlineSnapshot[] => {
   const nextOutlines: OutlineSnapshot[] = [];
 
-  const selectedElementOutlines = getPreviewSelectedElements()
-    .map((element) => measureElementOutline(element, 'selected'))
-    .filter(Boolean) as OutlineSnapshot[];
+  if (dragging) {
+    nextOutlines.push(...previousOutlines.filter((outline) => outline.tone === 'selected'));
+  }
 
-  if (selectedElementOutlines.length > 0) {
+  const selectedElementOutlines = dragging
+    ? []
+    : (getPreviewSelectedElements()
+        .map((element) => measureElementOutline(element, 'selected'))
+        .filter(Boolean) as OutlineSnapshot[]);
+
+  if (!dragging && selectedElementOutlines.length > 0) {
     nextOutlines.push(...selectedElementOutlines);
   }
 
-  if (selectedElementOutlines.length === 0 && selectedTargetId) {
+  if (!dragging && selectedElementOutlines.length === 0 && selectedTargetId) {
     const selectedOutline = measureOutline(selectedTargetId, 'selected');
     if (selectedOutline) {
       nextOutlines.push(selectedOutline);
@@ -249,9 +268,12 @@ export const CanvasOutlineOverlay: React.FC = () => {
     let stableFrameCount = 0;
 
     const measureAndCommitOutlines = (): boolean => {
+      const dragging = isPreviewDragging();
       const nextOutlines = measureActiveOutlines({
         hoveredTargetId,
         selectedTargetId,
+        previousOutlines: outlinesRef.current,
+        dragging,
       });
 
       const hasChanged = !areOutlinesEqual(outlinesRef.current, nextOutlines);
@@ -342,7 +364,7 @@ export const CanvasOutlineOverlay: React.FC = () => {
         childList: true,
         attributes: true,
         characterData: true,
-        attributeFilter: ['class', 'style'],
+        attributeFilter: ['class', 'style', 'data-dragging'],
       });
     }
 

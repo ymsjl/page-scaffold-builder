@@ -10,22 +10,27 @@ import {
   type SchemaItemSource,
 } from '../types';
 
+export type SchemaColumnSurface = 'header' | 'search-field';
+
 export type SchemaColumnBindingArgs = {
   ownerNodeId: string;
   column: ProCommonColumn;
   columnIndex?: number;
+  surface?: SchemaColumnSurface;
 };
 
 export const createSchemaColumnSource = ({
   ownerNodeId,
   column,
   columnIndex,
+  surface = 'header',
 }: SchemaColumnBindingArgs): SchemaItemSource => {
   return createSchemaItemSource({
     ownerNodeId,
     collectionKey: 'columns',
     editorKind: 'column',
     itemKey: column.key,
+    surfaceKey: surface,
     itemIndex: columnIndex,
   });
 };

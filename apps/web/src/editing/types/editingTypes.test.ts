@@ -17,7 +17,33 @@ describe('editing type factories', () => {
       itemIndex: 0,
     });
 
-    expect(buildEditableProjectionId(source)).toBe('schema-item:table-1:columns:name');
+    expect(buildEditableProjectionId(source)).toBe('schema-item:table-1:columns:column:name');
+  });
+
+  it('builds distinct ids for different schema-item surfaces', () => {
+    const headerSource = createSchemaItemSource({
+      ownerNodeId: 'table-1',
+      collectionKey: 'columns',
+      editorKind: 'column',
+      itemKey: 'status',
+      surfaceKey: 'header',
+      itemIndex: 2,
+    });
+    const searchFieldSource = createSchemaItemSource({
+      ownerNodeId: 'table-1',
+      collectionKey: 'columns',
+      editorKind: 'column',
+      itemKey: 'status',
+      surfaceKey: 'search-field',
+      itemIndex: 2,
+    });
+
+    expect(buildEditableProjectionId(headerSource)).toBe(
+      'schema-item:table-1:columns:column:status:header',
+    );
+    expect(buildEditableProjectionId(searchFieldSource)).toBe(
+      'schema-item:table-1:columns:column:status:search-field',
+    );
   });
 
   it('builds stable ids for slot-node projections', () => {
@@ -66,5 +92,26 @@ describe('editing type factories', () => {
     });
 
     expect(isSameEditableSource(left, right)).toBe(true);
+  });
+
+  it('treats different schema-item surfaces as distinct sources', () => {
+    const left = createSchemaItemSource({
+      ownerNodeId: 'table-1',
+      collectionKey: 'columns',
+      editorKind: 'column',
+      itemKey: 'status',
+      surfaceKey: 'header',
+      itemIndex: 2,
+    });
+    const right = createSchemaItemSource({
+      ownerNodeId: 'table-1',
+      collectionKey: 'columns',
+      editorKind: 'column',
+      itemKey: 'status',
+      surfaceKey: 'search-field',
+      itemIndex: 2,
+    });
+
+    expect(isSameEditableSource(left, right)).toBe(false);
   });
 });

@@ -2,13 +2,7 @@ import React from 'react';
 import { Button, Dropdown, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  DeleteOutlined,
-  EditOutlined,
-  HolderOutlined,
-  NumberOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, NumberOutlined, PlusOutlined } from '@ant-design/icons';
 import { EditableShell } from '@/components/EditableShell/EditableShell';
 import { setHoverSource } from '@/editing/store/editingSlice';
 import { useAppDispatch } from '@/store/hooks';
@@ -74,6 +68,7 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
       entityFields,
       onFocus,
       emptyInsertLabel: '空字段',
+      surface: 'search-field',
     });
 
     const labelText = String(
@@ -163,6 +158,9 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
       <EditableShell
         target={projection}
         selected={isSelected}
+        dragActivatorProps={canOperate ? { ...listeners, ...attributes } : undefined}
+        altDragEnabled={canOperate}
+        data-dragging={isDragging || undefined}
         className={`${styles.shellStretch} ${isDragging ? styles.draggingShell : ''}`}
         onSelect={(event) => {
           if (event.type !== 'contextmenu') {
@@ -178,21 +176,6 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
         onMouseLeave={() => dispatch(setHoverSource(null))}
         toolbar={
           <div className={styles.compactToolbar}>
-            <Tooltip title="拖动排序">
-              <Button
-                size="small"
-                type="text"
-                className={
-                  isDragging
-                    ? `${styles.controlButton} ${styles.dragButton} ${styles.dragButtonDragging}`
-                    : `${styles.controlButton} ${styles.dragButton}`
-                }
-                icon={<HolderOutlined />}
-                onClick={(event) => event.stopPropagation()}
-                {...listeners}
-                {...attributes}
-              />
-            </Tooltip>
             <Tooltip title="编辑字段">
               <Button size="small" type="text" icon={<EditOutlined />} onClick={handleEdit} />
             </Tooltip>

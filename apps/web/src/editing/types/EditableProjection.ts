@@ -25,13 +25,21 @@ export const buildEditableProjectionId = (source: EditableSource): string => {
       return ['component-node', source.nodeId].join(':');
     case 'slot-node':
       return ['slot-node', source.ownerNodeId, source.propPath, source.nodeId].join(':');
-    case 'schema-item':
-      return [
+    case 'schema-item': {
+      const projectionParts = [
         'schema-item',
         source.ownerNodeId,
         source.collectionKey,
-        source.itemKey ?? `index-${source.itemIndex ?? -1}`,
-      ].join(':');
+        source.editorKind,
+        source.itemKey,
+      ];
+
+      if (source.surfaceKey) {
+        projectionParts.push(source.surfaceKey);
+      }
+
+      return projectionParts.join(':');
+    }
     default:
       return 'unknown';
   }

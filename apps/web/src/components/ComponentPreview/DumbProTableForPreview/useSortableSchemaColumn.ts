@@ -6,6 +6,7 @@ import {
   createSchemaColumnSource,
   focusSchemaColumn,
   openSchemaColumnEditor,
+  type SchemaColumnSurface,
 } from '@/editing/bindings/schemaColumns';
 import { useAppDispatch } from '@/store/hooks';
 import {
@@ -25,6 +26,7 @@ type UseSortableSchemaColumnOptions = {
   entityFields: SchemaField[];
   onFocus: () => void;
   emptyInsertLabel: string;
+  surface?: SchemaColumnSurface;
 };
 
 export const useSortableSchemaColumn = ({
@@ -35,6 +37,7 @@ export const useSortableSchemaColumn = ({
   entityFields,
   onFocus,
   emptyInsertLabel,
+  surface = 'header',
 }: UseSortableSchemaColumnOptions) => {
   const dispatch = useAppDispatch();
   const canOperate = Boolean(previewNodeId);
@@ -48,16 +51,21 @@ export const useSortableSchemaColumn = ({
       return null;
     }
 
-    return createSchemaColumnSource({ ownerNodeId: previewNodeId, column, columnIndex });
-  }, [column, columnIndex, previewNodeId]);
+    return createSchemaColumnSource({ ownerNodeId: previewNodeId, column, columnIndex, surface });
+  }, [column, columnIndex, previewNodeId, surface]);
 
   const projection = React.useMemo(() => {
     if (!previewNodeId) {
       return null;
     }
 
-    return createSchemaColumnProjection({ ownerNodeId: previewNodeId, column, columnIndex });
-  }, [column, columnIndex, previewNodeId]);
+    return createSchemaColumnProjection({
+      ownerNodeId: previewNodeId,
+      column,
+      columnIndex,
+      surface,
+    });
+  }, [column, columnIndex, previewNodeId, surface]);
 
   const insertItems = React.useMemo<MenuProps['items']>(() => {
     return [
@@ -80,10 +88,11 @@ export const useSortableSchemaColumn = ({
           column,
           columnIndex,
           interactionSource,
+          surface,
         }),
       );
     },
-    [column, columnIndex, columnSource, dispatch, onFocus, previewNodeId],
+    [column, columnIndex, columnSource, dispatch, onFocus, previewNodeId, surface],
   );
 
   const insertBehind = React.useCallback(
@@ -124,9 +133,10 @@ export const useSortableSchemaColumn = ({
         column,
         columnIndex,
         interactionSource: 'canvas',
+        surface,
       }),
     );
-  }, [column, columnIndex, dispatch, onFocus, previewNodeId]);
+  }, [column, columnIndex, dispatch, onFocus, previewNodeId, surface]);
 
   const updateColumn = React.useCallback(
     (changes: Partial<ProCommonColumn>) => {

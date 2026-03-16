@@ -2,10 +2,13 @@ import React from 'react';
 import { Popover } from 'antd';
 import type { EditableProjection } from '@/editing/types';
 import * as styles from './EditableShell.css';
+import { useAltPressed } from './useAltPressed';
 
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 
 const TOOLBAR_CLOSE_DELAY_MS = 120;
+
+type DragActivatorProps = React.HTMLAttributes<HTMLDivElement> & React.AriaAttributes;
 
 export interface EditableShellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   target: EditableProjection;
@@ -13,7 +16,8 @@ export interface EditableShellProps extends Omit<React.HTMLAttributes<HTMLDivEle
   highlighted?: boolean;
   disabled?: boolean;
   toolbar?: React.ReactNode;
-  dragHandle?: React.ReactNode;
+  dragActivatorProps?: DragActivatorProps;
+  altDragEnabled?: boolean;
   placeholder?: React.ReactNode;
   children: React.ReactNode;
   onSelect?: (event: React.MouseEvent | React.KeyboardEvent) => void;
@@ -29,7 +33,8 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
       highlighted = true,
       disabled = false,
       toolbar,
-      dragHandle,
+      dragActivatorProps,
+      altDragEnabled = false,
       placeholder,
       children,
       onSelect,
@@ -38,6 +43,7 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
       className,
       onClick,
       onKeyDown,
+      onPointerDown,
       ...restProps
     },
     ref,
@@ -47,6 +53,27 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
     const [isShellHovered, setIsShellHovered] = React.useState(false);
     const [isToolbarHovered, setIsToolbarHovered] = React.useState(false);
     const hideToolbarTimeoutRef = React.useRef<number | null>(null);
+    const altPressed = useAltPressed();
+    const altDragReady = altDragEnabled && altPressed && !disabled;
+
+    const {
+      className: dragActivatorClassName,
+      onKeyDown: dragActivatorOnKeyDown,
+      onPointerDown: dragActivatorOnPointerDown,
+      role: dragActivatorRole,
+      tabIndex: dragActivatorTabIndex,
+      ...dragActivatorRestProps
+    } = dragActivatorProps ?? {};
+
+    const mergedPointerDown = React.useCallback<React.PointerEventHandler<HTMLDivElement>>(
+      (event) => {
+        onPointerDown?.(event);
+        if (!event.isPropagationStopped()) {
+          dragActivatorOnPointerDown?.(event);
+        }
+      },
+      [dragActivatorOnPointerDown, onPointerDown],
+    );
 
     const clearHideToolbarTimeout = React.useCallback(() => {
       if (hideToolbarTimeoutRef.current !== null) {
@@ -112,6 +139,9 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
 
     const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
       onKeyDown?.(event);
+      if (!event.isPropagationStopped()) {
+        dragActivatorOnKeyDown?.(event);
+      }
       if (!event.isPropagationStopped() && (event.key === 'Enter' || event.key === ' ')) {
         onSelect?.(event);
       }
@@ -129,16 +159,22 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
 
     const shellProps = {
       ...restProps,
+      ...dragActivatorRestProps,
       ref,
-      className: shellClassName,
+      className: dragActivatorClassName
+        ? `${shellClassName} ${dragActivatorClassName}`
+        : shellClassName,
       'data-target-id': target.id,
       'data-target-kind': target.kind,
       'data-outline-variant': target.outlineVariant ?? 'default',
       'data-selected': selected,
       'data-highlighted': highlighted,
       'data-disabled': disabled,
+      'data-alt-drag-enabled': altDragEnabled,
+      'data-alt-drag-ready': altDragReady,
       onMouseEnter: handleShellMouseEnter,
       onMouseLeave: handleShellMouseLeave,
+      onPointerDown: mergedPointerDown,
     };
 
     const shellNode = isInteractive ? (
@@ -146,17 +182,21 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
         {...shellProps}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
-        role="button"
-        tabIndex={0}
+        role={dragActivatorRole ?? 'button'}
+        tabIndex={dragActivatorTabIndex ?? 0}
         onKeyDown={handleKeyDown}
       >
-        {dragHandle ? <div className={styles.dragHandle}>{dragHandle}</div> : null}
         <div className={styles.content}>{children || placeholder}</div>
         {!children && placeholder ? <div className={styles.placeholder}>{placeholder}</div> : null}
       </div>
     ) : (
-      <div {...shellProps} onClick={onClick} onKeyDown={onKeyDown}>
-        {dragHandle ? <div className={styles.dragHandle}>{dragHandle}</div> : null}
+      <div
+        {...shellProps}
+        role={dragActivatorRole}
+        tabIndex={dragActivatorTabIndex}
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
+      >
         <div className={styles.content}>{children || placeholder}</div>
         {!children && placeholder ? <div className={styles.placeholder}>{placeholder}</div> : null}
       </div>

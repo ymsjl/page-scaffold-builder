@@ -1,6 +1,11 @@
 import { createSelector } from '@reduxjs/toolkit';
 import type { MaybeWritable, RootState } from '@/store/storeTypes';
-import type { EditableSource, SchemaItemSource } from '../types/EditableSource';
+import type {
+  ComponentNodeSource,
+  EditableSource,
+  NodeSlotSource,
+  SchemaItemSource,
+} from '../types/EditableSource';
 import type { EditingState } from './editingSlice';
 
 export const selectEditingState = (state: RootState) => state.editing;
@@ -44,22 +49,35 @@ export const makeSelectIsEditingSourceActive = (target: EditableSource) =>
     }
 
     switch (target.kind) {
-      case 'component-node':
-        return activeSource.nodeId === target.nodeId;
-      case 'slot-node':
+      case 'component-node': {
+        const componentTarget = target as ComponentNodeSource;
+        const componentActiveSource = activeSource as ComponentNodeSource;
+
+        return componentActiveSource.nodeId === componentTarget.nodeId;
+      }
+      case 'slot-node': {
+        const slotTarget = target as NodeSlotSource;
+        const slotActiveSource = activeSource as NodeSlotSource;
+
         return (
-          activeSource.ownerNodeId === target.ownerNodeId &&
-          activeSource.propPath === target.propPath &&
-          activeSource.nodeId === target.nodeId
+          slotActiveSource.ownerNodeId === slotTarget.ownerNodeId &&
+          slotActiveSource.propPath === slotTarget.propPath &&
+          slotActiveSource.nodeId === slotTarget.nodeId
         );
-      case 'schema-item':
+      }
+      case 'schema-item': {
+        const schemaTarget = target as SchemaItemSource;
+        const schemaActiveSource = activeSource as SchemaItemSource;
+
         return (
-          activeSource.ownerNodeId === target.ownerNodeId &&
-          activeSource.collectionKey === target.collectionKey &&
-          activeSource.editorKind === target.editorKind &&
-          activeSource.itemKey === target.itemKey &&
-          activeSource.itemIndex === target.itemIndex
+          schemaActiveSource.ownerNodeId === schemaTarget.ownerNodeId &&
+          schemaActiveSource.collectionKey === schemaTarget.collectionKey &&
+          schemaActiveSource.editorKind === schemaTarget.editorKind &&
+          schemaActiveSource.itemKey === schemaTarget.itemKey &&
+          schemaActiveSource.surfaceKey === schemaTarget.surfaceKey &&
+          schemaActiveSource.itemIndex === schemaTarget.itemIndex
         );
+      }
       default:
         return false;
     }

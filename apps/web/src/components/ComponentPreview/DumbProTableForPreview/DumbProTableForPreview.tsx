@@ -1,15 +1,9 @@
 import React from 'react';
 import { Col, Row } from 'antd';
-import {
-  type DragEndEvent,
-  DndContext,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { type DragEndEvent, DndContext, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { AltDragPointerSensor } from '@/components/ComponentPreview/altDragPointerSensor';
 import { createSchemaColumnSource, focusSchemaColumn } from '@/editing/bindings/schemaColumns';
 import { selectActiveEditingSource } from '@/editing/store/selectors';
 import { isSameEditableSource } from '@/editing/types/EditableSource';
@@ -53,7 +47,7 @@ export const DumbProTableForPreview: React.FC<SerializableProTableProps> = React
     null,
   );
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(AltDragPointerSensor, {
       activationConstraint: { distance: 4 },
     }),
   );
@@ -163,6 +157,7 @@ export const DumbProTableForPreview: React.FC<SerializableProTableProps> = React
           column,
           columnIndex,
           interactionSource: 'canvas',
+          surface: 'header',
         }),
       );
       dispatch(upsertColumnOfSelectedNode({ key: column.key, title: nextTitle }));
@@ -202,6 +197,7 @@ export const DumbProTableForPreview: React.FC<SerializableProTableProps> = React
           column,
           columnIndex,
           interactionSource: 'canvas',
+          surface: 'search-field',
         }),
       );
       dispatch(
@@ -250,7 +246,6 @@ export const DumbProTableForPreview: React.FC<SerializableProTableProps> = React
             {visibleSearchColumns.length > 0 ? (
               <DndContext
                 sensors={sensors}
-                modifiers={[restrictToVerticalAxis]}
                 collisionDetection={closestCenter}
                 onDragEnd={handleSearchDragEnd}
               >
@@ -262,6 +257,7 @@ export const DumbProTableForPreview: React.FC<SerializableProTableProps> = React
                             ownerNodeId: previewNodeId,
                             column: item.column,
                             columnIndex: item.columnIndex,
+                            surface: 'search-field',
                           })
                         : null;
                       const matchesActiveSource = isSameEditableSource(activeSource, columnSource);
@@ -363,6 +359,7 @@ export const DumbProTableForPreview: React.FC<SerializableProTableProps> = React
                           ownerNodeId: previewNodeId,
                           column: item.column,
                           columnIndex: item.columnIndex,
+                          surface: 'header',
                         })
                       : null;
                     const isSelected = isSameEditableSource(activeSource, columnSource);

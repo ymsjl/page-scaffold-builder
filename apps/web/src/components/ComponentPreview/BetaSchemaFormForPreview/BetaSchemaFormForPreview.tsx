@@ -11,8 +11,9 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import type { DragEndEvent } from '@dnd-kit/core';
-import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { AltDragPointerSensor } from '@/components/ComponentPreview/altDragPointerSensor';
 import type { ProCommonColumn } from '@/types';
 import { mapProCommonColumnToProps } from '@/store/mapProCommonColumnToProps';
 import {
@@ -95,7 +96,7 @@ const BetaSchemaFormForPreview: React.FC<SerializableBetaSchemaFormProps> = Reac
   const [draftLabel, setDraftLabel] = React.useState('');
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(AltDragPointerSensor, {
       activationConstraint: { distance: 4 },
     }),
   );

@@ -1,26 +1,27 @@
 # EditableShell 组件设计规范 (Spec)
 
-`EditableShell` 是一个基础包装组件，用于在低代码编辑器中实现组件的可选中、可编辑状态。它负责处理悬停状态、选中状态、工具栏（Toolbar）的显示、及其拖拽手柄。
+`EditableShell` 是一个基础包装组件，用于在低代码编辑器中实现组件的可选中、可编辑状态。它负责处理悬停状态、选中状态、工具栏（Toolbar）的显示，以及可选的拖拽激活区域。
 
 ## Props 属性定义
 
-| 属性名          | 类型                                                       | 说明                                                              |
-| :-------------- | :--------------------------------------------------------- | :---------------------------------------------------------------- |
-| `target`        | `EditableProjection`                                       | 目标投影对象，包含组件的 `id`、`kind` 以及 `outlineVariant` 等。  |
-| `selected`      | `boolean`                                                  | 是否处于选中状态。若为 `true`，工具栏默认可见。                   |
-| `highlighted`   | `boolean`                                                  | 是否高亮（默认 `true`）。用于在画布中显示辅助线/边框。            |
-| `disabled`      | `boolean`                                                  | 是否禁用交互。禁用后不会触发 `onSelect` 及相关 hover/click 事件。 |
-| `toolbar`       | `React.ReactNode`                                          | 悬浮在组件上方的工具栏内容。                                      |
-| `dragHandle`    | `React.ReactNode`                                          | 拖拽手柄组件，通常定位在左上角。                                  |
-| `placeholder`   | `React.ReactNode`                                          | 当 `children` 为空时显示的占位内容。                              |
-| `children`      | `React.ReactNode`                                          | 组件包装的实际内容。                                              |
-| `onSelect`      | `(event: React.MouseEvent \| React.KeyboardEvent) => void` | 当组件被点击或按下 Enter/Space 键时的回调。                       |
-| `onMouseEnter`  | `(e: React.MouseEvent<HTMLDivElement>) => void`            | 鼠标进入组件区域的回调。                                          |
-| `onMouseLeave`  | `(e: React.MouseEvent<HTMLDivElement>) => void`            | 鼠标离开组件区域的回调。                                          |
-| `className`     | `string`                                                   | 透传给外层容器的样式类名。                                        |
-| `onClick`       | `React.MouseEventHandler`                                  | 原生点击事件透传。                                                |
-| `onKeyDown`     | `React.KeyboardEventHandler`                               | 原生键盘事件透传。                                                |
-| `onContextMenu` | `React.MouseEventHandler`                                  | 原生上下文菜单（右键）事件透传。                                  |
+| 属性名               | 类型                                                          | 说明                                                                              |
+| :------------------- | :------------------------------------------------------------ | :-------------------------------------------------------------------------------- |
+| `target`             | `EditableProjection`                                          | 目标投影对象，包含组件的 `id`、`kind` 以及 `outlineVariant` 等。                  |
+| `selected`           | `boolean`                                                     | 是否处于选中状态。若为 `true`，工具栏默认可见。                                   |
+| `highlighted`        | `boolean`                                                     | 是否高亮（默认 `true`）。用于在画布中显示辅助线/边框。                            |
+| `disabled`           | `boolean`                                                     | 是否禁用交互。禁用后不会触发 `onSelect` 及相关 hover/click 事件。                 |
+| `toolbar`            | `React.ReactNode`                                             | 悬浮在组件上方的工具栏内容。                                                      |
+| `dragActivatorProps` | `React.HTMLAttributes<HTMLDivElement> & React.AriaAttributes` | 透传给 Shell 根节点的拖拽激活属性，通常来自 `dnd-kit` 的 `listeners/attributes`。 |
+| `altDragEnabled`     | `boolean`                                                     | 是否启用 Alt 按键拖拽提示；启用后按住 Alt 悬停会显示 `move` 光标。                |
+| `placeholder`        | `React.ReactNode`                                             | 当 `children` 为空时显示的占位内容。                                              |
+| `children`           | `React.ReactNode`                                             | 组件包装的实际内容。                                                              |
+| `onSelect`           | `(event: React.MouseEvent \| React.KeyboardEvent) => void`    | 当组件被点击或按下 Enter/Space 键时的回调。                                       |
+| `onMouseEnter`       | `(e: React.MouseEvent<HTMLDivElement>) => void`               | 鼠标进入组件区域的回调。                                                          |
+| `onMouseLeave`       | `(e: React.MouseEvent<HTMLDivElement>) => void`               | 鼠标离开组件区域的回调。                                                          |
+| `className`          | `string`                                                      | 透传给外层容器的样式类名。                                                        |
+| `onClick`            | `React.MouseEventHandler`                                     | 原生点击事件透传。                                                                |
+| `onKeyDown`          | `React.KeyboardEventHandler`                                  | 原生键盘事件透传。                                                                |
+| `onContextMenu`      | `React.MouseEventHandler`                                     | 原生上下文菜单（右键）事件透传。                                                  |
 
 ---
 
@@ -93,7 +94,7 @@
 
 ### 3. Drag Handle (`styles.dragHandle`)
 
-绝对定位在 Shell 的左上方 (`-10px`, `-10px`)，优先级较高 (`zIndex: 2`)，供 DnD 库识别触发拖拽。
+不再内置单独的拖拽手柄。需要排序的容器可通过 `dragActivatorProps` 将拖拽事件直接挂到 Shell 根节点，并配合 `altDragEnabled` 使用 Alt + 左键按住触发拖拽。
 
 ### 4. Content (`styles.content`)
 
@@ -107,6 +108,6 @@
 
 ## 样式约定 (CSS with vanilla-extract)
 
-- `.shell`: 基础样式，`position: relative` 为工具栏和手柄提供参考系。
+- `.shell`: 基础样式，`position: relative` 为工具栏和外层交互提供参考系。
 - `.toolbar`: 包含气泡样式的横向容器，具有阴影和圆角。
 - `.toolbarPopoverOverlay`: 通过 `globalStyle` 重置 Ant Design Popover 的内边距和背景，实现自定义工具栏外观。

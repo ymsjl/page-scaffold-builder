@@ -16,7 +16,14 @@ export const shell = style({
     '&[data-disabled="true"]': {
       cursor: 'default',
     },
+    '&[data-alt-drag-ready="true"]': {
+      cursor: 'move',
+    },
   },
+});
+
+globalStyle(`${shell}[data-alt-drag-ready="true"] *`, {
+  cursor: 'move',
 });
 
 export const content = style({
@@ -44,13 +51,6 @@ globalStyle(`${toolbarPopoverOverlay} .ant-popover-inner`, {
 
 globalStyle(`${toolbarPopoverOverlay} .ant-popover-inner-content`, {
   padding: 0,
-});
-
-export const dragHandle = style({
-  position: 'absolute',
-  top: '-10px',
-  left: '-10px',
-  zIndex: 2,
 });
 
 export const placeholder = style({

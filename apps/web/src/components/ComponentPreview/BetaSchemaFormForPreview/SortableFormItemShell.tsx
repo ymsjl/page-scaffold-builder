@@ -1,7 +1,8 @@
 import React from 'react';
-import { DeleteOutlined, HolderOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAltPressed } from '@/components/EditableShell/useAltPressed';
 import * as styles from './SortableFormItemShell.css';
 
 type SortableFormItemShellProps = {
@@ -15,18 +16,12 @@ type SortableFormItemShellProps = {
 
 export const SortableFormItemShell: React.FC<SortableFormItemShellProps> = React.memo(
   ({ id, canDrag, onInsertBehind, onDelete, onEdit, children }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      setActivatorNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
       id,
       disabled: !canDrag,
     });
+    const altPressed = useAltPressed();
+    const altDragReady = canDrag && altPressed;
 
     const shellClassName = isDragging
       ? `${styles.formItemShell} ${styles.formItemDragging}`
@@ -37,17 +32,16 @@ export const SortableFormItemShell: React.FC<SortableFormItemShellProps> = React
         ref={setNodeRef}
         style={{ transform: CSS.Transform.toString(transform), transition }}
         className={shellClassName}
+        data-alt-drag-ready={altDragReady}
+        data-dragging={isDragging || undefined}
+        {...attributes}
+        {...listeners}
       >
-        <button
-          type="button"
-          ref={setActivatorNodeRef}
-          className={`${styles.dragHandle} ${!canDrag ? styles.dragHandleDisabled : ''}`}
-          onClick={(event) => event.stopPropagation()}
-          {...attributes}
-          {...listeners}
+        <div
+          className={altDragReady ? `${styles.dragHint} ${styles.dragHintActive}` : styles.dragHint}
         >
-          <HolderOutlined className={styles.dragHandleIcon} />
-        </button>
+          Alt + 拖动排序
+        </div>
 
         <div className={styles.itemContent}>{children}</div>
 

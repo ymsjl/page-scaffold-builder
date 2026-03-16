@@ -1,7 +1,6 @@
-import { style } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 import {
   colorPrimary,
-  colorTextDisabled,
   fontSizeBase,
   radiusSmall,
   space1,
@@ -18,44 +17,45 @@ export const formItemShell = style({
     '&:hover': {
       zIndex: 1,
     },
+    '&[data-alt-drag-ready="true"]': {
+      cursor: 'move',
+    },
   },
+});
+
+globalStyle(`${formItemShell}[data-alt-drag-ready="true"] *`, {
+  cursor: 'move',
 });
 
 export const formItemDragging = style({
   opacity: 0.6,
 });
 
-export const dragHandle = style({
-  all: 'unset',
+export const dragHint = style({
   position: 'absolute',
-  top: 0,
-  bottom: 0,
-  right: '100%',
-  width: '28px',
+  top: 6,
+  left: 8,
+  padding: '2px 6px',
+  borderRadius: radiusSmall,
   backgroundColor: colorPrimary,
-  borderRadius: '6px 0 0 6px',
   color: '#ffffff',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+  fontSize: fontSizeBase,
+  lineHeight: 1.2,
   opacity: 0,
-  cursor: 'grab',
+  pointerEvents: 'none',
   transition: transitionFast,
-  flex: '0 0 auto',
   selectors: {
     [`${formItemShell}:hover &`]: {
+      opacity: 1,
+    },
+    [`${formItemShell}[data-alt-drag-ready="true"] &`]: {
       opacity: 1,
     },
   },
 });
 
-export const dragHandleDisabled = style({
-  cursor: 'default',
-  color: colorTextDisabled,
-});
-
-export const dragHandleIcon = style({
-  fontSize: fontSizeBase,
+export const dragHintActive = style({
+  backgroundColor: colorPrimary,
 });
 
 export const itemContent = style({

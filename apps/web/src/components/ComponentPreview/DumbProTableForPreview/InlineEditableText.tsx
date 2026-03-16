@@ -33,6 +33,7 @@ export const InlineEditableText: React.FC<InlineEditableTextProps> = ({
       <Input
         size="small"
         autoFocus
+        variant="borderless"
         value={draftValue}
         onChange={(event) => onDraftChange(event.target.value)}
         onBlur={onApplyDraft}
@@ -44,6 +45,9 @@ export const InlineEditableText: React.FC<InlineEditableTextProps> = ({
           if (event.key === 'Escape') {
             onCancelDraft();
           }
+        }}
+        style={{
+          height: 'auto',
         }}
         onClick={(event) => event.stopPropagation()}
       />

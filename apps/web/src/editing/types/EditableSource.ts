@@ -17,7 +17,8 @@ export type SchemaItemSource = {
   ownerNodeId: string;
   collectionKey: string;
   editorKind: string;
-  itemKey?: string;
+  itemKey: string;
+  surfaceKey?: string;
   itemIndex?: number;
 };
 
@@ -46,6 +47,7 @@ export const createSchemaItemSource = ({
   collectionKey,
   editorKind,
   itemKey,
+  surfaceKey,
   itemIndex,
 }: Omit<SchemaItemSource, 'kind'>): SchemaItemSource => ({
   kind: 'schema-item',
@@ -53,6 +55,7 @@ export const createSchemaItemSource = ({
   collectionKey,
   editorKind,
   itemKey,
+  surfaceKey,
   itemIndex,
 });
 
@@ -83,6 +86,7 @@ export const isSameEditableSource = (
         left.collectionKey === (right as SchemaItemSource).collectionKey &&
         left.editorKind === (right as SchemaItemSource).editorKind &&
         left.itemKey === (right as SchemaItemSource).itemKey &&
+        left.surfaceKey === (right as SchemaItemSource).surfaceKey &&
         left.itemIndex === (right as SchemaItemSource).itemIndex
       );
     default:
