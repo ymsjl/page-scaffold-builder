@@ -1,7 +1,6 @@
 import React from 'react';
-import { Button, Dropdown, Input, Tooltip } from 'antd';
+import { Button, Dropdown, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
-import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   DeleteOutlined,
@@ -11,23 +10,15 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { EditableShell } from '@/components/EditableShell/EditableShell';
-import {
-  createSchemaColumnProjection,
-  createSchemaColumnSource,
-  focusSchemaColumn,
-  openSchemaColumnEditor,
-} from '@/editing/bindings/schemaColumns';
 import { setHoverSource } from '@/editing/store/editingSlice';
 import { useAppDispatch } from '@/store/hooks';
-import {
-  deleteColumnForSelectedNode,
-  upsertColumnOfSelectedNode,
-} from '@/store/componentTreeSlice/componentTreeSlice';
 import type { SchemaField } from '@/types';
 import { getFieldLabel, getFieldName } from '../BetaSchemaFormForPreview/helper';
-import { buildInsertedColumn, renderSearchControl } from './shared';
+import { InlineEditableText } from './InlineEditableText';
+import { renderSearchControl } from './shared';
 import type { SearchableColumn } from './types';
 import * as styles from './DumbProTableForPreview.css';
+import { useSortableSchemaColumn } from './useSortableSchemaColumn';
 
 type SortableSearchFieldProps = {
   item: SearchableColumn;
@@ -59,35 +50,31 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
   }) => {
     const { column, columnIndex, dragId } = item;
     const dispatch = useAppDispatch();
-    const canOperate = Boolean(previewNodeId);
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-      id: dragId,
-      disabled: !canOperate,
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+      canOperate,
+      columnSource,
+      projection,
+      insertItems,
+      focusColumn,
+      insertBehind,
+      handleDelete,
+      handleEdit,
+      updateColumn,
+    } = useSortableSchemaColumn({
+      dragId,
+      column,
+      columnIndex,
+      previewNodeId,
+      entityFields,
+      onFocus,
+      emptyInsertLabel: '空字段',
     });
-
-    const columnSource = React.useMemo(() => {
-      if (!previewNodeId) {
-        return null;
-      }
-
-      return createSchemaColumnSource({ ownerNodeId: previewNodeId, column, columnIndex });
-    }, [column, columnIndex, previewNodeId]);
-
-    const projection = React.useMemo(() => {
-      if (!previewNodeId) {
-        return null;
-      }
-
-      return createSchemaColumnProjection({ ownerNodeId: previewNodeId, column, columnIndex });
-    }, [column, columnIndex, previewNodeId]);
-
-    const insertItems = React.useMemo<MenuProps['items']>(() => {
-      return [
-        { key: 'insert:empty', label: '空字段' },
-        { type: 'divider' },
-        ...entityFields.map((field) => ({ key: `insert:${field.key}`, label: field.key })),
-      ];
-    }, [entityFields]);
 
     const labelText = String(
       getFieldLabel(
@@ -95,64 +82,6 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
         getFieldName(column as Record<string, unknown>, columnIndex),
       ),
     );
-
-    const focusColumn = React.useCallback(() => {
-      if (!previewNodeId || !columnSource) {
-        return;
-      }
-
-      onFocus();
-      dispatch(
-        focusSchemaColumn({
-          ownerNodeId: previewNodeId,
-          column,
-          columnIndex,
-          interactionSource: 'canvas',
-        }),
-      );
-    }, [column, columnIndex, columnSource, dispatch, onFocus, previewNodeId]);
-
-    const insertBehind = React.useCallback(
-      (fieldKey?: string) => {
-        if (!previewNodeId) {
-          return;
-        }
-
-        focusColumn();
-        dispatch(
-          upsertColumnOfSelectedNode({
-            insertPos: columnIndex + 1,
-            changes: buildInsertedColumn({ componentType: 'Table', entityFields, fieldKey }),
-          }),
-        );
-      },
-      [columnIndex, dispatch, entityFields, focusColumn, previewNodeId],
-    );
-
-    const handleDelete = React.useCallback(() => {
-      if (!previewNodeId || !column.key) {
-        return;
-      }
-
-      focusColumn();
-      dispatch(deleteColumnForSelectedNode(column.key));
-    }, [column.key, dispatch, focusColumn, previewNodeId]);
-
-    const handleEdit = React.useCallback(() => {
-      if (!previewNodeId) {
-        return;
-      }
-
-      onFocus();
-      dispatch(
-        openSchemaColumnEditor({
-          ownerNodeId: previewNodeId,
-          column,
-          columnIndex,
-          interactionSource: 'canvas',
-        }),
-      );
-    }, [column, columnIndex, dispatch, onFocus, previewNodeId]);
 
     const menuItems = React.useMemo<MenuProps['items']>(
       () => [
@@ -185,6 +114,7 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
     const handleMenuClick = React.useCallback<NonNullable<MenuProps['onClick']>>(
       ({ key, domEvent }) => {
         domEvent.stopPropagation();
+
         if (!previewNodeId || !column.key) {
           return;
         }
@@ -208,47 +138,25 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
         }
 
         if (key === 'hideInSearch') {
-          dispatch(
-            upsertColumnOfSelectedNode({ key: column.key, hideInSearch: !column.hideInSearch }),
-          );
+          updateColumn({ hideInSearch: !column.hideInSearch });
         }
       },
-      [column, dispatch, focusColumn, handleDelete, handleEdit, insertBehind, previewNodeId],
+      [column, focusColumn, handleDelete, handleEdit, insertBehind, previewNodeId, updateColumn],
     );
 
-    const editableLabel = isEditing ? (
-      <Input
-        size="small"
-        autoFocus
-        value={draftValue}
-        onChange={(event) => onDraftChange(event.target.value)}
-        onBlur={onApplyDraft}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.currentTarget.blur();
-          }
-          if (event.key === 'Escape') {
-            onCancelDraft();
-          }
-        }}
-        onClick={(event) => event.stopPropagation()}
+    const editableLabel = (
+      <InlineEditableText
+        isEditing={isEditing}
+        draftValue={draftValue}
+        displayText={labelText}
+        onDraftChange={onDraftChange}
+        onApplyDraft={onApplyDraft}
+        onCancelDraft={onCancelDraft}
+        onActivate={() => focusColumn()}
+        onStartEditing={onStartEditing}
+        buttonClassName={styles.labelButton}
+        textClassName={styles.labelText}
       />
-    ) : (
-      <button
-        type="button"
-        className={styles.labelButton}
-        onClick={(event) => {
-          event.stopPropagation();
-          focusColumn();
-        }}
-        onDoubleClick={(event) => {
-          event.stopPropagation();
-          focusColumn();
-          onStartEditing();
-        }}
-      >
-        <span className={styles.labelText}>{labelText}</span>
-      </button>
     );
 
     const fieldShell = projection ? (
@@ -257,8 +165,10 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
         selected={isSelected}
         className={`${styles.shellStretch} ${isDragging ? styles.draggingShell : ''}`}
         onSelect={(event) => {
-          event.stopPropagation();
-          focusColumn();
+          if (event.type !== 'contextmenu') {
+            event.stopPropagation();
+            focusColumn();
+          }
         }}
         onMouseEnter={() => {
           if (columnSource) {
@@ -306,10 +216,15 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
           </div>
         }
       >
-        <div className={styles.fieldContent}>
-          <div className={styles.fieldLabelRow}>{editableLabel}</div>
-          <div className={styles.fieldControl}>{renderSearchControl(column, columnIndex)}</div>
-        </div>
+        <Dropdown
+          trigger={isEditing ? [] : ['contextMenu']}
+          menu={{ items: menuItems, onClick: handleMenuClick }}
+        >
+          <div className={styles.fieldContent}>
+            <div className={styles.fieldLabelRow}>{editableLabel}</div>
+            <div className={styles.fieldControl}>{renderSearchControl(column, columnIndex)}</div>
+          </div>
+        </Dropdown>
       </EditableShell>
     ) : (
       <div className={styles.fieldContent}>
@@ -318,16 +233,7 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
       </div>
     );
 
-    return projection ? (
-      <Dropdown
-        trigger={isEditing || !isSelected ? [] : ['contextMenu']}
-        menu={{ items: menuItems, onClick: handleMenuClick }}
-      >
-        <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }}>
-          {fieldShell}
-        </div>
-      </Dropdown>
-    ) : (
+    return (
       <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }}>
         {fieldShell}
       </div>

@@ -117,20 +117,35 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
       }
     };
 
+    const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
+      event?.stopPropagation();
+
+      // Only treat keyboard-invoked context menus as direct selection here.
+      // Mouse right-click selection is handled by outer context-menu triggers.
+      if (event.detail === 0) {
+        onSelect?.(event);
+      }
+    };
+
+    const shellProps = {
+      ...restProps,
+      ref,
+      className: shellClassName,
+      'data-target-id': target.id,
+      'data-target-kind': target.kind,
+      'data-outline-variant': target.outlineVariant ?? 'default',
+      'data-selected': selected,
+      'data-highlighted': highlighted,
+      'data-disabled': disabled,
+      onMouseEnter: handleShellMouseEnter,
+      onMouseLeave: handleShellMouseLeave,
+    };
+
     const shellNode = isInteractive ? (
       <div
-        {...restProps}
-        ref={ref}
-        className={shellClassName}
-        data-target-id={target.id}
-        data-target-kind={target.kind}
-        data-outline-variant={target.outlineVariant ?? 'default'}
-        data-selected={selected}
-        data-highlighted={highlighted}
-        data-disabled={disabled}
+        {...shellProps}
         onClick={handleClick}
-        onMouseEnter={handleShellMouseEnter}
-        onMouseLeave={handleShellMouseLeave}
+        onContextMenu={handleContextMenu}
         role="button"
         tabIndex={0}
         onKeyDown={handleKeyDown}
@@ -140,21 +155,7 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
         {!children && placeholder ? <div className={styles.placeholder}>{placeholder}</div> : null}
       </div>
     ) : (
-      <div
-        {...restProps}
-        ref={ref}
-        className={shellClassName}
-        data-target-id={target.id}
-        data-target-kind={target.kind}
-        data-outline-variant={target.outlineVariant ?? 'default'}
-        data-selected={selected}
-        data-highlighted={highlighted}
-        data-disabled={disabled}
-        onClick={onClick}
-        onMouseEnter={handleShellMouseEnter}
-        onMouseLeave={handleShellMouseLeave}
-        onKeyDown={onKeyDown}
-      >
+      <div {...shellProps} onClick={onClick} onKeyDown={onKeyDown}>
         {dragHandle ? <div className={styles.dragHandle}>{dragHandle}</div> : null}
         <div className={styles.content}>{children || placeholder}</div>
         {!children && placeholder ? <div className={styles.placeholder}>{placeholder}</div> : null}

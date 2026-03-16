@@ -39,10 +39,10 @@ export const surface = style({
 
 export const header = style({
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center',
   justifyContent: 'space-between',
   gap: space4,
-  padding: `${space4}px ${space4}px ${space3}px`,
+  paddingBlock: `${space4}px`,
 });
 
 export const titleBlock = style({
@@ -148,7 +148,6 @@ export const controlNote = style({
 
 export const tableWrap = style({
   overflowX: 'auto',
-  border: `1px solid ${colorBorderSecondary}`,
   borderRadius: radiusMedium,
 });
 
@@ -161,12 +160,6 @@ export const columnsRow = style({
 
 export const columnWrap = style({
   flex: '1 1 auto',
-  borderRight: `1px solid ${colorBorderSecondary}`,
-  selectors: {
-    '&:last-child': {
-      borderRight: 'none',
-    },
-  },
 });
 
 export const columnShell = style({
@@ -183,17 +176,33 @@ export const columnLaneActive = style({
 
 export const bodyCell = style({
   padding: `${space3}px ${space2}px`,
-  borderBottom: `1px solid ${colorBorderSecondary}`,
   transition: transitionFast,
   background: colorBgBase,
+  borderBottom: `1px solid ${colorBorderSecondary}`,
+  lineHeight: '22px',
 });
 
 export const columnContent = style({});
 
 export const headerShell = style({
+  position: 'relative',
   background: '#fafafa',
-  padding: `${space3}px ${space2}px`,
   borderBottom: `1px solid ${colorBorderSecondary}`,
+  padding: `${space3}px ${space2}px`,
+
+  selectors: {
+    '&::before': {
+      position: 'absolute',
+      top: '50%',
+      insetInlineEnd: 0,
+      width: '1px',
+      height: '1.6em',
+      backgroundColor: '#f0f0f0',
+      transform: 'translateY(-50%)',
+      transition: 'background-color 0.2s',
+      content: '',
+    },
+  },
 });
 
 export const headerContent = style({

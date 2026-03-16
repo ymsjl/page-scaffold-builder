@@ -1,7 +1,6 @@
 import React from 'react';
-import { Button, Dropdown, Input, Tooltip } from 'antd';
+import { Button, Dropdown, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
-import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   DeleteOutlined,
@@ -12,21 +11,13 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { EditableShell } from '@/components/EditableShell/EditableShell';
-import {
-  createSchemaColumnProjection,
-  createSchemaColumnSource,
-  focusSchemaColumn,
-  openSchemaColumnEditor,
-} from '@/editing/bindings/schemaColumns';
 import { setHoverSource } from '@/editing/store/editingSlice';
 import { useAppDispatch } from '@/store/hooks';
-import {
-  deleteColumnForSelectedNode,
-  upsertColumnOfSelectedNode,
-} from '@/store/componentTreeSlice/componentTreeSlice';
 import type { ProCommonColumn, SchemaField } from '@/types';
-import { buildInsertedColumn, getColumnTitleText } from './shared';
+import { InlineEditableText } from './InlineEditableText';
+import { getColumnTitleText } from './shared';
 import * as styles from './DumbProTableForPreview.css';
+import { useSortableSchemaColumn } from './useSortableSchemaColumn';
 
 type SortableHeaderCellProps = {
   dragId: string;
@@ -67,93 +58,31 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
     cellContent,
   }) => {
     const dispatch = useAppDispatch();
-    const canOperate = Boolean(previewNodeId);
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-      id: dragId,
-      disabled: !canOperate,
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+      canOperate,
+      columnSource,
+      projection,
+      insertItems,
+      focusColumn,
+      insertBehind,
+      handleDelete,
+      handleEdit,
+      updateColumn,
+    } = useSortableSchemaColumn({
+      dragId,
+      column,
+      columnIndex,
+      previewNodeId,
+      entityFields,
+      onFocus,
+      emptyInsertLabel: '空列',
     });
-
-    const columnSource = React.useMemo(() => {
-      if (!previewNodeId) {
-        return null;
-      }
-
-      return createSchemaColumnSource({ ownerNodeId: previewNodeId, column, columnIndex });
-    }, [column, columnIndex, previewNodeId]);
-
-    const projection = React.useMemo(() => {
-      if (!previewNodeId) {
-        return null;
-      }
-
-      return createSchemaColumnProjection({ ownerNodeId: previewNodeId, column, columnIndex });
-    }, [column, columnIndex, previewNodeId]);
-
-    const insertItems = React.useMemo<MenuProps['items']>(() => {
-      return [
-        { key: 'insert:empty', label: '空列' },
-        { type: 'divider' },
-        ...entityFields.map((field) => ({ key: `insert:${field.key}`, label: field.key })),
-      ];
-    }, [entityFields]);
-
-    const focusColumn = React.useCallback(() => {
-      if (!previewNodeId || !columnSource) {
-        return;
-      }
-
-      onFocus();
-      dispatch(
-        focusSchemaColumn({
-          ownerNodeId: previewNodeId,
-          column,
-          columnIndex,
-          interactionSource: 'canvas',
-        }),
-      );
-    }, [column, columnIndex, columnSource, dispatch, onFocus, previewNodeId]);
-
-    const insertBehind = React.useCallback(
-      (fieldKey?: string) => {
-        if (!previewNodeId) {
-          return;
-        }
-
-        focusColumn();
-        dispatch(
-          upsertColumnOfSelectedNode({
-            insertPos: columnIndex + 1,
-            changes: buildInsertedColumn({ componentType: 'Table', entityFields, fieldKey }),
-          }),
-        );
-      },
-      [columnIndex, dispatch, entityFields, focusColumn, previewNodeId],
-    );
-
-    const handleDelete = React.useCallback(() => {
-      if (!previewNodeId || !column.key) {
-        return;
-      }
-
-      focusColumn();
-      dispatch(deleteColumnForSelectedNode(column.key));
-    }, [column.key, dispatch, focusColumn, previewNodeId]);
-
-    const handleEdit = React.useCallback(() => {
-      if (!previewNodeId) {
-        return;
-      }
-
-      onFocus();
-      dispatch(
-        openSchemaColumnEditor({
-          ownerNodeId: previewNodeId,
-          column,
-          columnIndex,
-          interactionSource: 'canvas',
-        }),
-      );
-    }, [column, columnIndex, dispatch, onFocus, previewNodeId]);
 
     const menuItems = React.useMemo<MenuProps['items']>(
       () => [
@@ -187,6 +116,7 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
     const handleMenuClick = React.useCallback<NonNullable<MenuProps['onClick']>>(
       ({ key, domEvent }) => {
         domEvent.stopPropagation();
+
         if (!previewNodeId || !column.key) {
           return;
         }
@@ -210,60 +140,35 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
         }
 
         if (key === 'hideInSearch') {
-          dispatch(
-            upsertColumnOfSelectedNode({ key: column.key, hideInSearch: !column.hideInSearch }),
-          );
+          updateColumn({ hideInSearch: !column.hideInSearch });
           return;
         }
 
         if (key === 'hideInTable') {
-          dispatch(
-            upsertColumnOfSelectedNode({ key: column.key, hideInTable: !column.hideInTable }),
-          );
+          updateColumn({ hideInTable: !column.hideInTable });
         }
       },
-      [column, dispatch, focusColumn, handleDelete, handleEdit, insertBehind, previewNodeId],
+      [column, focusColumn, handleDelete, handleEdit, insertBehind, previewNodeId, updateColumn],
     );
 
     const controlButtonClassName = isDragging
       ? `${styles.controlButton} ${styles.dragButton} ${styles.dragButtonDragging}`
       : `${styles.controlButton} ${styles.dragButton}`;
 
-    const editableContent = isEditing ? (
-      <Input
-        size="small"
-        autoFocus
-        value={draftValue}
-        onChange={(event) => onDraftChange(event.target.value)}
-        onBlur={onApplyDraft}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.currentTarget.blur();
-          }
-          if (event.key === 'Escape') {
-            onCancelDraft();
-          }
-        }}
-        onClick={(event) => event.stopPropagation()}
+    const editableContent = (
+      <InlineEditableText
+        isEditing={isEditing}
+        draftValue={draftValue}
+        displayText={getColumnTitleText(column)}
+        onDraftChange={onDraftChange}
+        onApplyDraft={onApplyDraft}
+        onCancelDraft={onCancelDraft}
+        onActivate={focusColumn}
+        onStartEditing={onStartEditing}
+        buttonClassName={styles.headerTitleButton}
+        textClassName={styles.headerTitleText}
+        wrapperClassName={styles.headerContent}
       />
-    ) : (
-      <div className={styles.headerContent}>
-        <button
-          type="button"
-          className={styles.headerTitleButton}
-          onClick={(event) => {
-            event.stopPropagation();
-            focusColumn();
-          }}
-          onDoubleClick={(event) => {
-            event.stopPropagation();
-            focusColumn();
-            onStartEditing();
-          }}
-        >
-          <span className={styles.headerTitleText}>{getColumnTitleText(column)}</span>
-        </button>
-      </div>
     );
 
     const columnShell = projection ? (
@@ -272,7 +177,9 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
         selected={isSelected}
         className={`${styles.columnShell} ${styles.shellStretch} ${isDragging ? styles.draggingShell : ''}`}
         onSelect={(event) => {
-          event.stopPropagation();
+          if (event.type !== 'contextmenu') {
+            event.stopPropagation();
+          }
           focusColumn();
         }}
         onMouseEnter={() => {
@@ -321,10 +228,15 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
           </div>
         }
       >
-        <div className={styles.columnContent}>
-          <div className={styles.headerShell}>{editableContent}</div>
-          <div className={styles.bodyCell}>{cellContent}</div>
-        </div>
+        <Dropdown
+          trigger={isEditing ? [] : ['contextMenu']}
+          menu={{ items: menuItems, onClick: handleMenuClick }}
+        >
+          <div className={styles.columnContent}>
+            <div className={styles.headerShell}>{editableContent}</div>
+            <div className={styles.bodyCell}>{cellContent}</div>
+          </div>
+        </Dropdown>
       </EditableShell>
     ) : (
       <div className={styles.columnContent}>
@@ -334,20 +246,15 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
     );
 
     return (
-      <Dropdown
-        trigger={isEditing || !isSelected ? [] : ['contextMenu']}
-        menu={{ items: menuItems, onClick: handleMenuClick }}
+      <div
+        ref={setNodeRef}
+        style={{ transform: CSS.Transform.toString(transform), transition }}
+        className={
+          isColumnActive ? `${styles.columnLane} ${styles.columnLaneActive}` : styles.columnLane
+        }
       >
-        <div
-          ref={setNodeRef}
-          style={{ transform: CSS.Transform.toString(transform), transition }}
-          className={
-            isColumnActive ? `${styles.columnLane} ${styles.columnLaneActive}` : styles.columnLane
-          }
-        >
-          {columnShell}
-        </div>
-      </Dropdown>
+        {columnShell}
+      </div>
     );
   },
 );
