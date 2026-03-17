@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Dropdown, Tooltip } from 'antd';
+import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { CSS } from '@dnd-kit/utilities';
 import { DeleteOutlined, EditOutlined, NumberOutlined, PlusOutlined } from '@ant-design/icons';
@@ -8,7 +8,7 @@ import { setHoverSource } from '@/editing/store/editingSlice';
 import { useAppDispatch } from '@/store/hooks';
 import type { SchemaField } from '@/types';
 import { getFieldLabel, getFieldName } from '../BetaSchemaFormForPreview/helper';
-import { InlineEditableText } from './InlineEditableText';
+import { InlineEditableText } from '../InlineEditableText/InlineEditableText';
 import { renderSearchControl } from './shared';
 import type { SearchableColumn } from './types';
 import * as styles from './DumbProTableForPreview.css';
@@ -174,30 +174,21 @@ export const SortableSearchField: React.FC<SortableSearchFieldProps> = React.mem
           }
         }}
         onMouseLeave={() => dispatch(setHoverSource(null))}
-        toolbar={
-          <div className={styles.compactToolbar}>
-            <Tooltip title="编辑字段">
-              <Button size="small" type="text" icon={<EditOutlined />} onClick={handleEdit} />
-            </Tooltip>
-            <Tooltip title="删除字段">
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleDelete}
-              />
-            </Tooltip>
-            <Tooltip title="在后方插入字段">
-              <Button
-                size="small"
-                type="text"
-                icon={<PlusOutlined />}
-                onClick={() => insertBehind()}
-              />
-            </Tooltip>
-          </div>
-        }
+        toolbar={[
+          { title: '编辑字段', icon: <EditOutlined />, onClick: handleEdit, disabled: !canOperate },
+          {
+            title: '删除字段',
+            icon: <DeleteOutlined />,
+            onClick: handleDelete,
+            disabled: !canOperate,
+          },
+          {
+            title: '在后方插入字段',
+            icon: <PlusOutlined />,
+            onClick: () => insertBehind(),
+            disabled: !canOperate,
+          },
+        ]}
       >
         <Dropdown
           trigger={isEditing ? [] : ['contextMenu']}

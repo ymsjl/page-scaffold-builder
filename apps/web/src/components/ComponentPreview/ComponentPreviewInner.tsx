@@ -3,7 +3,8 @@ import type { ComponentNode } from '@/types';
 import { componentNodesSelectors } from '@/store/componentTreeSlice/componentTreeSelectors';
 import { useAppSelector } from '@/store/hooks';
 import { getComponentPrototype } from '../../componentMetas';
-import { CanvasOutlineOverlay } from './CanvasOutlineOverlay';
+import { CanvasOutlineOverlay } from './CanvasOutlineOverlay/CanvasOutlineOverlay';
+import { CanvasOutlineContentProvider } from './CanvasOutlineOverlay/canvasOutlineContent';
 import { usePreviewMode, type PreviewMode } from './previewMode';
 import { RenderNodeRefProvider } from './propResolvers';
 import * as previewStyles from './previewStyles.css';
@@ -53,10 +54,12 @@ const ComponentPreviewInner = React.memo(
 
     return (
       <RenderNodeRefProvider renderNodeRef={renderNodeRef}>
-        <div id="modal-preview-root" className={containerClass}>
-          <CanvasOutlineOverlay />
-          <RenderSingleNode node={node} componentPrototype={componentPrototype} />
-        </div>
+        <CanvasOutlineContentProvider>
+          <div id="modal-preview-root" className={containerClass}>
+            <CanvasOutlineOverlay />
+            <RenderSingleNode node={node} componentPrototype={componentPrototype} />
+          </div>
+        </CanvasOutlineContentProvider>
       </RenderNodeRefProvider>
     );
   },

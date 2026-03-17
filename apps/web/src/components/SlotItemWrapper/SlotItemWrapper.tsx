@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { EditableShell } from '@/components/EditableShell/EditableShell';
 import { createNodeSlotProjection, focusNodeSlot } from '@/editing/bindings/nodeSlots';
@@ -79,22 +78,20 @@ const SlotItemWrapper = ({
       onSelect={handleSelect}
       onMouseEnter={() => dispatch(setHoverSource(slotSource))}
       onMouseLeave={() => dispatch(setHoverSource(null))}
-      toolbar={
-        <>
-          <Tooltip title="选中组件">
-            <Button size="small" type="text" icon={<EditOutlined />} onClick={handleSelect} />
-          </Tooltip>
-          <Tooltip title="移除组件">
-            <Button
-              size="small"
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={handleRemove}
-            />
-          </Tooltip>
-        </>
-      }
+      toolbar={[
+        {
+          title: '选中组件',
+          icon: <EditOutlined />,
+          onClick: handleSelect,
+          disabled: false,
+        },
+        {
+          title: '移除组件',
+          icon: <DeleteOutlined />,
+          onClick: handleRemove,
+          disabled: false,
+        },
+      ]}
     >
       {children}
     </EditableShell>

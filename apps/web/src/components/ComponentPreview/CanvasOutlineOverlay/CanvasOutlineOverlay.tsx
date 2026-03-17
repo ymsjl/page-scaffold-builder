@@ -1,5 +1,8 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { PlusOutlined } from '@ant-design/icons';
+import { Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   buildEditableProjectionId,
   createComponentNodeSource,
@@ -9,12 +12,15 @@ import { selectActiveEditingSource, selectHoverEditingSource } from '@/editing/s
 import { useAppSelector } from '@/store/hooks';
 import { selectSelectedNodeId } from '@/store/componentTreeSlice/componentTreeSelectors';
 import * as styles from './CanvasOutlineOverlay.css';
+import { useCanvasOutlineRenderEntries } from './canvasOutlineContent';
 
 type OutlineTone = 'hover' | 'selected';
 type OutlineVariant = 'default' | 'subtle';
 
 type OutlineSnapshot = {
   targetId: string;
+  addMenuItems?: MenuProps['items'];
+  onAddMenuItemClick?: (key: string) => void;
   top: number;
   left: number;
   width: number;
@@ -231,6 +237,35 @@ const measureActiveOutlines = ({
   return nextOutlines;
 };
 
+const OutlineAdornment: React.FC<{ outline: OutlineSnapshot }> = ({ outline }) => {
+  const renderedEntries = useCanvasOutlineRenderEntries(outline.targetId);
+  const hasRenderedNodes = renderedEntries.length > 0;
+  const hasAddMenuItems = Boolean(outline.addMenuItems && outline.addMenuItems.length > 0);
+
+  return (
+    <>
+      {renderedEntries.map((entry) => (
+        <React.Fragment key={entry.id}>{entry.node}</React.Fragment>
+      ))}
+      {!hasRenderedNodes && hasAddMenuItems ? (
+        <Dropdown
+          placement="topRight"
+          trigger={['hover']}
+          overlayClassName={styles.addOverlay}
+          menu={{
+            items: outline.addMenuItems,
+            onClick: (e) => outline.onAddMenuItemClick?.(String(e.key)),
+          }}
+        >
+          <button type="button" className={`${styles.addBtn} ${styles.addBtnVariant.vertical}`}>
+            <PlusOutlined />
+          </button>
+        </Dropdown>
+      ) : null}
+    </>
+  );
+};
+
 export const CanvasOutlineOverlay: React.FC = () => {
   const hoverSource = useAppSelector(selectHoverEditingSource);
   const activeSource = useAppSelector(selectActiveEditingSource);
@@ -410,6 +445,7 @@ export const CanvasOutlineOverlay: React.FC = () => {
     <div className={styles.overlayRoot} aria-hidden>
       {outlines.map((outline) => (
         <div
+          id={`${outline.targetId}-outline`}
           key={`${outline.tone}:${outline.targetId}`}
           className={`${styles.outline} ${getVariantClassName(outline.tone, outline.variant)}`}
           style={{
@@ -419,7 +455,9 @@ export const CanvasOutlineOverlay: React.FC = () => {
             height: outline.height,
             borderRadius: outline.borderRadius,
           }}
-        />
+        >
+          <OutlineAdornment outline={outline} />
+        </div>
       ))}
     </div>,
     document.body,

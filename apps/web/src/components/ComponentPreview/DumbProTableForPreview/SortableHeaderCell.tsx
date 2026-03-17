@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Dropdown, Tooltip } from 'antd';
+import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -10,10 +10,12 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { EditableShell } from '@/components/EditableShell/EditableShell';
+import { RenderedInCanvasOutline } from '@/components/ComponentPreview/CanvasOutlineOverlay/canvasOutlineContent';
 import { setHoverSource } from '@/editing/store/editingSlice';
 import { useAppDispatch } from '@/store/hooks';
 import type { ProCommonColumn, SchemaField } from '@/types';
-import { InlineEditableText } from './InlineEditableText';
+import * as outlineStyles from '../CanvasOutlineOverlay/CanvasOutlineOverlay.css';
+import { InlineEditableText } from '../InlineEditableText/InlineEditableText';
 import { getColumnTitleText } from './shared';
 import * as styles from './DumbProTableForPreview.css';
 import { useSortableSchemaColumn } from './useSortableSchemaColumn';
@@ -190,31 +192,62 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
           dispatch(setHoverSource(null));
           onHoverChange(false);
         }}
-        toolbar={
-          <div className={styles.compactToolbar}>
-            <Tooltip title="编辑列">
-              <Button size="small" type="text" icon={<EditOutlined />} onClick={handleEdit} />
-            </Tooltip>
-            <Tooltip title="删除列">
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleDelete}
-              />
-            </Tooltip>
-            <Tooltip title="在后方插入一列">
-              <Button
-                size="small"
-                type="text"
-                icon={<PlusOutlined />}
-                onClick={() => insertBehind()}
-              />
-            </Tooltip>
-          </div>
-        }
+        toolbar={[
+          {
+            title: '编辑列',
+            icon: <EditOutlined />,
+            onClick: handleEdit,
+            disabled: !canOperate,
+          },
+          {
+            title: '删除列',
+            icon: <DeleteOutlined />,
+            onClick: handleDelete,
+            disabled: !canOperate,
+          },
+          {
+            title: '在后方插入一列',
+            icon: <PlusOutlined />,
+            onClick: () => insertBehind(),
+            disabled: !canOperate,
+          },
+        ]}
       >
+        {canOperate && isSelected && !isEditing ? (
+          <RenderedInCanvasOutline>
+            <Dropdown
+              placement="rightTop"
+              trigger={['hover']}
+              overlayClassName={outlineStyles.addOverlay}
+              menu={{
+                items: insertItems,
+                onClick: ({ key, domEvent }) => {
+                  domEvent.stopPropagation();
+                  focusColumn();
+
+                  if (typeof key !== 'string' || !key.startsWith('insert:')) {
+                    return;
+                  }
+
+                  const fieldKey = key === 'insert:empty' ? undefined : key.replace('insert:', '');
+                  insertBehind(fieldKey);
+                },
+              }}
+            >
+              <button
+                type="button"
+                aria-label="在后方插入一列"
+                className={`${outlineStyles.addBtn} ${outlineStyles.addBtnVariant.vertical}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  focusColumn();
+                }}
+              >
+                <PlusOutlined />
+              </button>
+            </Dropdown>
+          </RenderedInCanvasOutline>
+        ) : null}
         <Dropdown
           trigger={isEditing ? [] : ['contextMenu']}
           menu={{ items: menuItems, onClick: handleMenuClick }}

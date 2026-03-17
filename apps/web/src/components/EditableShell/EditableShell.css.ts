@@ -1,11 +1,5 @@
 import { globalStyle, style } from '@vanilla-extract/css';
-import {
-  colorBgBase,
-  colorBorderSecondary,
-  radiusSmall,
-  shadowBase,
-  transitionFast,
-} from '@/styles/tokens.css';
+import { colorPrimary, radiusMedium, transitionFast } from '@/styles/tokens.css';
 
 export const shell = style({
   all: 'unset',
@@ -35,10 +29,8 @@ export const toolbar = style({
   alignItems: 'center',
   gap: 4,
   padding: 2,
-  background: colorBgBase,
-  border: `1px solid ${colorBorderSecondary}`,
-  borderRadius: radiusSmall,
-  boxShadow: shadowBase,
+  background: colorPrimary,
+  borderRadius: radiusMedium,
 });
 
 export const toolbarPopoverOverlay = style({});
@@ -55,4 +47,8 @@ globalStyle(`${toolbarPopoverOverlay} .ant-popover-inner-content`, {
 
 export const placeholder = style({
   minHeight: 16,
+});
+
+export const toolbarButton = style({
+  color: '#fff',
 });

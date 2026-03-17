@@ -1,5 +1,5 @@
 import React, { type PropsWithChildren } from 'react';
-import { Button, Dropdown, Input, Tooltip } from 'antd';
+import { Dropdown, Input } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DeleteOutlined,
@@ -331,22 +331,20 @@ export const ColumnTitleMenu: React.FC<PropsWithChildren<ColumnTitleMenuProps>> 
           }}
           onMouseEnter={() => dispatch(setHoverSource(columnSource))}
           onMouseLeave={() => dispatch(setHoverSource(null))}
-          toolbar={
-            <>
-              <Tooltip title="编辑列">
-                <Button size="small" type="text" icon={<EditOutlined />} onClick={handleEdit} />
-              </Tooltip>
-              <Tooltip title="删除列">
-                <Button
-                  size="small"
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={handleDelete}
-                />
-              </Tooltip>
-            </>
-          }
+          toolbar={[
+            {
+              title: '编辑列',
+              icon: <EditOutlined />,
+              onClick: handleEdit,
+              disabled: !canOperate,
+            },
+            {
+              title: '删除列',
+              icon: <DeleteOutlined />,
+              onClick: handleDelete,
+              disabled: !canOperate,
+            },
+          ]}
         >
           <button
             type="button"

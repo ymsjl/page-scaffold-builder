@@ -1,5 +1,5 @@
 import React from 'react';
-import { Popover } from 'antd';
+import { Button, Popover, Tooltip } from 'antd';
 import type { EditableProjection } from '@/editing/types';
 import * as styles from './EditableShell.css';
 import { useAltPressed } from './useAltPressed';
@@ -10,12 +10,19 @@ const TOOLBAR_CLOSE_DELAY_MS = 120;
 
 type DragActivatorProps = React.HTMLAttributes<HTMLDivElement> & React.AriaAttributes;
 
+const EditableShellTargetContext = React.createContext<EditableProjection | null>(null);
+
 export interface EditableShellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   target: EditableProjection;
   selected?: boolean;
   highlighted?: boolean;
   disabled?: boolean;
-  toolbar?: React.ReactNode;
+  toolbar?: {
+    title: string;
+    icon?: React.ReactNode;
+    onClick?: React.MouseEventHandler<HTMLElement>;
+    disabled?: boolean;
+  }[];
   dragActivatorProps?: DragActivatorProps;
   altDragEnabled?: boolean;
   placeholder?: React.ReactNode;
@@ -24,6 +31,10 @@ export interface EditableShellProps extends Omit<React.HTMLAttributes<HTMLDivEle
   onMouseEnter?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
+
+export const useEditableShellTarget = (): EditableProjection | null => {
+  return React.useContext(EditableShellTargetContext);
+};
 
 export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps>(
   (
@@ -126,7 +137,20 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
           scheduleShellHoverClear();
         }}
       >
-        {toolbar}
+        {toolbar.map(
+          ({ title, icon, onClick: toolbarItemClick, disabled: toolbarItemDisabled }) => (
+            <Tooltip key={title} title={title}>
+              <Button
+                size="small"
+                type="text"
+                icon={icon}
+                className={styles.toolbarButton}
+                onClick={toolbarItemClick}
+                disabled={toolbarItemDisabled}
+              />
+            </Tooltip>
+          ),
+        )}
       </div>
     ) : null;
 
@@ -202,11 +226,7 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
       </div>
     );
 
-    if (!toolbarNode) {
-      return shellNode;
-    }
-
-    return (
+    const shellTree = toolbarNode ? (
       <Popover
         trigger={['hover']}
         open={toolbarVisible}
@@ -217,6 +237,14 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
       >
         {shellNode}
       </Popover>
+    ) : (
+      shellNode
+    );
+
+    return (
+      <EditableShellTargetContext.Provider value={target}>
+        {shellTree}
+      </EditableShellTargetContext.Provider>
     );
   },
 );
