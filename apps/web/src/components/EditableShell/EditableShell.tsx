@@ -1,28 +1,23 @@
 import React from 'react';
-import { Button, Popover, Tooltip } from 'antd';
 import type { EditableProjection } from '@/editing/types';
 import * as styles from './EditableShell.css';
+import type { EditableShellToolbarItem } from './EditableShellToolbar';
+import { EditableShellToolbar } from './EditableShellToolbar';
 import { useAltPressed } from './useAltPressed';
 
 /* eslint-disable jsx-a11y/no-static-element-interactions */
-
-const TOOLBAR_CLOSE_DELAY_MS = 120;
 
 type DragActivatorProps = React.HTMLAttributes<HTMLDivElement> & React.AriaAttributes;
 
 const EditableShellTargetContext = React.createContext<EditableProjection | null>(null);
 
-export interface EditableShellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
+export interface EditableShellProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect' | 'placeholder'> {
   target: EditableProjection;
   selected?: boolean;
   highlighted?: boolean;
   disabled?: boolean;
-  toolbar?: {
-    title: string;
-    icon?: React.ReactNode;
-    onClick?: React.MouseEventHandler<HTMLElement>;
-    disabled?: boolean;
-  }[];
+  toolbar?: EditableShellToolbarItem[];
   dragActivatorProps?: DragActivatorProps;
   altDragEnabled?: boolean;
   placeholder?: React.ReactNode;
@@ -59,11 +54,7 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
     },
     ref,
   ) => {
-    const isInteractive = !!onSelect && !disabled;
     const shellClassName = className ? `${styles.shell} ${className}` : styles.shell;
-    const [isShellHovered, setIsShellHovered] = React.useState(false);
-    const [isToolbarHovered, setIsToolbarHovered] = React.useState(false);
-    const hideToolbarTimeoutRef = React.useRef<number | null>(null);
     const altPressed = useAltPressed();
     const altDragReady = altDragEnabled && altPressed && !disabled;
 
@@ -86,74 +77,6 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
       [dragActivatorOnPointerDown, onPointerDown],
     );
 
-    const clearHideToolbarTimeout = React.useCallback(() => {
-      if (hideToolbarTimeoutRef.current !== null) {
-        window.clearTimeout(hideToolbarTimeoutRef.current);
-        hideToolbarTimeoutRef.current = null;
-      }
-    }, []);
-
-    const scheduleShellHoverClear = React.useCallback(() => {
-      clearHideToolbarTimeout();
-      hideToolbarTimeoutRef.current = window.setTimeout(() => {
-        setIsShellHovered(false);
-      }, TOOLBAR_CLOSE_DELAY_MS);
-    }, [clearHideToolbarTimeout]);
-
-    React.useEffect(() => {
-      return () => {
-        clearHideToolbarTimeout();
-      };
-    }, [clearHideToolbarTimeout]);
-
-    const handleShellMouseEnter: React.MouseEventHandler<HTMLDivElement> = React.useCallback(
-      (event) => {
-        clearHideToolbarTimeout();
-        setIsShellHovered(true);
-        onMouseEnter?.(event);
-      },
-      [clearHideToolbarTimeout, onMouseEnter],
-    );
-
-    const handleShellMouseLeave: React.MouseEventHandler<HTMLDivElement> = React.useCallback(
-      (event) => {
-        scheduleShellHoverClear();
-        onMouseLeave?.(event);
-      },
-      [onMouseLeave, scheduleShellHoverClear],
-    );
-
-    const toolbarVisible = Boolean(toolbar) && (selected || isShellHovered || isToolbarHovered);
-
-    const toolbarNode = toolbar ? (
-      <div
-        className={styles.toolbar}
-        onMouseEnter={() => {
-          clearHideToolbarTimeout();
-          setIsToolbarHovered(true);
-        }}
-        onMouseLeave={() => {
-          setIsToolbarHovered(false);
-          scheduleShellHoverClear();
-        }}
-      >
-        {toolbar.map(
-          ({ title, icon, onClick: toolbarItemClick, disabled: toolbarItemDisabled }) => (
-            <Tooltip key={title} title={title}>
-              <Button
-                size="small"
-                type="text"
-                icon={icon}
-                className={styles.toolbarButton}
-                onClick={toolbarItemClick}
-                disabled={toolbarItemDisabled}
-              />
-            </Tooltip>
-          ),
-        )}
-      </div>
-    ) : null;
-
     const handleClick: React.MouseEventHandler<HTMLDivElement> = (event) => {
       onClick?.(event);
       if (!event.isPropagationStopped()) {
@@ -173,77 +96,46 @@ export const EditableShell = React.forwardRef<HTMLDivElement, EditableShellProps
 
     const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
       event?.stopPropagation();
-
-      // Only treat keyboard-invoked context menus as direct selection here.
-      // Mouse right-click selection is handled by outer context-menu triggers.
       if (event.detail === 0) {
         onSelect?.(event);
       }
     };
 
-    const shellProps = {
-      ...restProps,
-      ...dragActivatorRestProps,
-      ref,
-      className: dragActivatorClassName
-        ? `${shellClassName} ${dragActivatorClassName}`
-        : shellClassName,
-      'data-target-id': target.id,
-      'data-target-kind': target.kind,
-      'data-outline-variant': target.outlineVariant ?? 'default',
-      'data-selected': selected,
-      'data-highlighted': highlighted,
-      'data-disabled': disabled,
-      'data-alt-drag-enabled': altDragEnabled,
-      'data-alt-drag-ready': altDragReady,
-      onMouseEnter: handleShellMouseEnter,
-      onMouseLeave: handleShellMouseLeave,
-      onPointerDown: mergedPointerDown,
-    };
-
-    const shellNode = isInteractive ? (
-      <div
-        {...shellProps}
-        onClick={handleClick}
-        onContextMenu={handleContextMenu}
-        role={dragActivatorRole ?? 'button'}
-        tabIndex={dragActivatorTabIndex ?? 0}
-        onKeyDown={handleKeyDown}
-      >
-        <div className={styles.content}>{children || placeholder}</div>
-        {!children && placeholder ? <div className={styles.placeholder}>{placeholder}</div> : null}
-      </div>
-    ) : (
-      <div
-        {...shellProps}
-        role={dragActivatorRole}
-        tabIndex={dragActivatorTabIndex}
-        onClick={onClick}
-        onKeyDown={handleKeyDown}
-      >
-        <div className={styles.content}>{children || placeholder}</div>
-        {!children && placeholder ? <div className={styles.placeholder}>{placeholder}</div> : null}
-      </div>
-    );
-
-    const shellTree = toolbarNode ? (
-      <Popover
-        trigger={['hover']}
-        open={toolbarVisible}
-        placement="topRight"
-        arrow={false}
-        overlayClassName={styles.toolbarPopoverOverlay}
-        content={toolbarNode}
-      >
-        {shellNode}
-      </Popover>
-    ) : (
-      shellNode
-    );
-
     return (
       <EditableShellTargetContext.Provider value={target}>
-        {shellTree}
+        <EditableShellToolbar toolbar={toolbar} selected={selected}>
+          <div
+            className={
+              dragActivatorClassName
+                ? `${shellClassName} ${dragActivatorClassName}`
+                : shellClassName
+            }
+            {...restProps}
+            {...dragActivatorRestProps}
+            ref={ref}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            onPointerDown={mergedPointerDown}
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
+            role={dragActivatorRole ?? 'button'}
+            tabIndex={dragActivatorTabIndex ?? 0}
+            onKeyDown={handleKeyDown}
+            data-target-id={target.id}
+            data-target-kind={target.kind}
+            data-outline-variant={target.outlineVariant ?? 'default'}
+            data-selected={selected}
+            data-highlighted={highlighted}
+            data-disabled={disabled}
+            data-alt-drag-enabled={altDragEnabled}
+            data-alt-drag-ready={altDragReady}
+          >
+            <div className={styles.content}>{children || placeholder}</div>
+            {!children && placeholder ? (
+              <div className={styles.placeholder}>{placeholder}</div>
+            ) : null}
+          </div>
+        </EditableShellToolbar>
       </EditableShellTargetContext.Provider>
     );
   },

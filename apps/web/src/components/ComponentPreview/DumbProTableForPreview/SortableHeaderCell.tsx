@@ -214,7 +214,7 @@ export const SortableHeaderCell: React.FC<SortableHeaderCellProps> = React.memo(
         ]}
       >
         {canOperate && isSelected && !isEditing ? (
-          <RenderedInCanvasOutline>
+          <RenderedInCanvasOutline targetId={projection.id}>
             <Dropdown
               placement="rightTop"
               trigger={['hover']}

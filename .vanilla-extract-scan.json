@@ -1,13 +1,12 @@
 {
   "summary": {
     "cssFiles": 0,
-    "inlineStyleFiles": 12,
+    "inlineStyleFiles": 11,
     "cssImports": 2
   },
   "examples": {
     "cssFiles": [],
     "inlineStyleFiles": [
-      "apps\\web\\src\\components\\ComponentPreview\\ProTableForPreview\\ColumnTitleMenu.tsx",
       "apps\\web\\src\\components\\ComponentTree\\TreeNodeItem.tsx",
       "apps\\web\\src\\components\\EntityModelDesigner\\EntityModelFieldsTable.tsx",
       "apps\\web\\src\\components\\FlowEditor\\CustomNode.tsx",
